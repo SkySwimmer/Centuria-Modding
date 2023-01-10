@@ -52,6 +52,6 @@ dotnet build
 <br/>
 
 ## Using the Desktop mod
-After putting it in the `BepInEx/plugins/feraltweaks` (you may need to create this directory) folder of your client (needs BepInEx), it should load automatically. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
+After putting it in the `BepInEx/plugins/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have BepInEx installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
 
 You can however change client-specific options in `BepInEx/feraltweaks/settings.props` which contains some settings you may find useful. Note that client settings are overriden by the server when playing on a feral-tweaks enabled Centuria server.
