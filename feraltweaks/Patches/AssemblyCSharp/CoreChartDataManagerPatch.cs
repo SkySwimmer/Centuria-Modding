@@ -5,472 +5,601 @@ using Il2CppSystem;
 using Il2CppSystem.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using System.Threading;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class CoreChartDataManagerPatch
     {
+        private class MirrorList<T, T2> : List<T> where T2 : T where T : BaseDef
+        {
+            private List<T2> delegateList;
+            private bool loading = true;
+            public MirrorList(List<T2> delegateList)
+            {
+                this.delegateList = delegateList;
+                foreach (T obj in delegateList)
+                    Add(obj);
+                loading = false;
+            }
+
+            public override void Add(T item)
+            {
+                base.Add(item);
+                if (!loading)
+                    delegateList.Add((T2)item);
+            }
+
+        }
+
+        private delegate BaseDef DefCreator();
+
         public static Dictionary<string, BaseDef> DefCache = new Dictionary<string, BaseDef>();
+        private static bool patched;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(LocalizationChartData), "Get")]
+        public static bool Get(string inDefID, string inDefault, ref LocalizationChartData __instance, ref string __result)
+        {
+            if (DefCache.ContainsKey(inDefID))
+            {
+                __result = DefCache[inDefID].GetComponent<LocalizationDefComponent>().LocalizedString;
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(LocalizationChartData), "GetString")]
+        public static bool GetString(string inDefID, ref string __result)
+        {
+            if (DefCache.ContainsKey(inDefID))
+            {
+                __result = DefCache[inDefID].GetComponent<LocalizationDefComponent>().LocalizedString;
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CoreGlobalSettingsManager), "Init")]
+        public static void Init()
+        {
+            CoreGlobalSettingsManager.coreInstance.chartAllowOfflineMode = true;
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
-        static void SetChartObjectInstances()
+        public static void SetChartObjectInstances()
         {
+            if (patched)
+                return;
+            patched = true;
+
             // Okay time to load over the original game
             ManualLogSource logger = Plugin.logger;
-
-            // Create patch directory
             logger.LogInfo("Loading chart patches...");
-            Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks/chartpatches");
 
-            // Read patches
-            foreach (FileInfo file in new DirectoryInfo(Paths.ConfigPath + "/feraltweaks/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
+            // Check
+            if (!Plugin.PatchConfig.ContainsKey("DisableClientChartPatches") || Plugin.PatchConfig["DisableClientChartPatches"] != "True")
             {
-                logger.LogInfo("Loading patch: " + file.Name);
-                string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
+                // Create patch directory
+                Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks/chartpatches");
 
-                // Parse patch
-                bool inPatchBlock = false;
-                string defID = "";
-                string patchData = "";
-                ChartDataObject chart = null;
-                foreach (string line in patch.Split('\n'))
+                // Read patches
+                foreach (FileInfo file in new DirectoryInfo(Paths.ConfigPath + "/feraltweaks/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
                 {
-                    if (!inPatchBlock)
+                    string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
+                    ApplyPatch(patch, file.Name);
+                }
+            }
+
+            // Other patches
+            foreach ((string patch, string fileName) in Plugin.Patches)
+            {
+                ApplyPatch(patch, fileName);
+            }
+        }
+
+        private static void ApplyPatch(string patch, string fileName)
+        {
+            // Parse patch
+            ManualLogSource logger = Plugin.logger;
+            logger.LogInfo("Loading patch: " + fileName);
+            bool inPatchBlock = false;
+            bool inNewDefBlock = false;
+            string defID = "";
+            string defData = "";
+            ChartDataObject chart = null;
+            List<BaseDef> defs = null;
+            DefCreator defCreator = () => new BaseDef();
+            foreach (string line in patch.Split('\n'))
+            {
+                if (!inPatchBlock && !inNewDefBlock)
+                {
+                    if (line == "" || line.StartsWith("//") || line.StartsWith("#"))
+                        continue;
+
+                    // Check command
+                    System.Collections.Generic.List<string> args = new System.Collections.Generic.List<string>(line.Split(" "));
+                    if (args.Count <= 1)
                     {
-                        if (line == "" || line.StartsWith("//") || line.StartsWith("#"))
-                            continue;
-
-                        // Check command
-                        System.Collections.Generic.List<string> args = new System.Collections.Generic.List<string>(line.Split(" "));
-                        if (args.Count <= 1)
-                        {
-                            logger.LogError("Invalid command: " + line + " found while parsing " + file.Name);
-                            break;
-                        }
-                        else
-                        {
-                            string cmd = args[0];
-                            args.RemoveAt(0);
-
-                            bool error = false;
-                            switch (cmd)
-                            {
-                                case "setchart":
-                                    {
-                                        string chartName = args[0];
-                                        switch (chartName)
-                                        {
-                                            case "WorldObjectChart":
-                                                {
-                                                    chart = ChartDataManager.instance.worldObjectChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.worldObjectChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "LocalizationChart":
-                                                {
-                                                    chart = ChartDataManager.instance.localizationChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.localizationChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ActorAttachNodeChart":
-                                                {
-                                                    chart = ChartDataManager.instance.actorAttachNodeChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.actorAttachNodeChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "CalendarChart":
-                                                {
-                                                    chart = ChartDataManager.instance.calendarChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.calendarChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "DialogChart":
-                                                {
-                                                    chart = ChartDataManager.instance.dialogChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.dialogChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ActorScaleGroupChart":
-                                                {
-                                                    chart = ChartDataManager.instance.actorScaleGroupChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.actorScaleGroupChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ActorAttachNodeGroupChart":
-                                                {
-                                                    chart = ChartDataManager.instance.actorAttachNodeGroupChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.actorAttachNodeGroupChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ActorNPCChart":
-                                                {
-                                                    chart = ChartDataManager.instance.actorNPCChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.actorNPCChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ActorBodyPartNodeChart":
-                                                {
-                                                    chart = ChartDataManager.instance.actorBodyPartNodeChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.actorBodyPartNodeChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "WorldSurfaceChart":
-                                                {
-                                                    chart = ChartDataManager.instance.worldSurfaceChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.worldSurfaceChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "URLChart":
-                                                {
-                                                    chart = ChartDataManager.instance.urlChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.urlChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "CraftableItemChart":
-                                                {
-                                                    chart = ChartDataManager.instance.craftableItemChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.craftableItemChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "AudioChart":
-                                                {
-                                                    chart = ChartDataManager.instance.audioChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.audioChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "HarvestPointChart":
-                                                {
-                                                    chart = ChartDataManager.instance.harvestPointChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.harvestPointChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "QuestChart":
-                                                {
-                                                    chart = ChartDataManager.instance.questChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.questChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ObjectiveChart":
-                                                {
-                                                    chart = ChartDataManager.instance.objectiveChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.objectiveChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "TaskChart":
-                                                {
-                                                    chart = ChartDataManager.instance.taskChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.taskChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "InteractableChart":
-                                                {
-                                                    chart = ChartDataManager.instance.interactableChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.interactableChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "QuestNPCDataChart":
-                                                {
-                                                    chart = ChartDataManager.instance.questNpcDataChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.questNpcDataChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "BundleIDChart":
-                                                {
-                                                    chart = ChartDataManager.instance.bundleIDChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.bundleIDChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "BundlePackChart":
-                                                {
-                                                    chart = ChartDataManager.instance.bundlePackChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.bundlePackChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ShopContentChart":
-                                                {
-                                                    chart = ChartDataManager.instance.shopContentChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.shopContentChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ShopChart":
-                                                {
-                                                    chart = ChartDataManager.instance.shopChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.shopChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "LootChart":
-                                                {
-                                                    chart = ChartDataManager.instance.lootChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.lootChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "NetworkedObjectsChart":
-                                                {
-                                                    chart = ChartDataManager.instance.networkedObjectsChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.networkedObjectsChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "ColorChart":
-                                                {
-                                                    chart = ChartDataManager.instance.colorChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.colorChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            case "GlobalChart":
-                                                {
-                                                    chart = ChartDataManager.instance.globalChartData;
-
-                                                    // Let it load
-                                                    while (chart == null)
-                                                    {
-                                                        chart = ChartDataManager.instance.globalChartData;
-                                                        Thread.Sleep(100);
-                                                    }
-                                                    break;
-                                                }
-                                            default:
-                                                {
-                                                    logger.LogError("Invalid command: " + line + " found while parsing " + file.Name + ": chart not recognized");
-                                                    error = true;
-                                                    break;
-                                                }
-                                        }
-                                        break;
-                                    }
-                                case "cleardef":
-                                    {
-                                        if (chart == null)
-                                        {
-                                            logger.LogError("Invalid command: " + line + " found while parsing " + file.Name + ": no active chart set");
-                                            error = true;
-                                            break;
-                                        }
-                                        logger.LogInfo("Clear def: " + args[0]);
-                                        BaseDef def = chart.GetDef(args[0]);
-                                        if (def == null)
-                                            logger.LogError("Error! Definition not found!");
-                                        else
-                                        {
-                                            def._components._components.Clear();
-                                            DefCache[args[0]] = def;
-                                        }
-                                        break;
-                                    }
-                                case "patch":
-                                    {
-                                        if (chart == null)
-                                        {
-                                            logger.LogError("Invalid command: " + line + " found while parsing " + file.Name + ": no active chart set");
-                                            error = true;
-                                            break;
-                                        }
-                                        inPatchBlock = true;
-                                        patchData = "";
-                                        defID = args[0];
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        logger.LogError("Invalid command: " + line + " found while parsing " + file.Name);
-                                        error = true;
-                                        break;
-                                    }
-                            }
-                            if (error)
-                                break;
-                        }
+                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName);
+                        break;
                     }
                     else
                     {
-                        string l = line;
-                        if (l == "endpatch")
-                        {
-                            // Apply patch
-                            inPatchBlock = false;
-                            string chartPatch = patchData;
-                            patchData = "";
+                        string cmd = args[0];
+                        args.RemoveAt(0);
 
-                            // Get def
-                            logger.LogInfo("Patching " + defID + " in chart " + chart.ChartName);
-                            BaseDef def = chart.GetDef(defID, true);
-                            if (def == null)
-                                logger.LogError("Error! Definition not found!");
-                            else
-                            {
-                                PatchDef(chartPatch, def);
-                                DefCache[defID] = def;
-                            }
-                            continue;
-                        }
-                        for (int i = 0; i < 4; i++)
+                        bool error = false;
+                        switch (cmd)
                         {
-                            if (!l.StartsWith(" "))
-                                break;
-                            l = l.Substring(1);
+                            case "setchart":
+                                {
+                                    string chartName = args[0];
+                                    switch (chartName)
+                                    {
+                                        case "WorldObjectChart":
+                                            {
+                                                chart = ChartDataManager.instance.worldObjectChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.worldObjectChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.worldObjectChartData.defList;
+                                                break;
+                                            }
+                                        case "LocalizationChart":
+                                            {
+                                                chart = ChartDataManager.instance.localizationChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.localizationChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = new MirrorList<BaseDef, LocalizationDef>(ChartDataManager.instance.localizationChartData.defList);
+                                                defCreator = () => new LocalizationDef();
+                                                break;
+                                            }
+                                        case "ActorAttachNodeChart":
+                                            {
+                                                chart = ChartDataManager.instance.actorAttachNodeChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.actorAttachNodeChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.actorAttachNodeChartData.defList;
+                                                break;
+                                            }
+                                        case "CalendarChart":
+                                            {
+                                                chart = ChartDataManager.instance.calendarChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.calendarChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.calendarChartData.defList;
+                                                break;
+                                            }
+                                        case "DialogChart":
+                                            {
+                                                chart = ChartDataManager.instance.dialogChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.dialogChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.dialogChartData.defList;
+                                                break;
+                                            }
+                                        case "ActorScaleGroupChart":
+                                            {
+                                                chart = ChartDataManager.instance.actorScaleGroupChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.actorScaleGroupChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.actorScaleGroupChartData.defList;
+                                                break;
+                                            }
+                                        case "ActorAttachNodeGroupChart":
+                                            {
+                                                chart = ChartDataManager.instance.actorAttachNodeGroupChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.actorAttachNodeGroupChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.actorAttachNodeGroupChartData.defList;
+                                                break;
+                                            }
+                                        case "ActorNPCChart":
+                                            {
+                                                chart = ChartDataManager.instance.actorNPCChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.actorNPCChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.actorNPCChartData.defList;
+                                                break;
+                                            }
+                                        case "ActorBodyPartNodeChart":
+                                            {
+                                                chart = ChartDataManager.instance.actorBodyPartNodeChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.actorBodyPartNodeChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.actorBodyPartNodeChartData.defList;
+                                                break;
+                                            }
+                                        case "WorldSurfaceChart":
+                                            {
+                                                chart = ChartDataManager.instance.worldSurfaceChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.worldSurfaceChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.worldSurfaceChartData.defList;
+                                                break;
+                                            }
+                                        case "URLChart":
+                                            {
+                                                chart = ChartDataManager.instance.urlChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.urlChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.urlChartData.defList;
+                                                break;
+                                            }
+                                        case "CraftableItemChart":
+                                            {
+                                                chart = ChartDataManager.instance.craftableItemChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.craftableItemChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.craftableItemChartData.defList;
+                                                break;
+                                            }
+                                        case "AudioChart":
+                                            {
+                                                chart = ChartDataManager.instance.audioChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.audioChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.audioChartData.defList;
+                                                break;
+                                            }
+                                        case "HarvestPointChart":
+                                            {
+                                                chart = ChartDataManager.instance.harvestPointChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.harvestPointChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.harvestPointChartData.defList;
+                                                break;
+                                            }
+                                        case "QuestChart":
+                                            {
+                                                chart = ChartDataManager.instance.questChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.questChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.questChartData.defList;
+                                                break;
+                                            }
+                                        case "ObjectiveChart":
+                                            {
+                                                chart = ChartDataManager.instance.objectiveChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.objectiveChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.objectiveChartData.defList;
+                                                break;
+                                            }
+                                        case "TaskChart":
+                                            {
+                                                chart = ChartDataManager.instance.taskChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.taskChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.taskChartData.defList;
+                                                break;
+                                            }
+                                        case "InteractableChart":
+                                            {
+                                                chart = ChartDataManager.instance.interactableChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.interactableChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.interactableChartData.defList;
+                                                break;
+                                            }
+                                        case "BundleIDChart":
+                                            {
+                                                chart = ChartDataManager.instance.bundleIDChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.bundleIDChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.bundleIDChartData.defList;
+                                                break;
+                                            }
+                                        case "BundlePackChart":
+                                            {
+                                                chart = ChartDataManager.instance.bundlePackChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.bundlePackChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.bundlePackChartData.defList;
+                                                break;
+                                            }
+                                        case "ShopContentChart":
+                                            {
+                                                chart = ChartDataManager.instance.shopContentChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.shopContentChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.shopContentChartData.defList;
+                                                break;
+                                            }
+                                        case "ShopChart":
+                                            {
+                                                chart = ChartDataManager.instance.shopChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.shopChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.shopChartData.defList;
+                                                break;
+                                            }
+                                        case "LootChart":
+                                            {
+                                                chart = ChartDataManager.instance.lootChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.lootChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = new MirrorList<BaseDef, LootDef>(ChartDataManager.instance.lootChartData.defList);
+                                                defCreator = () => new LootDef();
+                                                break;
+                                            }
+                                        case "NetworkedObjectsChart":
+                                            {
+                                                chart = ChartDataManager.instance.networkedObjectsChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.networkedObjectsChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.networkedObjectsChartData.defList;
+                                                break;
+                                            }
+                                        case "ColorChart":
+                                            {
+                                                chart = ChartDataManager.instance.colorChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.colorChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = new MirrorList<BaseDef, ColorDef>(ChartDataManager.instance.colorChartData.defList);
+                                                defCreator = () => new ColorDef();
+                                                break;
+                                            }
+                                        case "GlobalChart":
+                                            {
+                                                chart = ChartDataManager.instance.globalChartData;
+
+                                                // Let it load
+                                                while (chart == null)
+                                                {
+                                                    chart = ChartDataManager.instance.globalChartData;
+                                                    Thread.Sleep(100);
+                                                }
+                                                defs = ChartDataManager.instance.globalChartData.defList;
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": chart not recognized");
+                                                error = true;
+                                                break;
+                                            }
+                                    }
+                                    break;
+                                }
+                            case "cleardef":
+                                {
+                                    if (chart == null)
+                                    {
+                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        error = true;
+                                        break;
+                                    }
+                                    logger.LogInfo("Clear def: " + args[0]);
+                                    BaseDef def = chart.GetDef(args[0]);
+                                    if (def == null)
+                                        logger.LogError("Error! Definition not found!");
+                                    else
+                                    {
+                                        def._components._components.Clear();
+                                        DefCache[args[0]] = def;
+                                    }
+                                    break;
+                                }
+                            case "patch":
+                                {
+                                    if (chart == null)
+                                    {
+                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        error = true;
+                                        break;
+                                    }
+                                    inPatchBlock = true;
+                                    defData = "";
+                                    defID = args[0];
+                                    break;
+                                }
+                            case "def":
+                                {
+                                    if (chart == null)
+                                    {
+                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        error = true;
+                                        break;
+                                    }
+                                    inNewDefBlock = true;
+                                    defData = "";
+                                    defID = args[0];
+                                    break;
+                                }
+                            default:
+                                {
+                                    logger.LogError("Invalid command: " + line + " found while parsing " + fileName);
+                                    error = true;
+                                    break;
+                                }
                         }
-                        if (patchData == "")
-                            patchData = l;
-                        else
-                            patchData += l + "\n";
+                        if (error)
+                            break;
                     }
+                }
+                else
+                {
+                    string l = line;
+                    if (l == "endpatch" && inPatchBlock)
+                    {
+                        // Apply patch
+                        inPatchBlock = false;
+                        string chartPatch = defData;
+                        defData = "";
+
+                        // Get def
+                        logger.LogInfo("Patching " + defID + " in chart " + chart.ChartName);
+                        BaseDef def = chart.GetDef(defID, true);
+                        if (def == null)
+                            logger.LogError("Error! Definition not found!");
+                        else
+                        {
+                            PatchDef(chartPatch, def);
+                            DefCache[defID] = def;
+                        }
+                        continue;
+                    }
+                    else if (l == "enddef" && inNewDefBlock)
+                    {
+                        // Apply patch
+                        inPatchBlock = false;
+                        string chartPatch = defData;
+                        defData = "";
+
+                        // Get def
+                        logger.LogInfo("Creating " + defID + " in chart " + chart.ChartName);
+                        BaseDef def = chart.GetDef(defID, true);
+                        if (def != null)
+                            logger.LogError("Error! Chart definition already exists");
+                        else
+                        {
+                            def = defCreator();
+                            def.LoadDataJSON(chartPatch);
+                            DefCache[defID] = def;
+                            defs.Add(def);
+                        }
+                        continue;
+                    }
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (!l.StartsWith(" "))
+                            break;
+                        l = l.Substring(1);
+                    }
+                    if (defData == "")
+                        defData = l;
+                    else
+                        defData += l + "\n";
                 }
             }
         }

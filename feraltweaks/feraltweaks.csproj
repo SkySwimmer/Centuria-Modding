@@ -23,6 +23,10 @@
       <HintPath>lib\feral\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>lib\feral\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.UIModule">
       <HintPath>lib\feral\UnityEngine.UIModule.dll</HintPath>
       <Private>false</Private>
@@ -37,10 +41,6 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>lib\feral\UnityEngine.UI.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>lib\feral\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">

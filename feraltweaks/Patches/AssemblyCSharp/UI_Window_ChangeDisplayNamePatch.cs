@@ -16,34 +16,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 return;
             }
-            Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
+            
+            // Log
             ManualLogSource logger = Plugin.logger;
-
             logger.LogInfo("Patching display name change window...");
-            Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks");
-            if (!File.Exists(Paths.ConfigPath + "/feraltweaks/settings.props"))
-            {
-                Plugin.WriteDefaultConfig();
-            }
-            else
-            {
-                foreach (string line in File.ReadAllLines(Paths.ConfigPath + "/feraltweaks/settings.props"))
-                {
-                    if (line == "" || line.StartsWith("#") || !line.Contains("="))
-                        continue;
-                    string key = line.Remove(line.IndexOf("="));
-                    string value = line.Substring(line.IndexOf("=") + 1);
-                    PatchConfig[key] = value;
-                }
-            }
 
             // Check FlexibleDisplayNames
-            if (PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 __instance._usernameInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._usernameInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (PatchConfig.ContainsKey("DisplayNameMaxLength"))
-                    __instance._usernameInput.characterLimit = int.Parse(PatchConfig["DisplayNameMaxLength"]);
+                if (Plugin.PatchConfig.ContainsKey("DisplayNameMaxLength"))
+                    __instance._usernameInput.characterLimit = int.Parse(Plugin.PatchConfig["DisplayNameMaxLength"]);
             }
         }
     }

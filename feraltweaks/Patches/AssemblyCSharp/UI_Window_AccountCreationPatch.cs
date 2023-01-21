@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +17,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class UI_Window_AccountCreationPatch
     {
-        private static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
         private static RecreatedWaiter usernameVerifyWaiter;
         private class RecreatedWaiter
         {
@@ -30,42 +28,26 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "OnOpen")]
         public static void OnOpen(ref UI_Window_AccountCreation __instance)
         {
+            // Log
             ManualLogSource logger = Plugin.logger;
-
             logger.LogInfo("Patching account creation...");
-            Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks");
-            if (!File.Exists(Paths.ConfigPath + "/feraltweaks/settings.props"))
-            {
-                Plugin.WriteDefaultConfig();
-            }
-            else
-            {
-                foreach (string line in File.ReadAllLines(Paths.ConfigPath + "/feraltweaks/settings.props"))
-                {
-                    if (line == "" || line.StartsWith("#") || !line.Contains("="))
-                        continue;
-                    string key = line.Remove(line.IndexOf("="));
-                    string value = line.Substring(line.IndexOf("=") + 1);
-                    PatchConfig[key] = value;
-                }
-            }
 
             // Check AllowNonEmailUsernames
-            if (PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")
+            if (Plugin.PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")
             {
                 __instance._emailInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._emailInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (PatchConfig.ContainsKey("UserNameMaxLength"))
-                    __instance._emailInput.characterLimit = int.Parse(PatchConfig["UserNameMaxLength"]);
+                if (Plugin.PatchConfig.ContainsKey("UserNameMaxLength"))
+                    __instance._emailInput.characterLimit = int.Parse(Plugin.PatchConfig["UserNameMaxLength"]);
             }
 
             // Check FlexibleDisplayNames
-            if (PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 __instance._usernameInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._usernameInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (PatchConfig.ContainsKey("DisplayNameMaxLength"))
-                    __instance._usernameInput.characterLimit = int.Parse(PatchConfig["DisplayNameMaxLength"]);
+                if (Plugin.PatchConfig.ContainsKey("DisplayNameMaxLength"))
+                    __instance._usernameInput.characterLimit = int.Parse(Plugin.PatchConfig["DisplayNameMaxLength"]);
             }
         }
 
@@ -73,7 +55,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "RefreshUsernameStatus")]
         private static bool RefreshUsernameStatus(UI_Window_AccountCreation __instance)
         {
-            if (!PatchConfig.ContainsKey("DisplayNameRegex"))
+            if (!Plugin.PatchConfig.ContainsKey("DisplayNameRegex"))
                 return true;
             if (usernameVerifyWaiter != null)
                 usernameVerifyWaiter = null;
@@ -91,11 +73,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             Action ac = () => {
                  __instance._usernameStatusIndicator.SetStatus(UI_FieldStatusIndicator.FieldStatus.Verifying, true);
                 string status = RegisterUserStatus.SUCCESS;
-                if (!Regex.Match(__instance.Username, PatchConfig["DisplayNameRegex"]).Success || user.EndsWith(" ") || user.StartsWith(" "))
+                if (!Regex.Match(__instance.Username, Plugin.PatchConfig["DisplayNameRegex"]).Success || user.EndsWith(" ") || user.StartsWith(" "))
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_INVALID_FORMAT;
                 else if (__instance.Username.Length < 2)
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_TOO_SHORT;
-                else if (__instance.Username.Length > int.Parse(PatchConfig.GetValueOrDefault("DisplayNameMaxLength", "16")))
+                else if (__instance.Username.Length > int.Parse(Plugin.PatchConfig.GetValueOrDefault("DisplayNameMaxLength", "16")))
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_TOO_LONG;
                 else
                 {
@@ -197,7 +179,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "CheckEmail")]
         private static bool CheckEmail(ref UI_Window_AccountCreation __instance, ref string __result)
         {
-            if (!PatchConfig.ContainsKey("UserNameRegex"))
+            if (!Plugin.PatchConfig.ContainsKey("UserNameRegex"))
                 return true;
             if (__instance._cachedEmailValidations.ContainsKey(__instance.Email))
             {
@@ -205,7 +187,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return false;
             }
             string status = RegisterUserStatus.SUCCESS;
-            if (!Regex.Match(__instance.Email, PatchConfig["UserNameRegex"]).Success)
+            if (!Regex.Match(__instance.Email, Plugin.PatchConfig["UserNameRegex"]).Success)
                 status = RegisterUserStatus.ERROR_USERNAME_INVALID_FORMAT;
             __instance._cachedEmailValidations[__instance.Email] = status;
             __result = status;
@@ -216,7 +198,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "CreateAccount")]
         public static void CreateAccount(ref UI_Window_AccountCreation __instance, ref string inUsername)
         {
-            if (PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 inUsername = inUsername.ToLower();
             }

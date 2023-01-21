@@ -22,7 +22,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (obj == null && message.DefId != "852" && message.DefId != "1751")
             {
                 // Find in world
-                Debug.Log("Loading world object: " + message.Id + "...");
                 obj = QuestManager.instance.GetWorldObject(message.Id);
             }
             if (obj == null)
@@ -32,7 +31,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     if (wO.Id == message.Id)
                     {
-                        Debug.Log("Loading world object: " + message.Id + " from scene...");
                         obj = wO;
                         break;
                     }
@@ -41,7 +39,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (obj == null)
             {
                 // Create
-                Debug.Log("Creating world object: " + message.Id + "...");
                 obj = __instance.CreateObject(message);
             }
 
@@ -53,8 +50,28 @@ namespace feraltweaks.Patches.AssemblyCSharp
             obj.OnObjectInfo(message);
 
             // Override position and rotation
-            obj.transform.position = new Vector3(message.LastMove.position.x, message.LastMove.position.y, message.LastMove.position.z);
-            obj.transform.rotation = new Quaternion(message.LastMove.rotation.x, message.LastMove.rotation.y, message.LastMove.rotation.z, message.LastMove.rotation.w);
+            if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && Plugin.PatchConfig["OverrideReplicate-" + message.Id] == "True") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"] == "True" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || Plugin.PatchConfig["OverrideReplicate-" + message.Id] != "False")))
+            {
+                // Only do this if its enabled, otherwise it can be buggy
+                obj.transform.position = new Vector3(message.LastMove.position.x, message.LastMove.position.y, message.LastMove.position.z);
+                obj.transform.rotation = new Quaternion(message.LastMove.rotation.x, message.LastMove.rotation.y, message.LastMove.rotation.z, message.LastMove.rotation.w);
+
+                // Move the npc if its a npc
+                try
+                {
+                    ActorNPCSpawner spawner = Plugin.GetNpcSpawnerFrom(obj);
+                    if (spawner != null)
+                    {
+                        // Move
+                        spawner.ActorBase.gameObject.transform.position = new Vector3(message.LastMove.position.x, message.LastMove.position.y, message.LastMove.position.z);
+                        spawner.ActorBase.gameObject.transform.rotation = new Quaternion(message.LastMove.rotation.x, message.LastMove.rotation.y, message.LastMove.rotation.z, message.LastMove.rotation.w);
+                    }
+                }
+                catch
+                {
+                    // Il2cpp or unity goof
+                }
+            }
             return false;
         }
     }
