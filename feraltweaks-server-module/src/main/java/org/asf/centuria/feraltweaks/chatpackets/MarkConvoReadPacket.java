@@ -1,4 +1,4 @@
-package org.asf.centuria.feraltweaks;
+package org.asf.centuria.feraltweaks.chatpackets;
 
 import org.asf.centuria.networking.chatserver.ChatClient;
 import org.asf.centuria.networking.chatserver.networking.AbstractChatPacket;

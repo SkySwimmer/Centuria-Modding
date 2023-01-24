@@ -10,11 +10,14 @@ import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.dms.DMManager;
+import org.asf.centuria.feraltweaks.chatpackets.MarkConvoReadPacket;
+import org.asf.centuria.feraltweaks.http.CdnProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
 import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.events.accounts.AccountPreloginEvent;
 import org.asf.centuria.modules.events.chat.ChatLoginEvent;
 import org.asf.centuria.modules.events.chat.ChatMessageBroadcastEvent;
+import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
 
 import com.google.gson.JsonArray;
@@ -94,8 +97,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 				.replaceAll("\\\\n", "\n");
 
 		// Create CDN path
-		if (!new File(ftCdnPath + "/feraltweaks").exists())
-			new File(ftCdnPath + "/feraltweaks").mkdirs();
+		if (!new File(ftCdnPath + "/feraltweaks/chartpatches").exists())
+			new File(ftCdnPath + "/feraltweaks/chartpatches").mkdirs();
 		if (!new File(ftCdnPath + "/clientmods/assemblies").exists())
 			new File(ftCdnPath + "/clientmods/assemblies").mkdirs();
 		if (!new File(ftCdnPath + "/clientmods/assets").exists())
@@ -147,6 +150,12 @@ public class FeralTweaksModule implements ICenturiaModule {
 				}
 			}
 		}
+	}
+
+	@EventListener
+	public void apiStartup(APIServerStartupEvent event) {
+		// Register custom processors
+		event.getServer().registerProcessor(new CdnProcessor());
 	}
 
 	@EventListener
