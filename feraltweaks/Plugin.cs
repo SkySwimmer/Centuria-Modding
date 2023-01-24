@@ -17,6 +17,7 @@ using System.Text;
 using Server;
 using UnityEngine;
 using Random = System.Random;
+using LitJson;
 
 namespace feraltweaks
 {
@@ -25,11 +26,15 @@ namespace feraltweaks
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BasePlugin
     {
+        public const int ProtocolVersion = 1;
+        public const string Version = "beta-1.0.0";
         public static List<Func<bool>> actions = new List<Func<bool>>();
         public static List<Action> uiActions = new List<Action>();
         public static Dictionary<string, string> Patches = new Dictionary<string, string>();
         public static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
         public static string AutoLoginToken = null;
+
+        public static bool ShowWorldJoinChatUnreadPopup;
 
         public static string DirectorAddress = null;
         public static string APIAddress = null;
@@ -129,6 +134,7 @@ namespace feraltweaks
             Harmony.CreateAndPatchAll(typeof(WorldObjectManagerPatch));
             Harmony.CreateAndPatchAll(typeof(MessageRouterPatch));
             Harmony.CreateAndPatchAll(typeof(UI_VersionPatch));
+            Harmony.CreateAndPatchAll(typeof(ChatPatches));
 
             // Handle command line
             Log.LogInfo("Waiting for commands from launcher...");
@@ -493,6 +499,39 @@ namespace feraltweaks
                         }
                         return true;
                     }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Handles chat packets
+        /// </summary>
+        /// <param name="evt">Packet ID</param>
+        /// <param name="packet">Packet payload</param>
+        /// <returns>True if handled by feraltweaks, false otherwise</returns>
+        public static bool HandleChatPacket(string evt, JsonData packet)
+        {
+            if (evt.StartsWith("feraltweaks."))
+            {
+                string id = evt.Substring("feraltweaks.".Length);
+                switch (id)
+                {
+                    case "unreadconversations":
+                        {
+                            // Add unreads
+                            Il2CppSystem.Collections.Generic.List<string> convos = JsonMapper.ToObject<Il2CppSystem.Collections.Generic.List<string>>(JsonMapper.ToJson(packet["conversations"])); 
+                            foreach (string convo in convos)
+                                ChatManager.instance._unreadConversations.Add(convo);
+                            ShowWorldJoinChatUnreadPopup = true;
+                            break;
+                        }
+                    default:
+                        {
+                            logger.LogError("Unhandled FeralTweaks chat packet: " + id + ": " + JsonMapper.ToJson(packet));
+                            break;
+                        }
+                }
+                return true;
             }
             return false;
         }

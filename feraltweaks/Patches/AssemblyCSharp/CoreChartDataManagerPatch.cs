@@ -62,13 +62,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return true;
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(CoreGlobalSettingsManager), "Init")]
-        public static void Init()
-        {
-            CoreGlobalSettingsManager.coreInstance.chartAllowOfflineMode = true;
-        }
-
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
         public static void SetChartObjectInstances()

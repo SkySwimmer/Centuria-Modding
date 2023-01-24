@@ -137,8 +137,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     reloadGlidingManager = true;
                     CoreBundleManager2.UnloadAllLevelAssetBundles();
                     CoreLevelManager.LoadLevelSingle("Loading");
+                    UserManager.Me = null;
                     actionsToRun.Add(() =>
                     {
+                        UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
+                        if (chat != null)
+                            GameObject.Destroy(chat.gameObject);
+                        ChatManager.instance._cachedConversations = null;
+                        ChatManager.instance._unreadConversations.Clear();
                         CoreWindowManager.CloseAllWindows();
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
                         Plugin.uiActions.Add(() =>
@@ -238,7 +244,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     return true;
                 }
-                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start >= 1000)
+                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start >= 500)
                 {
                     Plugin.uiActions.Add(() =>
                     {
@@ -252,6 +258,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
                 return false;
             });
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
+        public static void Hide()
+        {
+            errorDisplayed = true;
         }
 
         [HarmonyPrefix]
