@@ -125,7 +125,9 @@ public class CdnProcessor extends HttpGetProcessor {
 					.equalsIgnoreCase(new File(module.ftCdnPath).getCanonicalPath())
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
 							.startsWith(new File(module.ftCdnPath).getCanonicalPath().toLowerCase() + File.separator)))
-					&& !path.equals("/feraltweaks/chartpatches/index.json")) {
+					&& !path.equals("/feraltweaks/chartpatches/index.json")
+					&& !path.equals("/clientmods/assemblies/index.json")
+					&& !path.equals("/clientmods/assets/index.json")) {
 				this.setResponseCode(404);
 				this.setResponseMessage("Not found");
 				this.setBody("text/json", "{\"error\":\"file_not_found\"}");
@@ -140,7 +142,8 @@ public class CdnProcessor extends HttpGetProcessor {
 
 				// Add replication
 				for (String obj : module.replicatingObjects.keySet()) {
-					res += "OverrideReplicate-" + obj + "=" + (module.replicatingObjects.get(obj) ? "True" : "False") + "\n";
+					res += "OverrideReplicate-" + obj + "=" + (module.replicatingObjects.get(obj) ? "True" : "False")
+							+ "\n";
 				}
 
 				getResponse().setResponseStatus(200, "OK");
@@ -150,6 +153,21 @@ public class CdnProcessor extends HttpGetProcessor {
 				// Index json
 				JsonArray res = new JsonArray();
 				scan(new File(module.ftCdnPath, "feraltweaks/chartpatches"), res, "/feraltweaks/chartpatches/");
+				getResponse().setResponseStatus(200, "OK");
+				getResponse().setContent("text/json", res.toString());
+				return;
+			} else if (path.equals("/clientmods/assemblies/index.json")) {
+				// Index json
+				JsonObject res = new JsonObject();
+				scan(new File(module.ftCdnPath, "clientmods/assemblies"), res, "/clientmods/assemblies/",
+						"/BepInEx/plugins/");
+				getResponse().setResponseStatus(200, "OK");
+				getResponse().setContent("text/json", res.toString());
+				return;
+			} else if (path.equals("/clientmods/assets/index.json")) {
+				// Index json
+				JsonObject res = new JsonObject();
+				scan(new File(module.ftCdnPath, "clientmods/assets"), res, "/clientmods/assets/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
@@ -172,6 +190,15 @@ public class CdnProcessor extends HttpGetProcessor {
 				scan(f, res, prefix + f.getName() + "/");
 			else
 				res.add(prefix + f.getName());
+		}
+	}
+
+	private void scan(File source, JsonObject res, String prefix, String prefixOut) {
+		for (File f : source.listFiles()) {
+			if (f.isDirectory())
+				scan(f, res, prefix + f.getName() + "/", prefixOut + f.getName() + "/");
+			else
+				res.addProperty(prefix + f.getName(), prefixOut + f.getName());
 		}
 	}
 
