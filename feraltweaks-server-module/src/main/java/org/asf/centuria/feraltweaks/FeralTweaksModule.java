@@ -12,7 +12,7 @@ import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.dms.DMManager;
 import org.asf.centuria.feraltweaks.chatpackets.MarkConvoReadPacket;
-import org.asf.centuria.feraltweaks.http.CdnProcessor;
+import org.asf.centuria.feraltweaks.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
 import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.events.accounts.AccountPreloginEvent;
@@ -43,7 +43,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public String modDataVersion;
 	public boolean enableByDefault;
 	public boolean preventNonFTClients;
-	public String ftCdnPath;
+	public String ftDataPath;
 
 	public HashMap<String, Boolean> replicatingObjects = new HashMap<String, Boolean>();
 
@@ -65,7 +65,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 			// Write config
 			try {
 				Files.writeString(configFile.toPath(), "enable-by-default=false\n" + "prevent-non-ft-clients=true\n"
-						+ "cdn-path=feraltweaks/content\n"
+						+ "data-path=feraltweaks/content\n"
 						+ "error-unauthorized=\nFeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.\n"
 						+ "error-outdated=Incompatible client!\\nYour client is currently out of date, restart the game to update the client mods.\n"
 						+ "mod-data-version=1\n");
@@ -97,7 +97,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 		}
 		enableByDefault = properties.getOrDefault("enable-by-default", "false").equalsIgnoreCase("true");
 		preventNonFTClients = properties.getOrDefault("prevent-non-ft-clients", "false").equalsIgnoreCase("true");
-		ftCdnPath = properties.getOrDefault("cdn-path", "feraltweaks/content");
+		ftDataPath = properties.getOrDefault("data-path", "feraltweaks/content");
 		ftOutdatedErrorMessage = properties.getOrDefault("error-outdated",
 				"\nIncompatible client!\nYour client is currently out of date, restart the game to update the client mods.")
 				.replaceAll("\\\\n", "\n");
@@ -106,13 +106,13 @@ public class FeralTweaksModule implements ICenturiaModule {
 				.replaceAll("\\\\n", "\n");
 		modDataVersion = properties.getOrDefault("mod-data-version", "1");
 
-		// Create CDN path
-		if (!new File(ftCdnPath + "/feraltweaks/chartpatches").exists())
-			new File(ftCdnPath + "/feraltweaks/chartpatches").mkdirs();
-		if (!new File(ftCdnPath + "/clientmods/assemblies").exists())
-			new File(ftCdnPath + "/clientmods/assemblies").mkdirs();
-		if (!new File(ftCdnPath + "/clientmods/assets").exists())
-			new File(ftCdnPath + "/clientmods/assets").mkdirs();
+		// Create data folders
+		if (!new File(ftDataPath + "/feraltweaks/chartpatches").exists())
+			new File(ftDataPath + "/feraltweaks/chartpatches").mkdirs();
+		if (!new File(ftDataPath + "/clientmods/assemblies").exists())
+			new File(ftDataPath + "/clientmods/assemblies").mkdirs();
+		if (!new File(ftDataPath + "/clientmods/assets").exists())
+			new File(ftDataPath + "/clientmods/assets").mkdirs();
 	}
 
 	@EventListener
@@ -165,7 +165,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void apiStartup(APIServerStartupEvent event) {
 		// Register custom processors
-		event.getServer().registerProcessor(new CdnProcessor());
+		event.getServer().registerProcessor(new DataProcessor());
 	}
 
 	@EventListener

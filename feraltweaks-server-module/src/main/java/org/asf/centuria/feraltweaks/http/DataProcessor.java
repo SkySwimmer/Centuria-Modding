@@ -17,16 +17,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class CdnProcessor extends HttpGetProcessor {
+public class DataProcessor extends HttpGetProcessor {
 
 	@Override
 	public HttpGetProcessor createNewInstance() {
-		return new CdnProcessor();
+		return new DataProcessor();
 	}
 
 	@Override
 	public String path() {
-		return "/cdn";
+		return "/data";
 	}
 
 	@Override
@@ -122,11 +122,11 @@ public class CdnProcessor extends HttpGetProcessor {
 			}
 
 			// Check file
-			File reqFile = new File(module.ftCdnPath, path);
+			File reqFile = new File(module.ftDataPath, path);
 			if ((!reqFile.exists() || (!reqFile.getParentFile().getCanonicalPath()
-					.equalsIgnoreCase(new File(module.ftCdnPath).getCanonicalPath())
+					.equalsIgnoreCase(new File(module.ftDataPath).getCanonicalPath())
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
-							.startsWith(new File(module.ftCdnPath).getCanonicalPath().toLowerCase() + File.separator)))
+							.startsWith(new File(module.ftDataPath).getCanonicalPath().toLowerCase() + File.separator)))
 					&& !path.equals("/feraltweaks/chartpatches/index.json")
 					&& !path.equals("/clientmods/assemblies/index.json")
 					&& !path.equals("/clientmods/assets/index.json")) {
@@ -155,14 +155,14 @@ public class CdnProcessor extends HttpGetProcessor {
 			} else if (path.equals("/feraltweaks/chartpatches/index.json")) {
 				// Index json
 				JsonArray res = new JsonArray();
-				scan(new File(module.ftCdnPath, "feraltweaks/chartpatches"), res, "/feraltweaks/chartpatches/");
+				scan(new File(module.ftDataPath, "feraltweaks/chartpatches"), res, "/feraltweaks/chartpatches/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
 			} else if (path.equals("/clientmods/assemblies/index.json")) {
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftCdnPath, "clientmods/assemblies"), res, "/clientmods/assemblies/",
+				scan(new File(module.ftDataPath, "clientmods/assemblies"), res, "/clientmods/assemblies/",
 						"/BepInEx/plugins/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
@@ -170,7 +170,7 @@ public class CdnProcessor extends HttpGetProcessor {
 			} else if (path.equals("/clientmods/assets/index.json")) {
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftCdnPath, "clientmods/assets"), res, "/clientmods/assets/", "/");
+				scan(new File(module.ftDataPath, "clientmods/assets"), res, "/clientmods/assets/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
