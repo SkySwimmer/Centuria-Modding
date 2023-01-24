@@ -42,81 +42,83 @@ public class CdnProcessor extends HttpGetProcessor {
 				return;
 			}
 
-			// Parse JWT payload
-			if (!getRequest().headers.containsKey("Authorization")) {
-				this.setResponseCode(401);
-				this.setResponseMessage("Authorization Required");
-				return;
-			}
-			String token = this.getHeader("Authorization").substring("Bearer ".length());
-			if (token.isBlank()) {
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				return;
-			}
-
-			// Parse token
-			if (token.isBlank()) {
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				return;
-			}
-
-			// Verify signature
-			String verifyD = token.split("\\.")[0] + "." + token.split("\\.")[1];
-			String sig = token.split("\\.")[2];
-			if (!Centuria.verify(verifyD.getBytes("UTF-8"), Base64.getUrlDecoder().decode(sig))) {
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				return;
-			}
-
-			// Verify expiry
-			JsonObject jwtPl = JsonParser
-					.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
-					.getAsJsonObject();
-			if (!jwtPl.has("exp") || jwtPl.get("exp").getAsLong() < System.currentTimeMillis() / 1000) {
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				return;
-			}
-
-			JsonObject payload = JsonParser
-					.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
-					.getAsJsonObject();
-
-			// Find account
-			String id = payload.get("uuid").getAsString();
-
-			// Check existence
-			if (id == null) {
-				// Invalid details
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				this.setResponseCode(422);
-				return;
-			}
-
-			// Find account
-			CenturiaAccount acc = AccountManager.getInstance().getAccount(id);
-			if (acc == null) {
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-				return;
-			}
-
-			// Check if FT is enabled
 			FeralTweaksModule module = (FeralTweaksModule) ModuleManager.getInstance().getModule("feraltweaks");
-			if (!module.enableByDefault && !acc.getSaveSharedInventory().containsItem("feraltweaks")) {
-				// No access
-				this.setResponseCode(403);
-				this.setResponseMessage("Access denied");
-				this.setBody("text/json", "{\"error\":\"feraltweaks_not_enabled\"}");
-				return;
+			if (!path.equals("/server.json")) {
+				// Parse JWT payload
+				if (!getRequest().headers.containsKey("Authorization")) {
+					this.setResponseCode(401);
+					this.setResponseMessage("Authorization Required");
+					return;
+				}
+				String token = this.getHeader("Authorization").substring("Bearer ".length());
+				if (token.isBlank()) {
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					return;
+				}
+
+				// Parse token
+				if (token.isBlank()) {
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					return;
+				}
+
+				// Verify signature
+				String verifyD = token.split("\\.")[0] + "." + token.split("\\.")[1];
+				String sig = token.split("\\.")[2];
+				if (!Centuria.verify(verifyD.getBytes("UTF-8"), Base64.getUrlDecoder().decode(sig))) {
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					return;
+				}
+
+				// Verify expiry
+				JsonObject jwtPl = JsonParser
+						.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
+						.getAsJsonObject();
+				if (!jwtPl.has("exp") || jwtPl.get("exp").getAsLong() < System.currentTimeMillis() / 1000) {
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					return;
+				}
+
+				JsonObject payload = JsonParser
+						.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
+						.getAsJsonObject();
+
+				// Find account
+				String id = payload.get("uuid").getAsString();
+
+				// Check existence
+				if (id == null) {
+					// Invalid details
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					this.setResponseCode(422);
+					return;
+				}
+
+				// Find account
+				CenturiaAccount acc = AccountManager.getInstance().getAccount(id);
+				if (acc == null) {
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
+					return;
+				}
+
+				// Check if FT is enabled
+				if (!module.enableByDefault && !acc.getSaveSharedInventory().containsItem("feraltweaks")) {
+					// No access
+					this.setResponseCode(403);
+					this.setResponseMessage("Access denied");
+					this.setBody("text/json", "{\"error\":\"feraltweaks_not_enabled\"}");
+					return;
+				}
 			}
 
 			// Check file
@@ -145,6 +147,7 @@ public class CdnProcessor extends HttpGetProcessor {
 					res += "OverrideReplicate-" + obj + "=" + (module.replicatingObjects.get(obj) ? "True" : "False")
 							+ "\n";
 				}
+				res += "ServerVersion=" + module.modDataVersion + "/" + Centuria.SERVER_UPDATE_VERSION + "\n";
 
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/plain", res);

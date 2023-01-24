@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.asf.centuria.Centuria;
 import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.data.XtReader;
@@ -39,6 +40,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public static int FT_VERSION = 1;
 	public String ftUnsupportedErrorMessage;
 	public String ftOutdatedErrorMessage;
+	public String modDataVersion;
 	public boolean enableByDefault;
 	public boolean preventNonFTClients;
 	public String ftCdnPath;
@@ -65,7 +67,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 				Files.writeString(configFile.toPath(), "enable-by-default=false\n" + "prevent-non-ft-clients=true\n"
 						+ "cdn-path=feraltweaks/content\n"
 						+ "error-unauthorized=\nFeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.\n"
-						+ "error-outdated=Incompatible client!\\nYour client is currently out of date, restart the game to update the client mods.");
+						+ "error-outdated=Incompatible client!\\nYour client is currently out of date, restart the game to update the client mods.\n"
+						+ "mod-data-version=1\n");
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -101,6 +104,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 		ftUnsupportedErrorMessage = properties.getOrDefault("error-unauthorized",
 				"FeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.")
 				.replaceAll("\\\\n", "\n");
+		modDataVersion = properties.getOrDefault("mod-data-version", "1");
 
 		// Create CDN path
 		if (!new File(ftCdnPath + "/feraltweaks/chartpatches").exists())
@@ -192,11 +196,15 @@ public class FeralTweaksModule implements ICenturiaModule {
 					if (!rd.hasNext())
 						break; // Invalid
 					String ver = rd.read();
+					if (!rd.hasNext())
+						break; // Invalid
+					String dataVer = rd.read();
 					if (rd.hasNext())
 						break; // Invalid
 
 					// Check handshake
-					if (protVer != FT_VERSION) {
+					if (protVer != FT_VERSION
+							|| !dataVer.equals(modDataVersion + "/" + Centuria.SERVER_UPDATE_VERSION)) {
 						// Handshake failure
 						event.getLoginResponseParameters().addProperty("errorMessage", ftOutdatedErrorMessage);
 						event.setStatus(-26);
