@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Iss;
 using LitJson;
 using System;
 using System.Collections;
@@ -301,5 +302,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 Plugin.LoginErrorMessage = json["params"]["errorMessage"].ToString();
             errorDisplayed = true;
         }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(IssClient), "Login")]
+        public static void Login(ref string name)
+        {
+            // Mention feraltweaks support
+            name = name + "%feraltweaks%enabled%" + Plugin.ProtocolVersion.ToString() + "%" + Plugin.Version;
+        }
+
     }
 }

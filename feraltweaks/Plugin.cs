@@ -424,6 +424,78 @@ namespace feraltweaks
                                     });
                                     break;
                                 }
+                            case "notification":
+                                {
+                                    // Notification
+
+                                    // Read packet
+                                    string message = reader.ReadString();
+                                    string icon = null;
+                                    if (reader.ReadBool())
+                                        icon = reader.ReadString();
+
+                                    // Handle packet
+                                    uiActions.Add(() =>
+                                    {
+                                        NotificationManager.instance.AddNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
+                                    });
+
+                                    break;
+                                }
+                            case "sysnotification":
+                                {
+                                    // Notification
+
+                                    // Read packet
+                                    string message = reader.ReadString();
+                                    string icon = null;
+                                    if (reader.ReadBool())
+                                        icon = reader.ReadString();
+
+                                    // Handle packet
+                                    uiActions.Add(() =>
+                                    {
+                                        NotificationManager.instance.AddSystemNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
+                                    });
+
+                                    break;
+                                }
+                            case "critnotification":
+                                {
+                                    // Notification
+
+                                    // Read packet
+                                    string message = reader.ReadString();
+                                    string icon = null;
+                                    if (reader.ReadBool())
+                                        icon = reader.ReadString();
+
+                                    // Handle packet
+                                    uiActions.Add(() =>
+                                    {
+                                        NotificationManager.instance.AddCriticalNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
+                                    });
+
+                                    break;
+                                }
+                            case "gpnotification":
+                                {
+                                    // Notification
+
+                                    // Read packet
+                                    string message = reader.ReadString();
+                                    string icon = null;
+                                    if (reader.ReadBool())
+                                        icon = reader.ReadString();
+
+                                    // Handle packet
+                                    uiActions.Add(() =>
+                                    {
+                                        NotificationManager.instance.AddGameplayNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
+                                    });
+
+                                    break;
+                                }
                             case "errorpopup":
                                 {
                                     // Error popup
