@@ -11,15 +11,27 @@ import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.dms.DMManager;
+import org.asf.centuria.entities.players.Player;
 import org.asf.centuria.feraltweaks.chatpackets.MarkConvoReadPacket;
+import org.asf.centuria.feraltweaks.gamepackets.DisconnectPacket;
+import org.asf.centuria.feraltweaks.gamepackets.ErrorPopupPacket;
+import org.asf.centuria.feraltweaks.gamepackets.NotificationPacket;
+import org.asf.centuria.feraltweaks.gamepackets.OkPopupPacket;
+import org.asf.centuria.feraltweaks.gamepackets.YesNoPopupPacket;
 import org.asf.centuria.feraltweaks.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
+import org.asf.centuria.modules.eventbus.EventBus;
 import org.asf.centuria.modules.eventbus.EventListener;
+import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
 import org.asf.centuria.modules.events.accounts.AccountPreloginEvent;
+import org.asf.centuria.modules.events.accounts.MiscModerationEvent;
 import org.asf.centuria.modules.events.chat.ChatLoginEvent;
 import org.asf.centuria.modules.events.chat.ChatMessageBroadcastEvent;
+import org.asf.centuria.modules.events.chatcommands.ChatCommandEvent;
+import org.asf.centuria.modules.events.chatcommands.ModuleCommandSyntaxListEvent;
 import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
+import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -113,6 +125,52 @@ public class FeralTweaksModule implements ICenturiaModule {
 			new File(ftDataPath + "/clientmods/assemblies").mkdirs();
 		if (!new File(ftDataPath + "/clientmods/assets").exists())
 			new File(ftDataPath + "/clientmods/assets").mkdirs();
+	}
+
+	@EventListener
+	public void disconnect(AccountDisconnectEvent event) {
+		if (event.getAccount().getOnlinePlayerInstance() != null
+				&& event.getAccount().getOnlinePlayerInstance().getObject(FeralTweaksClientObject.class) != null
+				&& event.getAccount().getOnlinePlayerInstance().getObject(FeralTweaksClientObject.class).isEnabled()) {
+			DisconnectPacket pkt = new DisconnectPacket();
+			pkt.button = "Quit";
+			pkt.title = "Disconnected";
+			switch (event.getType()) {
+			case BANNED:
+				pkt.title = "Banned";
+				pkt.message = "Your account was suspended and has been disconnected.";
+				if (event.getReason() != null)
+					pkt.message += "\n\nReason: " + event.getReason();
+				break;
+			case KICKED:
+				pkt.message = "You were disconnected from the server.";
+				if (event.getReason() != null)
+					pkt.message += "\n\nReason: " + event.getReason();
+				break;
+			case MAINTENANCE:
+				pkt.title = "Server Closed";
+				pkt.message = "The server has been placed under maintenance, hope to be back soon!";
+				break;
+			case SERVER_SHUTDOWN:
+				pkt.title = "Server Closed";
+				pkt.message = "The server has been temporarily shut down, hope to be back soon!";
+				break;
+			case UNKNOWN:
+				pkt.message = "Disconnected from server due to an unknown error.";
+				break;
+			}
+			event.getAccount().getOnlinePlayerInstance().client.sendPacket(pkt);
+			try {
+				// Give time to disconnect
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+
+	@EventListener
+	public void gameServerStartup(GameServerStartupEvent event) {
+		event.registerPacket(new YesNoPopupPacket());
 	}
 
 	@EventListener
@@ -301,6 +359,253 @@ public class FeralTweaksModule implements ICenturiaModule {
 				return;
 			}
 			event.getClient().addObject(new FeralTweaksClientObject(false, null));
+		}
+	}
+
+	@EventListener
+	public void registerCommands(ModuleCommandSyntaxListEvent event) {
+		if (event.hasPermission("moderator")) {
+			event.addCommandSyntaxMessage("announce \"<message>\" [\"<title>\"]");
+			event.addCommandSyntaxMessage("warn \"<player>\" \"<message>\" [\"<title>\"]");
+			event.addCommandSyntaxMessage(
+					"request \"<player>\" \"<message>\" [\"<title>\"] [\"<yes-button>\"] [\"<no-button>\"]");
+			event.addCommandSyntaxMessage("notify \"<player>\" \"<message>\"");
+		}
+	}
+
+	@EventListener
+	public void runCommand(ChatCommandEvent event) {
+		if (event.hasPermission("moderator")) {
+			switch (event.getCommandID().toLowerCase()) {
+			case "announce": {
+				// Handle announcement commands
+
+				event.setHandled();
+				if (event.getCommandArguments().length == 0) {
+					event.respond("Error: missing argument: message");
+					return;
+				}
+
+				// Send announcement
+				for (Player plr : Centuria.gameServer.getPlayers()) {
+					if (plr != null) {
+						if (plr.getObject(FeralTweaksClientObject.class) == null
+								|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+							// Send as DM
+							Centuria.systemMessage(plr, "Server announcement!\n" + event.getCommandArguments()[0],
+									true);
+						} else {
+							// Show popup
+							OkPopupPacket pkt = new OkPopupPacket();
+							pkt.title = "Server Announcement";
+							pkt.message = event.getCommandArguments()[0];
+							if (event.getCommandArguments().length >= 2)
+								pkt.title = event.getCommandArguments()[1];
+							plr.client.sendPacket(pkt);
+						}
+					}
+				}
+				event.respond(
+						"Sent announcement, note that for some this might be sent as a DM as not every client supports FeralTweaks.");
+
+				// Log
+				HashMap<String, String> details = new HashMap<String, String>();
+				details.put("Message", event.getCommandArguments()[0]);
+				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("announce", "Made a server announcement",
+						details, event.getClient().getPlayer().getAccountID(), null));
+
+				break;
+			}
+
+			case "request": {
+				// Handle request commands
+
+				event.setHandled();
+				if (event.getCommandArguments().length == 0) {
+					event.respond("Error: missing argument: player");
+					return;
+				}
+				if (event.getCommandArguments().length == 1) {
+					event.respond("Error: missing argument: message");
+					return;
+				}
+
+				// Find player
+				String uuid = AccountManager.getInstance().getUserByDisplayName(event.getCommandArguments()[0]);
+				if (uuid == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				CenturiaAccount acc = AccountManager.getInstance().getAccount(uuid);
+				if (acc == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				Player plr = acc.getOnlinePlayerInstance();
+				if (plr == null) {
+					// Player offline
+					event.respond(
+							"Player is offline, cannot warn them unless they are ingame, please use DMs instead.");
+					return;
+				}
+
+				// Check support
+				if (plr.getObject(FeralTweaksClientObject.class) == null
+						|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+					// Send as DM
+					event.respond(
+							"Error: the given player has no client mods that support this command, cannot send a popup.");
+					return;
+				} else {
+				}
+
+				// Send popup
+				YesNoPopupPacket pkt = new YesNoPopupPacket();
+				pkt.title = event.getClient().getPlayer().getDisplayName() + " asks";
+				pkt.message = event.getCommandArguments()[1];
+				pkt.yesButton = "Yes";
+				pkt.noButton = "No";
+				pkt.id = "playersent/" + plr.account.getAccountID();
+				if (event.getCommandArguments().length >= 3)
+					pkt.title = event.getCommandArguments()[2];
+				if (event.getCommandArguments().length >= 4)
+					pkt.yesButton = event.getCommandArguments()[3];
+				if (event.getCommandArguments().length >= 5)
+					pkt.noButton = event.getCommandArguments()[4];
+				plr.client.sendPacket(pkt);
+				event.respond("Request sent.");
+
+				// Log
+				HashMap<String, String> details = new HashMap<String, String>();
+				details.put("Message", event.getCommandArguments()[0]);
+				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("request", "Requested something", details,
+						event.getClient().getPlayer().getAccountID(), plr.account));
+
+				break;
+			}
+
+			case "warn": {
+				// Handle warning commands
+
+				event.setHandled();
+				if (event.getCommandArguments().length == 0) {
+					event.respond("Error: missing argument: player");
+					return;
+				}
+				if (event.getCommandArguments().length == 1) {
+					event.respond("Error: missing argument: message");
+					return;
+				}
+
+				// Find player
+				String uuid = AccountManager.getInstance().getUserByDisplayName(event.getCommandArguments()[0]);
+				if (uuid == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				CenturiaAccount acc = AccountManager.getInstance().getAccount(uuid);
+				if (acc == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				Player plr = acc.getOnlinePlayerInstance();
+				if (plr == null) {
+					// Player offline
+					event.respond(
+							"Player is offline, cannot warn them unless they are ingame, please use DMs instead.");
+					return;
+				}
+
+				// Warn
+				if (plr.getObject(FeralTweaksClientObject.class) == null
+						|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+					// Send as DM
+					Centuria.systemMessage(plr, "You have been warned!\n" + event.getCommandArguments()[1], true);
+					event.respond(
+							"Sent DM as system as the user does not have feraltweaks active, cannot display popups without it.");
+				} else {
+					// Show popup
+					ErrorPopupPacket pkt = new ErrorPopupPacket();
+					pkt.title = "You have been warned!";
+					pkt.message = event.getCommandArguments()[1];
+					if (event.getCommandArguments().length >= 3)
+						pkt.title = event.getCommandArguments()[2];
+					plr.client.sendPacket(pkt);
+					event.respond("Warning sent.");
+				}
+
+				// Log
+				HashMap<String, String> details = new HashMap<String, String>();
+				details.put("Message", event.getCommandArguments()[0]);
+				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("request", "Issued a warning", details,
+						event.getClient().getPlayer().getAccountID(), plr.account));
+
+				break;
+			}
+
+			case "notify": {
+				// Handle warning commands
+
+				event.setHandled();
+				if (event.getCommandArguments().length == 0) {
+					event.respond("Error: missing argument: player");
+					return;
+				}
+				if (event.getCommandArguments().length == 1) {
+					event.respond("Error: missing argument: message");
+					return;
+				}
+
+				// Find player
+				String uuid = AccountManager.getInstance().getUserByDisplayName(event.getCommandArguments()[0]);
+				if (uuid == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				CenturiaAccount acc = AccountManager.getInstance().getAccount(uuid);
+				if (acc == null) {
+					// Player not found
+					event.respond("Specified account could not be located");
+					return;
+				}
+				Player plr = acc.getOnlinePlayerInstance();
+				if (plr == null) {
+					// Player offline
+					event.respond(
+							"Player is offline, cannot notify them unless they are ingame, please use DMs instead.");
+					return;
+				}
+
+				// Check support
+				if (plr.getObject(FeralTweaksClientObject.class) == null
+						|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+					// Send as DM
+					event.respond(
+							"Error: the given player has no client mods that support this command, cannot send a popup.");
+					return;
+				} else {
+				}
+
+				// Show popup
+				NotificationPacket pkt = new NotificationPacket();
+				pkt.message = event.getCommandArguments()[1];
+				plr.client.sendPacket(pkt);
+				event.respond("Notification sent.");
+
+				// Log
+				HashMap<String, String> details = new HashMap<String, String>();
+				details.put("Message", event.getCommandArguments()[0]);
+				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("notify", "Sent a notification", details,
+						event.getClient().getPlayer().getAccountID(), plr.account));
+
+				break;
+			}
+			}
 		}
 	}
 }
