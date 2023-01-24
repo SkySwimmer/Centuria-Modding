@@ -447,7 +447,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 				if (plr == null) {
 					// Player offline
 					event.respond(
-							"Player is offline, cannot warn them unless they are ingame, please use DMs instead.");
+							"Player is offline, cannot send popups to them unless they are ingame, please use DMs instead.");
 					return;
 				}
 
