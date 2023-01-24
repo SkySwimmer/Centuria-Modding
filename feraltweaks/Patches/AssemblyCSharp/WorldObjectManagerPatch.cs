@@ -50,7 +50,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             obj.OnObjectInfo(message);
 
             // Override position and rotation
-            if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && Plugin.PatchConfig["OverrideReplicate-" + message.Id] == "True") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"] == "True" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || Plugin.PatchConfig["OverrideReplicate-" + message.Id] != "False")))
+            if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() == "true") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"].ToLower() == "true" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() != "false")))
             {
                 // Only do this if its enabled, otherwise it can be buggy
                 obj.transform.position = new Vector3(message.LastMove.position.x, message.LastMove.position.y, message.LastMove.position.z);

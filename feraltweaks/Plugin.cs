@@ -313,7 +313,7 @@ namespace feraltweaks
                         msg.RouteInfo = NetworkManager.Router._table[id];
 
                         // Check replication settings
-                        if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId] == "True") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"] == "True" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId] != "False")))
+                        if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"].ToLower() == "true" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Remove manually
                             Plugin.uiActions.Add(() =>
@@ -349,7 +349,7 @@ namespace feraltweaks
                         msg.RouteInfo = NetworkManager.Router._table[id];
 
                         // Check replication settings
-                        if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId] == "True") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"] == "True" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId] != "False")))
+                        if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"].ToLower() == "true" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || Plugin.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Move manually
                             Plugin.uiActions.Add(() =>

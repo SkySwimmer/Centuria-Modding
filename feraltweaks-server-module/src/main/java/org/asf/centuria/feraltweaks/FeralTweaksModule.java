@@ -43,6 +43,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public boolean preventNonFTClients;
 	public String ftCdnPath;
 
+	public HashMap<String, Boolean> replicatingObjects = new HashMap<String, Boolean>();
+
 	@Override
 	public String id() {
 		return "feraltweaks";
@@ -80,6 +82,10 @@ public class FeralTweaksModule implements ICenturiaModule {
 				if (key.contains("=")) {
 					value = key.substring(key.indexOf("=") + 1);
 					key = key.substring(0, key.indexOf("="));
+					if (key.startsWith("set-replication-for:")) {
+						replicatingObjects.put(key.substring("set-replication-for:".length()),
+								value.equalsIgnoreCase("enabled"));
+					}
 				}
 				properties.put(key, value);
 			}

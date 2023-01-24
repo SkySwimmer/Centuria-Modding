@@ -135,8 +135,14 @@ public class CdnProcessor extends HttpGetProcessor {
 			// Check feraltweaks requests
 			if (path.equals("/feraltweaks/settings.props")) {
 				// Append to the settings properties file
-				String res = Files.readString(reqFile.toPath());
+				String res = Files.readString(reqFile.toPath()).replace("\r", "");
 				res = res.replace("${server:version}", Centuria.SERVER_UPDATE_VERSION);
+
+				// Add replication
+				for (String obj : module.replicatingObjects.keySet()) {
+					res += "OverrideReplicate-" + obj + "=" + (module.replicatingObjects.get(obj) ? "True" : "False") + "\n";
+				}
+
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/plain", res);
 				return;
