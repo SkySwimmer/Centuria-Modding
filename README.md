@@ -49,8 +49,6 @@ dotnet build
 
 9. You can find the plugin at `feraltweaks/run/plugins/netstandard2.1/feraltweaks.dll`
 
-<br/>
-
 ## Using the Desktop mod
 After putting it in the `BepInEx/plugins/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have BepInEx installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
 
