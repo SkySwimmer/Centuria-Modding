@@ -293,7 +293,7 @@ namespace feraltweaks
         /// </summary>
         public static void WriteDefaultConfig()
         {
-            File.WriteAllText(Paths.ConfigPath + "/feraltweaks/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\n");
+            File.WriteAllText(Paths.ConfigPath + "/feraltweaks/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\n");
         }
 
         /// <summary>

@@ -43,6 +43,10 @@
       <HintPath>lib\feral\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UniRx.Async">
+      <HintPath>lib\feral\UniRx.Async.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>lib\feral\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
