@@ -49,6 +49,22 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // Load object
             obj.OnObjectInfo(message);
 
+            // Patch
+            if (Plugin.PatchConfig.GetValueOrDefault("JiggleResourceInteractions", "false").ToLower() == "true")
+            {
+                NetworkedObjectInfo info = obj.gameObject.GetComponent<NetworkedObjectInfo>();
+                if (info != null && info.actorType == NetworkedObjectInfo.EActorType.harvestItem)
+                {
+                    Interactable inter = obj.gameObject.gameObject.GetComponent<Interactable>();
+                    if (inter != null)
+                    {
+                        // Set jiggle if not a skyjelly
+                        if (inter.interactableDefId != "28486" && inter.interactableDefId != "28512" && inter.interactableDefId != "5615")
+                            inter._jiggleWhileInteracting = true;
+                    }
+                }
+            }
+
             // Override position and rotation
             if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() == "true") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"].ToLower() == "true" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() != "false")))
             {
