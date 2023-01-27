@@ -112,7 +112,8 @@ public class DataProcessor extends HttpGetProcessor {
 				}
 
 				// Check if FT is enabled
-				if (!module.enableByDefault && !acc.getSaveSharedInventory().containsItem("feraltweaks")) {
+				if (!module.enableByDefault && !acc.getSaveSharedInventory().containsItem("feraltweaks")
+						&& !acc.getSaveSpecificInventory().containsItem("feraltweaks")) {
 					// No access
 					this.setResponseCode(403);
 					this.setResponseMessage("Access denied");

@@ -190,7 +190,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 					// Check if online
 					if (acc.getOnlinePlayerInstance() == null) {
 						// Offline, check feraltweaks support
-						if (enableByDefault || acc.getSaveSharedInventory().containsItem("feraltweaks")) {
+						if (enableByDefault || acc.getSaveSharedInventory().containsItem("feraltweaks")
+								|| acc.getSaveSpecificInventory().containsItem("feraltweaks")) {
 							// Add to unread history
 							JsonArray arr = new JsonArray();
 
@@ -270,7 +271,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 					}
 
 					// Check if FT is enabled
-					if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")) {
+					if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+							&& !event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks")) {
 						// Handshake failure
 						event.setStatus(-26);
 						event.getLoginResponseParameters().addProperty("errorMessage", ftUnsupportedErrorMessage);
@@ -286,7 +288,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 			if (!feralTweaks) {
 				// No feraltweaks
-				if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks"))
+				if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+						|| event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks"))
 						&& preventNonFTClients) {
 					// Requires feraltweaks and its not installed/active
 					// Set to error
@@ -314,7 +317,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 			}
 
 			// Check if FT is enabled
-			if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")) {
+			if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+					&& !event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks")) {
 				// Handshake failure
 				event.cancel();
 				return;
@@ -352,7 +356,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 			pkt.add("conversations", arr);
 			event.getClient().sendPacket(pkt);
 		} else {
-			if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks"))
+			if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+					|| event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks"))
 					&& preventNonFTClients) {
 				// Unsupported
 				event.cancel();
