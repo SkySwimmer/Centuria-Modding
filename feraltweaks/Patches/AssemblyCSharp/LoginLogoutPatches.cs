@@ -136,6 +136,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     Avatar_Local.instance = null;
                     GlidingManager.instance.MStart();
                     reloadGlidingManager = true;
+                    QuestManager.instance._linearQuestListData = null;
                     CoreBundleManager2.UnloadAllLevelAssetBundles();
                     CoreLevelManager.LoadLevelSingle("Loading");
                     UserManager.Me = null;
