@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.asf.centuria.Centuria;
 import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
+import org.asf.centuria.accounts.SaveMode;
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.dms.DMManager;
 import org.asf.centuria.entities.players.Player;
@@ -54,6 +55,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public String ftOutdatedErrorMessage;
 	public String modDataVersion;
 	public boolean enableByDefault;
+	public boolean requireManagedSaveData;
 	public boolean preventNonFTClients;
 	public String ftDataPath;
 
@@ -117,6 +119,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 				"FeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.")
 				.replaceAll("\\\\n", "\n");
 		modDataVersion = properties.getOrDefault("mod-data-version", "1");
+		requireManagedSaveData = properties.getOrDefault("require-managed-saves", "false")
+				.equalsIgnoreCase("true");
 
 		// Create data folders
 		if (!new File(ftDataPath + "/feraltweaks/chartpatches").exists())
@@ -276,6 +280,15 @@ public class FeralTweaksModule implements ICenturiaModule {
 						// Handshake failure
 						event.setStatus(-26);
 						event.getLoginResponseParameters().addProperty("errorMessage", ftUnsupportedErrorMessage);
+						return;
+					}
+					
+					// Check managed saves if needed
+					if (requireManagedSaveData && event.getAccount().getSaveMode() != SaveMode.MANAGED) {
+						// Handshake failure
+						event.setStatus(-26);
+						event.getLoginResponseParameters().addProperty("errorMessage",
+								"Please migrate to managed save data before continuing, you can do this from the account panel.");
 						return;
 					}
 

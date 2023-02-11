@@ -246,15 +246,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     return true;
                 }
-                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start >= 500)
+                if (UI_ProgressScreen.instance.IsVisibleOrFading)
                 {
                     Plugin.uiActions.Add(() =>
                     {
-                        UI_ProgressScreen.instance.ClearLabels();
-                        UI_ProgressScreen.instance.SetSpinnerLabelWithIndex(0, "Logging In...");
                         RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
                         UI_ProgressScreen.instance.UpdateLevel();
-                        CoreLoadingManager.ShowProgressScreen(null);
                     });
                     return true;
                 }
