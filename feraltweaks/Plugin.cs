@@ -40,7 +40,6 @@ namespace feraltweaks
         public static string APIAddress = null;
         public static string ChatHost = null;
         public static string VoiceChatHost = null;
-        public static string BlueboxHost = null;
         public static int GamePort = -1;
         public static int VoiceChatPort = -1;
         public static int ChatPort = -1;
@@ -190,7 +189,7 @@ namespace feraltweaks
                                         // Parse environment
                                         string[] payload = args.Split(" ");
                                         if (payload.Length == 0)
-                                            Log.LogError("Error: missing argument(s) for serverenvironment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxhost] [blueboxport] [encryptedgame: true/false]");
+                                            Log.LogError("Error: missing argument(s) for serverenvironment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
                                         if (payload.Length >= 1)
                                             DirectorAddress = payload[0];
                                         if (payload.Length >= 2)
@@ -206,11 +205,9 @@ namespace feraltweaks
                                         if (payload.Length >= 7)
                                             VoiceChatPort = int.Parse(payload[6]);
                                         if (payload.Length >= 8)
-                                            BlueboxHost = payload[7];
+                                            BlueboxPort = int.Parse(payload[7]);
                                         if (payload.Length >= 9)
-                                            BlueboxPort = int.Parse(payload[8]);
-                                        if (payload.Length >= 10)
-                                            EncryptedGame = payload[9].ToLower() == "true" ? 1 : 0;
+                                            EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
                                         break;
                                     }
                                 case "autologin":

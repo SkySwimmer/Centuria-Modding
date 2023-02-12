@@ -192,8 +192,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.Environment.serviceApiHost = Plugin.APIAddress;
                 NetworkManager.Environment.webAPIHost = Plugin.APIAddress;
             }
-            if (Plugin.BlueboxHost != null)
-                NetworkManager.Environment.blueboxHost = Plugin.BlueboxHost;
             if (Plugin.BlueboxPort != -1)
                 NetworkManager.Environment.blueboxPort = Plugin.BlueboxPort;
             if (Plugin.ChatHost != null)
