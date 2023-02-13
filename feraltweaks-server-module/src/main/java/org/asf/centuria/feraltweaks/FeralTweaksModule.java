@@ -484,7 +484,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 				pkt.message = event.getCommandArguments()[1];
 				pkt.yesButton = "Yes";
 				pkt.noButton = "No";
-				pkt.id = "playersent/" + plr.account.getAccountID();
+				pkt.id = "playersent/" + event.getAccount().getAccountID();
 				if (event.getCommandArguments().length >= 3)
 					pkt.title = event.getCommandArguments()[2];
 				if (event.getCommandArguments().length >= 4)
