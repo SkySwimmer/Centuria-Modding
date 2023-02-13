@@ -861,6 +861,7 @@ public class LauncherMain {
 					log("Waiting for client startup...");
 					progressBar.setMaximum(100);
 					progressBar.setValue(0);
+					panel_1.repaint();
 				});
 				proc.onExit().thenAccept(t -> {
 					running = false;
@@ -876,6 +877,7 @@ public class LauncherMain {
 							log("Communicating with client...");
 							progressBar.setMaximum(100);
 							progressBar.setValue(0);
+							panel_1.repaint();
 						});
 						launcherHandoff(cl, authToken, hosts.get("api").getAsString(), serverInfo, hosts, ports,
 								completedTutorial);
@@ -884,7 +886,10 @@ public class LauncherMain {
 							log("Finished startup!");
 							progressBar.setMaximum(100);
 							progressBar.setValue(0);
-							frmCenturiaLauncher.setVisible(false);
+							panel_1.repaint();
+						});
+						Thread.sleep(1000);
+						SwingUtilities.invokeAndWait(() -> {
 							frmCenturiaLauncher.dispose();
 						});
 						proc.waitFor();
@@ -950,11 +955,10 @@ public class LauncherMain {
 			url += ele.getAsString();
 
 			// Download patch
-			System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading chart patch: " + url);
+			String file = ele.getAsString();
 			String patch = downloadProtectedString(url, authToken);
 
 			// Send patch
-			String file = ele.getAsString();
 			System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Sending chart patch: " + file);
 			sendCommand(cl, "chartpatch", Base64.getEncoder()
 					.encodeToString((file + "::" + patch.replace("\t", "    ").replace("\r", "")).getBytes("UTF-8")));

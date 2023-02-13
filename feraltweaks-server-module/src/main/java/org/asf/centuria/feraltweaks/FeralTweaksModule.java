@@ -119,8 +119,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 				"FeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.")
 				.replaceAll("\\\\n", "\n");
 		modDataVersion = properties.getOrDefault("mod-data-version", "1");
-		requireManagedSaveData = properties.getOrDefault("require-managed-saves", "false")
-				.equalsIgnoreCase("true");
+		requireManagedSaveData = properties.getOrDefault("require-managed-saves", "false").equalsIgnoreCase("true");
 
 		// Create data folders
 		if (!new File(ftDataPath + "/feraltweaks/chartpatches").exists())
@@ -282,7 +281,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 						event.getLoginResponseParameters().addProperty("errorMessage", ftUnsupportedErrorMessage);
 						return;
 					}
-					
+
 					// Check managed saves if needed
 					if (requireManagedSaveData && event.getAccount().getSaveMode() != SaveMode.MANAGED) {
 						// Handshake failure
@@ -495,12 +494,6 @@ public class FeralTweaksModule implements ICenturiaModule {
 				plr.client.sendPacket(pkt);
 				event.respond("Request sent.");
 
-				// Log
-				HashMap<String, String> details = new HashMap<String, String>();
-				details.put("Message", event.getCommandArguments()[0]);
-				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("request", "Requested something", details,
-						event.getClient().getPlayer().getAccountID(), plr.account));
-
 				break;
 			}
 
@@ -558,7 +551,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 				// Log
 				HashMap<String, String> details = new HashMap<String, String>();
-				details.put("Message", event.getCommandArguments()[0]);
+				details.put("Message", event.getCommandArguments()[1]);
 				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("request", "Issued a warning", details,
 						event.getClient().getPlayer().getAccountID(), plr.account));
 
@@ -614,12 +607,6 @@ public class FeralTweaksModule implements ICenturiaModule {
 				pkt.message = event.getCommandArguments()[1];
 				plr.client.sendPacket(pkt);
 				event.respond("Notification sent.");
-
-				// Log
-				HashMap<String, String> details = new HashMap<String, String>();
-				details.put("Message", event.getCommandArguments()[0]);
-				EventBus.getInstance().dispatchEvent(new MiscModerationEvent("notify", "Sent a notification", details,
-						event.getClient().getPlayer().getAccountID(), plr.account));
 
 				break;
 			}
