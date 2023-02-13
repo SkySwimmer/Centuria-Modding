@@ -935,13 +935,6 @@ public class LauncherMain {
 		if (!api.endsWith("/"))
 			api += "/";
 
-		// Send server environment
-		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Sending configuration...");
-		sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
-				hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
-				hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
-				ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean());
-
 		// Send options
 		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading and sending configuration...");
 		sendCommand(cl, "config",
@@ -968,6 +961,13 @@ public class LauncherMain {
 			sendCommand(cl, "chartpatch", Base64.getEncoder()
 					.encodeToString((file + "::" + patch.replace("\t", "    ").replace("\r", "")).getBytes("UTF-8")));
 		}
+
+		// Send server environment
+		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Sending configuration...");
+		sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
+				hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
+				hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
+				ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean());
 
 		// Send autologin
 		if (completedTutorial) {
