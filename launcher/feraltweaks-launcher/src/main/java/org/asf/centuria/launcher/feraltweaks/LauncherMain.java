@@ -879,8 +879,13 @@ public class LauncherMain {
 							progressBar.setValue(0);
 							panel_1.repaint();
 						});
-						launcherHandoff(cl, authToken, hosts.get("api").getAsString(), serverInfo, hosts, ports,
-								completedTutorial);
+						try {
+							launcherHandoff(cl, authToken, hosts.get("api").getAsString(), serverInfo, hosts, ports,
+									completedTutorial);
+						} catch (Exception e) {
+							proc.destroyForcibly();
+							throw e;
+						}
 						cl.close();
 						SwingUtilities.invokeAndWait(() -> {
 							log("Finished startup!");
