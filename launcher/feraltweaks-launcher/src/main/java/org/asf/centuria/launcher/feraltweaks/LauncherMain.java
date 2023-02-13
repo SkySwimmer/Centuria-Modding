@@ -869,37 +869,37 @@ public class LauncherMain {
 				while (running) {
 					// Check file
 					if (new File("client/build/launcherhandoff." + proc.pid() + ".port").exists()) {
-						// Connect
-						int port = Integer.parseInt(Files
-								.readString(new File("client/build/launcherhandoff." + proc.pid() + ".port").toPath()));
-						Socket cl = new Socket("127.0.0.1", port);
-						SwingUtilities.invokeAndWait(() -> {
-							log("Communicating with client...");
-							progressBar.setMaximum(100);
-							progressBar.setValue(0);
-							panel_1.repaint();
-						});
 						try {
+							// Connect
+							int port = Integer.parseInt(Files.readString(
+									new File("client/build/launcherhandoff." + proc.pid() + ".port").toPath()));
+							Socket cl = new Socket("127.0.0.1", port);
+							SwingUtilities.invokeAndWait(() -> {
+								log("Communicating with client...");
+								progressBar.setMaximum(100);
+								progressBar.setValue(0);
+								panel_1.repaint();
+							});
 							launcherHandoff(cl, authToken, hosts.get("api").getAsString(), serverInfo, hosts, ports,
 									completedTutorial);
+							cl.close();
+							SwingUtilities.invokeAndWait(() -> {
+								log("Finished startup!");
+								progressBar.setMaximum(100);
+								progressBar.setValue(0);
+								panel_1.repaint();
+							});
+							Thread.sleep(1000);
+							SwingUtilities.invokeAndWait(() -> {
+								frmCenturiaLauncher.dispose();
+							});
+							proc.waitFor();
+							System.exit(proc.exitValue());
+							return;
 						} catch (Exception e) {
 							proc.destroyForcibly();
 							throw e;
 						}
-						cl.close();
-						SwingUtilities.invokeAndWait(() -> {
-							log("Finished startup!");
-							progressBar.setMaximum(100);
-							progressBar.setValue(0);
-							panel_1.repaint();
-						});
-						Thread.sleep(1000);
-						SwingUtilities.invokeAndWait(() -> {
-							frmCenturiaLauncher.dispose();
-						});
-						proc.waitFor();
-						System.exit(proc.exitValue());
-						return;
 					}
 					Thread.sleep(1000);
 				}
