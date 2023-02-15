@@ -163,8 +163,7 @@ public class DataProcessor extends HttpGetProcessor {
 			} else if (path.equals("/clientmods/assemblies/index.json")) {
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftDataPath, "clientmods/assemblies"), res, "/clientmods/assemblies/",
-						"/BepInEx/plugins/");
+				scan(new File(module.ftDataPath, "clientmods/assemblies"), res, "/clientmods/assemblies/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
