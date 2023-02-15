@@ -1,0 +1,9 @@
+Libraries and tools used by the FeralTweaks bootstrap project:
+ - Il2CppDumper: credits to Perfare
+ - HarmonyX: credits to pardeike and the developers of BepInEx
+ - Il2CppInterop: credits to the developers of BepInEx
+ - Newtonsoft.Json: credits to jamesnk
+ - Mono.Cecil: credits to Jb Evain
+ - UnityDoorstop: credits to ghorsington
+ - AssetRipper.VersionUtilities: credits to ds5678
+ - Funchook: credits to kubo

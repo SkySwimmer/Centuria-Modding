@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,8 +27,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void OnOpen(ref UI_Window_AccountCreation __instance)
         {
             // Log
-            ManualLogSource logger = Plugin.logger;
-            logger.LogInfo("Patching account creation...");
+            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching account creation...");
 
             // Check AllowNonEmailUsernames
             if (Plugin.PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")
@@ -144,7 +141,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             status = resp["error"];
                     }
                     catch (Exception e) {
-                        Plugin.logger.LogError("error " + e);
+                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("error " + e);
                     }
                 }
                 if (user == __instance.Username)

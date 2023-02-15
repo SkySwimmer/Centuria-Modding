@@ -754,16 +754,31 @@ public class LauncherMain {
 							progressBar.setValue(0);
 						});
 						try {
-							new ProcessBuilder("wine", "reg", "add", "HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides",
-									"/v", "winhttp", "/d", "native,builtin", "/f").start().waitFor();
-							new ProcessBuilder("wine", "reg", "add", "HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides",
-									"/v", "d3d11", "/d", "native", "/f").start().waitFor();
-							new ProcessBuilder("wine", "reg", "add", "HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides",
-									"/v", "d3d10core", "/d", "native", "/f").start().waitFor();
-							new ProcessBuilder("wine", "reg", "add", "HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides",
-									"/v", "dxgi", "/d", "native", "/f").start().waitFor();
-							new ProcessBuilder("wine", "reg", "add", "HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides",
-									"/v", "d3d9", "/d", "native", "/f").start().waitFor();
+							ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
+									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
+									"native,builtin", "/f");
+							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+							proc.start().waitFor();
+							proc = new ProcessBuilder("wine", "reg", "add",
+									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
+									"native", "/f");
+							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+							proc.start().waitFor();
+							proc = new ProcessBuilder("wine", "reg", "add",
+									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
+									"native", "/f");
+							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+							proc.start().waitFor();
+							proc = new ProcessBuilder("wine", "reg", "add",
+									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "dxgi", "/d",
+									"native", "/f");
+							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+							proc.start().waitFor();
+							proc = new ProcessBuilder("wine", "reg", "add",
+									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d",
+									"native", "/f");
+							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+							proc.start().waitFor();
 						} catch (Exception e) {
 							prefix.delete();
 							SwingUtilities.invokeAndWait(() -> {

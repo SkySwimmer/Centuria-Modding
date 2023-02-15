@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;

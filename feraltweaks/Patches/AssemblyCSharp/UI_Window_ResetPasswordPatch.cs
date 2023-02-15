@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -19,8 +17,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Log
-            ManualLogSource logger = Plugin.logger;
-            logger.LogInfo("Patching password reset window...");
+            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching password reset window...");
 
             // Check AllowNonEmailUsernames
             if (Plugin.PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")

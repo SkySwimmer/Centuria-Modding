@@ -304,7 +304,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void Login(ref string name)
         {
             // Mention feraltweaks support
-            name = name + "%feraltweaks%enabled%" + Plugin.ProtocolVersion.ToString() + "%" + Plugin.Version + "%" + Plugin.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
+            name = name + "%feraltweaks%enabled%" + Plugin.ProtocolVersion.ToString() + "%" + FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().Version + "%" + Plugin.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
         }
 
     }

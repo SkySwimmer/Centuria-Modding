@@ -1,8 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using BepInEx.IL2CPP;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using HarmonyLib.Tools;
 using feraltweaks.Patches.AssemblyCSharp;
 using System;
@@ -18,16 +14,21 @@ using Server;
 using UnityEngine;
 using Random = System.Random;
 using LitJson;
+using FeralTweaks.Mods;
 
 namespace feraltweaks
 {
-    [BepInProcess("Fer.al.exe")]
-    [BepInProcess("Feral.exe")]
-    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-    public class Plugin : BasePlugin
+    public class Plugin : FeralTweaksMod
     {
         public const int ProtocolVersion = 1;
-        public const string Version = "beta-1.0.0";
+
+        public override string ID => "feraltweaks";
+        public override string Version => "beta-1.0.0";
+
+        protected override void Define()
+        {
+        }
+
         public static List<Func<bool>> actions = new List<Func<bool>>();
         public static List<Action> uiActions = new List<Action>();
         public static Dictionary<string, string> Patches = new Dictionary<string, string>();
@@ -48,8 +49,6 @@ namespace feraltweaks
 
         // Error message container for when login fails and the server includes a feraltweaks message field in the response
         public static string LoginErrorMessage = null;
-
-        public static ManualLogSource logger;
 
         private static void StartActionThread()
         {
@@ -87,22 +86,20 @@ namespace feraltweaks
             th.Start();
         }
 
-        public override void Load()
+        public override void Init()
         {
-            logger = Log;
-
             // Load config
-            logger.LogInfo("Loading configuration...");
-            Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks");
-            if (!File.Exists(Paths.ConfigPath + "/feraltweaks/settings.props"))
+            LogInfo("Loading configuration...");
+            Directory.CreateDirectory(ConfigDir);
+            if (!File.Exists(ConfigDir + "/settings.props"))
             {
-                logger.LogInfo("Writing defaults...");
+                LogInfo("Writing defaults...");
                 Plugin.WriteDefaultConfig();
             }
             else
             {
-                logger.LogInfo("Processing data...");
-                foreach (string line in File.ReadAllLines(Paths.ConfigPath + "/feraltweaks/settings.props"))
+                LogInfo("Processing data...");
+                foreach (string line in File.ReadAllLines(ConfigDir + "/settings.props"))
                 {
                     if (line == "" || line.StartsWith("#") || !line.Contains("="))
                         continue;
@@ -111,66 +108,62 @@ namespace feraltweaks
                     PatchConfig[key] = value;
                 }
             }
-            logger.LogInfo("Configuration loaded.");
+            LogInfo("Configuration loaded.");
 
             // Start action thread
             StartActionThread();
 
             // Patch with harmony
-            Log.LogInfo("Applying patches...");
-            Harmony.CreateAndPatchAll(typeof(BaseDefPatch));
-            Harmony.CreateAndPatchAll(typeof(CoreChartDataManagerPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_AccountCreationPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_ChangeDisplayNamePatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_ResetPasswordPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_TradeItemQuantityPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_OkPopupPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_Window_YesNoPopupPatch));
-            Harmony.CreateAndPatchAll(typeof(WWTcpClientPatch));
-            Harmony.CreateAndPatchAll(typeof(WindUpdraftPatch));
-            Harmony.CreateAndPatchAll(typeof(LoginLogoutPatches));
-            Harmony.CreateAndPatchAll(typeof(CoreBundleManager2Patch));
-            Harmony.CreateAndPatchAll(typeof(WorldObjectManagerPatch));
-            Harmony.CreateAndPatchAll(typeof(MessageRouterPatch));
-            Harmony.CreateAndPatchAll(typeof(UI_VersionPatch));
-            Harmony.CreateAndPatchAll(typeof(ChatPatches));
-            Harmony.CreateAndPatchAll(typeof(HttpRequestPatch));
-            Harmony.CreateAndPatchAll(typeof(DOTweenAnimatorPatch));
+            LogInfo("Applying patches...");
+            ApplyPatch(typeof(BaseDefPatch));
+            ApplyPatch(typeof(CoreChartDataManagerPatch));
+            ApplyPatch(typeof(UI_Window_AccountCreationPatch));
+            ApplyPatch(typeof(UI_Window_ChangeDisplayNamePatch));
+            ApplyPatch(typeof(UI_Window_ResetPasswordPatch));
+            ApplyPatch(typeof(UI_Window_TradeItemQuantityPatch));
+            ApplyPatch(typeof(UI_Window_OkPopupPatch));
+            ApplyPatch(typeof(UI_Window_YesNoPopupPatch));
+            ApplyPatch(typeof(WWTcpClientPatch));
+            ApplyPatch(typeof(WindUpdraftPatch));
+            ApplyPatch(typeof(LoginLogoutPatches));
+            ApplyPatch(typeof(CoreBundleManager2Patch));
+            ApplyPatch(typeof(WorldObjectManagerPatch));
+            ApplyPatch(typeof(UI_VersionPatch));
+            ApplyPatch(typeof(MessageRouterPatch));
+            ApplyPatch(typeof(ChatPatches));
+            ApplyPatch(typeof(HttpRequestPatch));
+            ApplyPatch(typeof(DOTweenAnimatorPatch));
 
-            // Handle command line
-            Log.LogInfo("Waiting for commands from launcher...");
-            Random rnd = new Random();
-            int port = 0;
-            TcpListener listener;
-            while (true)
+            // Check command line
+            LogInfo("Processing command line arguments...");
+            int handoffPort = 0;
+            int i = 0;
+            foreach (string arg in Environment.GetCommandLineArgs())
             {
-                port = rnd.Next(10000, short.MaxValue);
+                if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
+                {
+                    handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
+                }
+                i++;
+            }
+            if (handoffPort != 0)
+            {
+                LogInfo("Connecting to launcher...");
+                TcpClient client = null;
                 try
                 {
-                    listener = new TcpListener(IPAddress.Loopback, port);
-                    listener.Start();
-                    break;
+                    client = new TcpClient("127.0.0.1", handoffPort);
                 }
                 catch
                 {
+                    LogError("Failed to connect to the launcher!");
                 }
-            }
-
-            bool done = false;
-            bool wait = false;
-            Log.LogInfo("Waiting for commands on port " + port + "...");
-            File.WriteAllText("launcherhandoff." + Process.GetCurrentProcess().Id + ".port", port.ToString());
-            Task.Run(() => {
-                try
+                if (client != null)
                 {
-                    TcpClient client = listener.AcceptTcpClient();
-                    wait = true;
-
-                    // Read commands
-                    StreamReader rd = new StreamReader(client.GetStream());
-                    Log.LogInfo("Launcher connected, processing...");
+                    LogInfo("Connected to the launcher, processing...");
                     try
                     {
+                        StreamReader rd = new StreamReader(client.GetStream());
                         while (true)
                         {
                             string args = "";
@@ -189,7 +182,7 @@ namespace feraltweaks
                                         // Parse environment
                                         string[] payload = args.Split(" ");
                                         if (payload.Length == 0)
-                                            Log.LogError("Error: missing argument(s) for serverenvironment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
+                                            LogError("Error: missing argument(s) for serverenvironment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
                                         if (payload.Length >= 1)
                                             DirectorAddress = payload[0];
                                         if (payload.Length >= 2)
@@ -213,7 +206,7 @@ namespace feraltweaks
                                 case "autologin":
                                     {
                                         if (args == "")
-                                            Log.LogError("Error: missing argument for autologin: token");
+                                            LogError("Error: missing argument for autologin: token");
                                         else
                                             AutoLoginToken = args;
                                         break;
@@ -221,7 +214,7 @@ namespace feraltweaks
                                 case "chartpatch":
                                     {
                                         if (args == "")
-                                            Log.LogError("Error: missing argument for patchchart: patch-data");
+                                            LogError("Error: missing argument for patchchart: patch-data");
                                         else
                                         {
                                             // Process data
@@ -234,7 +227,7 @@ namespace feraltweaks
                                             }
                                             catch
                                             {
-                                                Log.LogError("Error: invalid patch data for patchchart");
+                                                LogError("Error: invalid patch data for patchchart");
                                             }
                                         }
                                         break;
@@ -242,7 +235,7 @@ namespace feraltweaks
                                 case "config":
                                     {
                                         if (args == "")
-                                            Log.LogError("Error: missing argument for config: configuration-data");
+                                            LogError("Error: missing argument for config: configuration-data");
                                         else
                                         {
                                             try
@@ -260,7 +253,7 @@ namespace feraltweaks
                                             }
                                             catch
                                             {
-                                                Log.LogError("Error: invalid configuration data for config");
+                                                LogError("Error: invalid configuration data for config");
                                             }
                                         }
                                         break;
@@ -270,21 +263,16 @@ namespace feraltweaks
                     }
                     catch { }
                     client.Close();
+                }
+            }
+            else
+                LogInfo("No command line parameters received for launcher handoff, starting regularly...");
+        }
 
-                    done = true;
-                }
-                catch
-                {
-                }
-            });
-            for (int i = 0; i < 10 && !done && !wait; i++)
-                Thread.Sleep(1000);
-            while (wait && !done)
-                Thread.Sleep(100);
-            listener.Stop();
-            if (!done)
-                Log.LogInfo("Timed out while waiting for commands, starting regularly.");
-            File.Delete("launcherhandoff." + Process.GetCurrentProcess().Id + ".port");
+        private void ApplyPatch(Type type)
+        {
+            LogInfo("Applying patch: " + type.FullName);
+            Harmony.CreateAndPatchAll(type);
         }
 
         /// <summary>
@@ -292,7 +280,7 @@ namespace feraltweaks
         /// </summary>
         public static void WriteDefaultConfig()
         {
-            File.WriteAllText(Paths.ConfigPath + "/feraltweaks/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\nJiggleResourceInteractions=false\nCityFeraMovingRocks=false\nCityFeraTeleporterSFX=false\nHttpDnsOverrides=game-assets.fer.al:23.218.218.148\n");
+            File.WriteAllText(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\nJiggleResourceInteractions=false\nCityFeraMovingRocks=false\nCityFeraTeleporterSFX=false\nHttpDnsOverrides=game-assets.fer.al:23.218.218.148\n");
         }
 
         /// <summary>
@@ -317,7 +305,7 @@ namespace feraltweaks
                             // Remove manually
                             Plugin.uiActions.Add(() =>
                             {
-                                Plugin.logger.LogInfo("Destroying object: " + msg.ObjectId);
+                                FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Destroying object: " + msg.ObjectId);
                                 if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
                                 {
                                     WorldObject obj = WorldObjectManager.instance._objects._objectsById[msg.ObjectId];
@@ -564,7 +552,7 @@ namespace feraltweaks
                                 }
                             default:
                                 {
-                                    logger.LogError("Unhandled FeralTweaks packet: " + id + ": " + reader);
+                                    FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Unhandled FeralTweaks packet: " + id + ": " + reader);
                                     break;
                                 }
                         }
@@ -598,7 +586,7 @@ namespace feraltweaks
                         }
                     default:
                         {
-                            logger.LogError("Unhandled FeralTweaks chat packet: " + id + ": " + JsonMapper.ToJson(packet));
+                            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Unhandled FeralTweaks chat packet: " + id + ": " + JsonMapper.ToJson(packet));
                             break;
                         }
                 }

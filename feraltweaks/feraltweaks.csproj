@@ -1,21 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net60</TargetFramework>
     <AssemblyName>feraltweaks</AssemblyName>
     <Description>Chart modification system and various tweaks</Description>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>  
+</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>run\BepInEx\plugins\</OutputPath>
+    <OutputPath>run\FeralTweaks\mods\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BepInEx.IL2CPP" Version="6.0.0-*" IncludeAssets="compile" />
-    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.0.0" />
+    <PackageReference Include="HarmonyX" Version="2.10.1" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.3" />
+    <Reference Include="FeralTweaksBootstrap">
+      <HintPath>lib\ftl\FeralTweaksBootstrap.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

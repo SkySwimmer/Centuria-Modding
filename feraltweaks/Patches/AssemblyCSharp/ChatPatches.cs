@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Il2CppInterop.Runtime;
 using LitJson;
 using Server;
 using Services.Chat;
@@ -179,11 +180,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Swap out the back button handler
                 FeralButton btn = GetChild(tab, "ChatPanel_Private/Group_Participant/Button_Back").GetComponent<FeralButton>();
-                btn.onClick.AddListener(cont, cont.GetIl2CppType().GetMethod("BtnClicked_CloseConversation"));
+                btn.onClick.m_PersistentCalls.m_Calls.Add(new UnityEngine.Events.PersistentCall()
+                {
+                    m_Target = cont,
+                    m_MethodName = "BtnClicked_CloseConversation"
+                });
                 btn.onClick.m_PersistentCalls.m_Calls.RemoveAt(1);
 
                 // Set inactive
                 tab.SetActive(false);
+
+                // Re-add emoji panel
+                // TODO
 
                 // Set public chat as active
                 __instance._inputField.gameObject.transform.parent.parent.gameObject.SetActive(true);
@@ -236,13 +244,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void GetTimeStampUIString(ref ChatEntry __instance, ref string __result)
         {
             // Return timestamp
-            // First, lets explain what happens here
-            // Due to a mistake by WW, the ChatEntry.timeStamp field is not the actual UTC timestamp
-            // It is actually the UTC timestamp minus the UTC offset of the current timezone
-            // We cannot patch this issue sadly due to an issue with BepInEx, we cannot edit constructors
-            //
-            // Instead, since localTimeStamp is the actual UTC timestamp so we use that and add the current UTC
-            // offset to the current time to get the actual local time of the message
             Il2CppSystem.DateTime local = __instance.localTimeStamp.Add(Il2CppSystem.TimeZone.CurrentTimeZone.GetUtcOffset(Il2CppSystem.DateTime.Now.Date));
             Il2CppSystem.TimeSpan span = Il2CppSystem.DateTime.Now - local;
 
@@ -278,6 +279,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyListItem_ChatConversation), "RefreshLastChatEntry")]
         public static void RefreshLastChatEntry(ref UI_LazyListItem_ChatConversation __instance, ChatEntry inChatEntry)
         {
+            if (inChatEntry == null)
+                return;
             GameObject marker = GetChild(__instance._lastChatTimeText.gameObject.transform.parent.gameObject, "UI_UnreadIndicator");
             if (ChatManager.instance.UnreadConversations.Contains(inChatEntry.conversationId))
             {
@@ -371,7 +374,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 pkt["auth_token"] = NetworkManager.autoLoginAuthToken;
                 pkt["feraltweaks"] = "enabled";
                 pkt["feraltweaks_protocol"] = Plugin.ProtocolVersion.ToString();
-                pkt["feraltweaks_version"] = Plugin.Version;
+                pkt["feraltweaks_version"] = FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().Version;
                 string msg = JsonMapper.ToJson(pkt);
                 NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
                 return false;

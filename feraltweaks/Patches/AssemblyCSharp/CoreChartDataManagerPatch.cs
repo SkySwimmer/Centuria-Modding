@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Il2CppSystem;
 using Il2CppSystem.Collections.Generic;
 using System.IO;
@@ -71,17 +69,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
             patched = true;
 
             // Okay time to load over the original game
-            ManualLogSource logger = Plugin.logger;
-            logger.LogInfo("Loading chart patches...");
+            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Loading chart patches...");
 
             // Check
             if (!Plugin.PatchConfig.ContainsKey("DisableClientChartPatches") || Plugin.PatchConfig["DisableClientChartPatches"] != "True")
             {
                 // Create patch directory
-                Directory.CreateDirectory(Paths.ConfigPath + "/feraltweaks/chartpatches");
+                Directory.CreateDirectory(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/chartpatches");
 
                 // Read patches
-                foreach (FileInfo file in new DirectoryInfo(Paths.ConfigPath + "/feraltweaks/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
+                foreach (FileInfo file in new DirectoryInfo(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
                 {
                     string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
                     ApplyPatch(patch, file.Name);
@@ -98,8 +95,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static void ApplyPatch(string patch, string fileName)
         {
             // Parse patch
-            ManualLogSource logger = Plugin.logger;
-            logger.LogInfo("Loading patch: " + fileName);
+            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Loading patch: " + fileName);
             bool inPatchBlock = false;
             bool inNewDefBlock = false;
             string defID = "";
@@ -118,7 +114,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     System.Collections.Generic.List<string> args = new System.Collections.Generic.List<string>(line.Split(" "));
                     if (args.Count <= 1)
                     {
-                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName);
+                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName);
                         break;
                     }
                     else
@@ -477,7 +473,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                             }
                                         default:
                                             {
-                                                logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": chart not recognized");
+                                                FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName + ": chart not recognized");
                                                 error = true;
                                                 break;
                                             }
@@ -488,14 +484,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 {
                                     if (chart == null)
                                     {
-                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
                                         error = true;
                                         break;
                                     }
-                                    logger.LogInfo("Clear def: " + args[0]);
+                                    FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Clear def: " + args[0]);
                                     BaseDef def = chart.GetDef(args[0]);
                                     if (def == null)
-                                        logger.LogError("Error! Definition not found!");
+                                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Error! Definition not found!");
                                     else
                                     {
                                         def._components._components.Clear();
@@ -507,7 +503,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 {
                                     if (chart == null)
                                     {
-                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
                                         error = true;
                                         break;
                                     }
@@ -520,7 +516,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 {
                                     if (chart == null)
                                     {
-                                        logger.LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
+                                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName + ": no active chart set");
                                         error = true;
                                         break;
                                     }
@@ -531,7 +527,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 }
                             default:
                                 {
-                                    logger.LogError("Invalid command: " + line + " found while parsing " + fileName);
+                                    FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Invalid command: " + line + " found while parsing " + fileName);
                                     error = true;
                                     break;
                                 }
@@ -551,10 +547,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         defData = "";
 
                         // Get def
-                        logger.LogInfo("Patching " + defID + " in chart " + chart.ChartName);
+                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching " + defID + " in chart " + chart.ChartName);
                         BaseDef def = chart.GetDef(defID, true);
                         if (def == null)
-                            logger.LogError("Error! Definition not found!");
+                            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Error! Definition not found!");
                         else
                         {
                             PatchDef(chartPatch, def);
@@ -570,10 +566,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         defData = "";
 
                         // Get def
-                        logger.LogInfo("Creating " + defID + " in chart " + chart.ChartName);
+                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Creating " + defID + " in chart " + chart.ChartName);
                         BaseDef def = chart.GetDef(defID, true);
                         if (def != null)
-                            logger.LogError("Error! Chart definition already exists");
+                            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("Error! Chart definition already exists");
                         else
                         {
                             def = defCreator();

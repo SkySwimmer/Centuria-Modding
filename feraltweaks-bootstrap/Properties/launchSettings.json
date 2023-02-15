@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "FeralTweaksBootstrap": {
+      "commandName": "Executable",
+      "executablePath": ".\\Fer.al.exe",
+      "workingDirectory": "run"
+    }
+  }
+}

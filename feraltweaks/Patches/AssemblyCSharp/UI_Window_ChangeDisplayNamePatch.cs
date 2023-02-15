@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
 
@@ -16,10 +14,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 return;
             }
-            
+
             // Log
-            ManualLogSource logger = Plugin.logger;
-            logger.LogInfo("Patching display name change window...");
+            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching display name change window...");
 
             // Check FlexibleDisplayNames
             if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
