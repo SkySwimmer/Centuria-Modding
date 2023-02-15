@@ -23,7 +23,7 @@ namespace FeralTweaksBootstrap
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
         }
 
-        public InteropLogger()
+        static InteropLogger()
         {
             // Set up log
             LogWriter = new StreamWriter("FeralTweaks/logs/interop.log");

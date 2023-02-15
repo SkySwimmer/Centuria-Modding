@@ -348,14 +348,14 @@ namespace FeralTweaksBootstrap
                 DetourProvider = new Il2CppDetourProvider()
             });
 
-            // Load dobby for the current platform
+            // Load funchook for the current platform
             switch (plat)
             {
                 case PlatformType.WINDOWS:
                     NativeLibrary.Load("FeralTweaks/lib/win/funchook.dll");
                     break;
                 case PlatformType.OSX:
-                    NativeLibrary.Load("FeralTweaks/lib/osx/libfunchook.dylib");
+                    NativeLibrary.Load("libfunchook.dylib");
                     break;
                 case PlatformType.ANDROID:
                     // TODO: idfk how to do this atm

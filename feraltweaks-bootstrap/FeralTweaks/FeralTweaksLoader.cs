@@ -165,38 +165,7 @@ namespace FeralTweaks
                     Assembly asm = Assembly.Load(mod.Name.Remove(mod.Name.LastIndexOf(".dll")));
 
                     // Find mod types
-                    foreach (Type t in asm.GetTypes())
-                    {
-                        if (t.IsAssignableTo(typeof(FeralTweaksMod)))
-                        {
-                            try
-                            {
-                                // Attempt to load type
-                                ConstructorInfo constr = t.GetConstructor(new Type[0]);
-                                if (constr == null)
-                                    throw new ArgumentException("No empty constructor");
-                                FeralTweaksMod inst = (FeralTweaksMod)constr.Invoke(new object[0]);
-                                try
-                                {
-                                    // Attempt to load mod instance
-                                    inst.Initialize();
-
-                                    // Find existing mod
-                                    if (IsModLoaded(inst.ID))
-                                        throw new ArgumentException("Duplicate mod detected! ID: " + inst.ID + " was loaded twice!");
-                                    mods.Add(inst);
-                                }
-                                catch (Exception e)
-                                {
-                                    LogError("Failed to load mod: " + inst.ID + ": " + e);
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                LogError("Failed to load mod: " + t.FullName + ": " + e);
-                            }
-                        }
-                    }
+                    LoadModsFrom(asm);
                 }
                 catch (Exception e)
                 {
@@ -229,6 +198,42 @@ namespace FeralTweaks
                 // Init
                 mod.Init();
             });
+        }
+
+        private static void LoadModsFrom(Assembly asm)
+        {
+            foreach (Type t in asm.GetTypes())
+            {
+                if (t.IsAssignableTo(typeof(FeralTweaksMod)) && !t.IsAbstract)
+                {
+                    try
+                    {
+                        // Attempt to load type
+                        ConstructorInfo constr = t.GetConstructor(new Type[0]);
+                        if (constr == null)
+                            throw new ArgumentException("No empty constructor");
+                        FeralTweaksMod inst = (FeralTweaksMod)constr.Invoke(new object[0]);
+                        try
+                        {
+                            // Attempt to load mod instance
+                            inst.Initialize();
+
+                            // Find existing mod
+                            if (IsModLoaded(inst.ID))
+                                throw new ArgumentException("Duplicate mod detected! ID: " + inst.ID + " was loaded twice!");
+                            mods.Add(inst);
+                        }
+                        catch (Exception e)
+                        {
+                            LogError("Failed to load mod: " + inst.ID + ": " + e);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogError("Failed to load mod: " + t.FullName + ": " + e);
+                    }
+                }
+            }
         }
 
         private static void RunForMods(Action<FeralTweaksMod> ex)
