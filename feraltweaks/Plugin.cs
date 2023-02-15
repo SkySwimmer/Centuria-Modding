@@ -110,6 +110,10 @@ namespace feraltweaks
             }
             LogInfo("Configuration loaded.");
 
+            // Load environment
+            if (PatchConfig.ContainsKey("ServerEnvironment"))
+                LoadServerEnvironment(PatchConfig["ServerEnvironment"]);
+
             // Start action thread
             StartActionThread();
 
@@ -179,28 +183,7 @@ namespace feraltweaks
                             {
                                 case "serverenvironment":
                                     {
-                                        // Parse environment
-                                        string[] payload = args.Split(" ");
-                                        if (payload.Length == 0)
-                                            LogError("Error: missing argument(s) for serverenvironment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
-                                        if (payload.Length >= 1)
-                                            DirectorAddress = payload[0];
-                                        if (payload.Length >= 2)
-                                            APIAddress = payload[1];
-                                        if (payload.Length >= 3)
-                                            ChatHost = payload[2];
-                                        if (payload.Length >= 4)
-                                            ChatPort = int.Parse(payload[3]);
-                                        if (payload.Length >= 5)
-                                            GamePort = int.Parse(payload[4]);
-                                        if (payload.Length >= 6)
-                                            VoiceChatHost = payload[5];
-                                        if (payload.Length >= 7)
-                                            VoiceChatPort = int.Parse(payload[6]);
-                                        if (payload.Length >= 8)
-                                            BlueboxPort = int.Parse(payload[7]);
-                                        if (payload.Length >= 9)
-                                            EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
+                                        LoadServerEnvironment(args);
                                         break;
                                     }
                                 case "autologin":
@@ -267,6 +250,39 @@ namespace feraltweaks
             }
             else
                 LogInfo("No command line parameters received for launcher handoff, starting regularly...");
+        }
+
+        private void LoadServerEnvironment(string args)
+        {
+            // Parse environment
+            string[] payload = args.Split(" ");
+            if (payload.Length == 0)
+                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
+            try
+            {
+                if (payload.Length >= 1)
+                    DirectorAddress = payload[0];
+                if (payload.Length >= 2)
+                    APIAddress = payload[1];
+                if (payload.Length >= 3)
+                    ChatHost = payload[2];
+                if (payload.Length >= 4)
+                    ChatPort = int.Parse(payload[3]);
+                if (payload.Length >= 5)
+                    GamePort = int.Parse(payload[4]);
+                if (payload.Length >= 6)
+                    VoiceChatHost = payload[5];
+                if (payload.Length >= 7)
+                    VoiceChatPort = int.Parse(payload[6]);
+                if (payload.Length >= 8)
+                    BlueboxPort = int.Parse(payload[7]);
+                if (payload.Length >= 9)
+                    EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
+            }
+            catch
+            {
+                LogError("Error: invalid server environment arguments, expected: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
+            }
         }
 
         private void ApplyPatch(Type type)
