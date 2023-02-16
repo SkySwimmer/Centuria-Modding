@@ -142,13 +142,28 @@ namespace feraltweaks
             LogInfo("Processing command line arguments...");
             int handoffPort = 0;
             int i = 0;
-            foreach (string arg in Environment.GetCommandLineArgs())
+            if (!Environment.GetEnvironmentVariables().Contains("DOORSTOP_EXECUTABLE_ARGS"))
             {
-                if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
+                foreach (string arg in Environment.GetCommandLineArgs())
                 {
-                    handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
+                    if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
+                    {
+                        handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
+                    }
+                    i++;
                 }
-                i++;
+            }
+            else
+            {
+                // MacOS workaround
+                foreach (string arg in Environment.GetEnvironmentVariables()["DOORSTOP_EXECUTABLE_ARGS"].ToString().Split(" "))
+                {
+                    if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
+                    {
+                        handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
+                    }
+                    i++;
+                }
             }
             if (handoffPort != 0)
             {
