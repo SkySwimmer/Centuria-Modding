@@ -49,7 +49,7 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\feraltweaks\Libaries\feral\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\feraltweaks\lib\feral\UnityEngine.CoreModule.dll</HintPath>
 	  <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -58,9 +58,9 @@
     <Exec Command="xcopy /s /i Funchook run\FeralTweaks\lib /Y" Condition="'$(OS)' != 'Unix'" />
     <Exec Command="mkdir -p run/FeralTweaks/lib" Condition="'$(OS)' == 'Unix'" />
     <Exec Command="cp -rf Funchook/. run/FeralTweaks/lib" Condition="'$(OS)' == 'Unix'" />
-    <Exec Command="copy Lib\MonoMod.Utils.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="copy Lib\MonoMod.RuntimeDetour.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="cp -rf Lib/MonoMod* run/FeralTweaks" Condition="'$(OS)' == 'Unix'" />
+    <Exec Command="copy Libraries\MonoMod.Utils.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
+    <Exec Command="copy Libraries\MonoMod.RuntimeDetour.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
+    <Exec Command="cp -rf Libraries/MonoMod* run/FeralTweaks" Condition="'$(OS)' == 'Unix'" />
   </Target>
   
 </Project>

@@ -43,7 +43,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
@@ -53,6 +55,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -72,7 +75,7 @@ public class LauncherMain {
 	private JLabel lblNewLabel;
 	private static String[] args;
 	private boolean shiftDown;
-	private boolean running = true;
+	private boolean connected;
 
 	/**
 	 * Launch the application.
@@ -432,6 +435,31 @@ public class LauncherMain {
 				JsonObject respJ = JsonParser.parseString(dataS).getAsJsonObject();
 				boolean completedTutorial = respJ.get("tutorial_completed").getAsBoolean();
 
+				// Check client modding
+				try {
+					conn = (HttpURLConnection) new URL(api + "data/clientmods/testendpoint").openConnection();
+					conn.addRequestProperty("Authorization", "Bearer " + authToken);
+					InputStream strm;
+					if (conn.getResponseCode() < 400)
+						strm = conn.getInputStream();
+					else
+						strm = conn.getErrorStream();
+					String data = new String(strm.readAllBytes(), "UTF-8");
+					JsonObject resp = JsonParser.parseString(data).getAsJsonObject();
+					if (resp.has("error")) {
+						// Handle error
+						String err = resp.get("error").getAsString();
+						if (err.equals("feraltweaks_not_enabled")) {
+							JOptionPane.showMessageDialog(frmCenturiaLauncher,
+									"Client modding is not enabled on your account, unable to launch the game.",
+									"Launcher Error", JOptionPane.ERROR_MESSAGE);
+							System.exit(1);
+							return;
+						}
+					}
+				} catch (IOException e) {
+				}
+
 				// Check client
 				SwingUtilities.invokeAndWait(() -> {
 					log("Checking client files...");
@@ -672,7 +700,8 @@ public class LauncherMain {
 					});
 
 					// Download manifest
-					updateMods("assemblies/index.json", hosts, authToken, progressBar, panel_1);
+					updateMods("assemblies/index.json", modloader.get("assemblyBaseDir").getAsString(), hosts,
+							authToken, progressBar, panel_1);
 
 					// Save version
 					Files.writeString(Path.of("modversion.info"), serverInfo.get("modVersion").getAsString());
@@ -697,7 +726,8 @@ public class LauncherMain {
 					});
 
 					// Download manifest
-					updateMods("assets/index.json", hosts, authToken, progressBar, panel_1);
+					updateMods("assets/index.json", modloader.get("assetBaseDir").getAsString(), hosts, authToken,
+							progressBar, panel_1);
 
 					// Save version
 					Files.writeString(Path.of("assetversion.info"), serverInfo.get("assetVersion").getAsString());
@@ -723,7 +753,7 @@ public class LauncherMain {
 				// Check OS
 				File clientFile;
 				if (feralPlat.equals("osx")) {
-					clientFile = new File("client/build/Fer.al.app"); // MacOS
+					clientFile = new File("client/build/run.sh"); // MacOS
 				} else {
 					clientFile = new File("client/build/Fer.al.exe"); // Linux or Windows
 				}
@@ -736,166 +766,221 @@ public class LauncherMain {
 				// Start client
 				ProcessBuilder builder;
 
-				// Check OS
-				if (os.equals("win64"))
-					builder = new ProcessBuilder(clientFile.getAbsolutePath()); // Windows
-				else if (os.equals("osx"))
-					builder = new ProcessBuilder("open", "-n", clientFile.getAbsolutePath()); // MacOS
-				else if (os.equals("linux")) {
-					builder = new ProcessBuilder("wine", clientFile.getAbsolutePath()); // Linux, need wine
-					File prefix = new File("wineprefix");
-					if (!new File(prefix, "completed").exists()) {
-						prefix.mkdirs();
-
-						// Set overrides
-						SwingUtilities.invokeAndWait(() -> {
-							log("Configuring wine...");
-							progressBar.setMaximum(100);
-							progressBar.setValue(0);
-						});
-						try {
-							ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
-									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
-									"native,builtin", "/f");
-							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-							proc.start().waitFor();
-							proc = new ProcessBuilder("wine", "reg", "add",
-									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
-									"native", "/f");
-							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-							proc.start().waitFor();
-							proc = new ProcessBuilder("wine", "reg", "add",
-									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
-									"native", "/f");
-							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-							proc.start().waitFor();
-							proc = new ProcessBuilder("wine", "reg", "add",
-									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "dxgi", "/d",
-									"native", "/f");
-							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-							proc.start().waitFor();
-							proc = new ProcessBuilder("wine", "reg", "add",
-									"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d",
-									"native", "/f");
-							proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-							proc.start().waitFor();
-						} catch (Exception e) {
-							prefix.delete();
-							SwingUtilities.invokeAndWait(() -> {
-								JOptionPane.showMessageDialog(frmCenturiaLauncher,
-										"Failed to configure wine, please make sure you have wine installed.",
-										"Launcher Error", JOptionPane.ERROR_MESSAGE);
-								System.exit(1);
-							});
-						}
-
-						// Download DXVK
-						SwingUtilities.invokeAndWait(() -> {
-							log("Downloading DXVK...");
-							progressBar.setMaximum(100);
-							progressBar.setValue(0);
-							panel_5.setVisible(true);
-						});
-						String man = downloadString("https://api.github.com/repos/doitsujin/dxvk/releases/latest");
-						JsonArray assets = JsonParser.parseString(man).getAsJsonObject().get("assets").getAsJsonArray();
-						String dxvk = null;
-						for (JsonElement ele : assets) {
-							JsonObject asset = ele.getAsJsonObject();
-							if (asset.get("name").getAsString().endsWith(".tar.gz")
-									&& !asset.get("name").getAsString().contains("steam")) {
-								dxvk = asset.get("browser_download_url").getAsString();
-								break;
-							}
-						}
-						if (dxvk == null)
-							throw new Exception("Failed to find a DXVK download.");
-						downloadFile(dxvk, new File("dxvk.tar.gz"), progressBar, panel_1);
-
-						// Extract
-						try {
-							SwingUtilities.invokeAndWait(() -> {
-								log("Extracting DXVK...");
-								progressBar.setMaximum(100);
-								progressBar.setValue(0);
-								panel_1.repaint();
-							});
-						} catch (InvocationTargetException | InterruptedException e) {
-						}
-						unTarGz(new File("dxvk.tar.gz"), new File("dxvk"), progressBar, panel_1);
-
-						// Install
-						try {
-							SwingUtilities.invokeAndWait(() -> {
-								log("Installing DXVK...");
-								progressBar.setMaximum(100);
-								progressBar.setValue(0);
-								panel_5.setVisible(false);
-								panel_1.repaint();
-							});
-						} catch (InvocationTargetException | InterruptedException e) {
-						}
-						File dxvkDir = new File("dxvk").listFiles()[0];
-						File wineSys = new File(prefix, "drive_c/windows");
-						wineSys.mkdirs();
-
-						// Install for x32
-						new File(wineSys, "system32").mkdirs();
-						for (File f : new File(dxvkDir, "x32").listFiles()) {
-							Files.copy(f.toPath(), new File(wineSys, "system32/" + f.getName()).toPath(),
-									StandardCopyOption.REPLACE_EXISTING);
-						}
-
-						// Install for x64
-						new File(wineSys, "syswow64").mkdirs();
-						for (File f : new File(dxvkDir, "x64").listFiles()) {
-							Files.copy(f.toPath(), new File(wineSys, "syswow64/" + f.getName()).toPath(),
-									StandardCopyOption.REPLACE_EXISTING);
-						}
-
-						// Mark done
-						new File(prefix, "completed").createNewFile();
-					}
-					builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-				} else
-					throw new Exception("Invalid platform: " + os);
-				builder.directory(new File("client/build"));
-
 				// Log
 				try {
 					SwingUtilities.invokeAndWait(() -> {
-						log("Starting client...");
+						log("Preparing client communication...");
 						progressBar.setMaximum(100);
 						progressBar.setValue(0);
 					});
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
 
-				// Start
-				Process proc = builder.start();
+				// Find a port
+				ServerSocket s;
+				Random rnd = new Random();
+				int port;
+				while (true) {
+					port = rnd.nextInt(1024, 65535);
+					try {
+						s = new ServerSocket(port, 0, InetAddress.getByName("127.0.0.1"));
+						break;
+					} catch (IOException e) {
+					}
+				}
+				ServerSocket serverSock = s;
+
+				// Prepare to start
 				SwingUtilities.invokeAndWait(() -> {
-					log("Waiting for client startup...");
-					progressBar.setMaximum(100);
-					progressBar.setValue(0);
+					log("Preparing game client...");
 					panel_1.repaint();
 				});
-				proc.onExit().thenAccept(t -> {
-					running = false;
-				});
-				while (running) {
-					// Check file
-					if (new File("client/build/launcherhandoff." + proc.pid() + ".port").exists()) {
+
+				try {
+					// Check OS
+					if (os.equals("win64"))
+						builder = new ProcessBuilder(clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // Windows
+					else if (os.equals("osx"))
+						builder = new ProcessBuilder("sh", clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // MacOS
+					else if (os.equals("linux")) {
+						builder = new ProcessBuilder("wine", clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // Linux, need wine
+						File prefix = new File("wineprefix");
+						if (!new File(prefix, "completed").exists()) {
+							prefix.mkdirs();
+
+							// Set overrides
+							SwingUtilities.invokeAndWait(() -> {
+								log("Configuring wine...");
+								progressBar.setMaximum(100);
+								progressBar.setValue(0);
+							});
+							try {
+								ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
+										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
+										"native,builtin", "/f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.start().waitFor();
+								proc = new ProcessBuilder("wine", "reg", "add",
+										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
+										"native", "/f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.start().waitFor();
+								proc = new ProcessBuilder("wine", "reg", "add",
+										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
+										"native", "/f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.start().waitFor();
+								proc = new ProcessBuilder("wine", "reg", "add",
+										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "dxgi", "/d", "native",
+										"/f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.start().waitFor();
+								proc = new ProcessBuilder("wine", "reg", "add",
+										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d", "native",
+										"/f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.start().waitFor();
+							} catch (Exception e) {
+								prefix.delete();
+								SwingUtilities.invokeAndWait(() -> {
+									JOptionPane.showMessageDialog(frmCenturiaLauncher,
+											"Failed to configure wine, please make sure you have wine installed.",
+											"Launcher Error", JOptionPane.ERROR_MESSAGE);
+									try {
+										serverSock.close();
+									} catch (IOException e2) {
+									}
+									System.exit(1);
+								});
+							}
+
+							// Download DXVK
+							SwingUtilities.invokeAndWait(() -> {
+								log("Downloading DXVK...");
+								progressBar.setMaximum(100);
+								progressBar.setValue(0);
+								panel_5.setVisible(true);
+							});
+							String man = downloadString("https://api.github.com/repos/doitsujin/dxvk/releases/latest");
+							JsonArray assets = JsonParser.parseString(man).getAsJsonObject().get("assets")
+									.getAsJsonArray();
+							String dxvk = null;
+							for (JsonElement ele : assets) {
+								JsonObject asset = ele.getAsJsonObject();
+								if (asset.get("name").getAsString().endsWith(".tar.gz")
+										&& !asset.get("name").getAsString().contains("steam")) {
+									dxvk = asset.get("browser_download_url").getAsString();
+									break;
+								}
+							}
+							if (dxvk == null)
+								throw new Exception("Failed to find a DXVK download.");
+							downloadFile(dxvk, new File("dxvk.tar.gz"), progressBar, panel_1);
+
+							// Extract
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									log("Extracting DXVK...");
+									progressBar.setMaximum(100);
+									progressBar.setValue(0);
+									panel_1.repaint();
+								});
+							} catch (InvocationTargetException | InterruptedException e) {
+							}
+							unTarGz(new File("dxvk.tar.gz"), new File("dxvk"), progressBar, panel_1);
+
+							// Install
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									log("Installing DXVK...");
+									progressBar.setMaximum(100);
+									progressBar.setValue(0);
+									panel_5.setVisible(false);
+									panel_1.repaint();
+								});
+							} catch (InvocationTargetException | InterruptedException e) {
+							}
+							File dxvkDir = new File("dxvk").listFiles()[0];
+							File wineSys = new File(prefix, "drive_c/windows");
+							wineSys.mkdirs();
+
+							// Install for x32
+							new File(wineSys, "system32").mkdirs();
+							for (File f : new File(dxvkDir, "x32").listFiles()) {
+								Files.copy(f.toPath(), new File(wineSys, "system32/" + f.getName()).toPath(),
+										StandardCopyOption.REPLACE_EXISTING);
+							}
+
+							// Install for x64
+							new File(wineSys, "syswow64").mkdirs();
+							for (File f : new File(dxvkDir, "x64").listFiles()) {
+								Files.copy(f.toPath(), new File(wineSys, "syswow64/" + f.getName()).toPath(),
+										StandardCopyOption.REPLACE_EXISTING);
+							}
+
+							// Mark done
+							new File(prefix, "completed").createNewFile();
+						}
+						builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+					} else
+						throw new Exception("Invalid platform: " + os);
+					builder.directory(new File("client/build"));
+
+					// Log
+					try {
+						SwingUtilities.invokeAndWait(() -> {
+							log("Starting client...");
+							progressBar.setMaximum(100);
+							progressBar.setValue(0);
+						});
+					} catch (InvocationTargetException | InterruptedException e) {
+					}
+
+					// Start
+					Process proc = builder.start();
+					SwingUtilities.invokeAndWait(() -> {
+						log("Waiting for client startup...");
+						progressBar.setMaximum(100);
+						progressBar.setValue(0);
+						panel_1.repaint();
+					});
+					proc.onExit().thenAccept(t -> {
+						if (!connected) {
+							try {
+								try {
+									serverSock.close();
+								} catch (IOException e) {
+								}
+								SwingUtilities.invokeAndWait(() -> {
+									JOptionPane.showMessageDialog(frmCenturiaLauncher,
+											"Client process exited before the launch was completed!\nExit code: "
+													+ proc.exitValue() + "\n\nPlease open a support ticket!",
+											"Launcher Error", JOptionPane.ERROR_MESSAGE);
+									System.exit(proc.exitValue());
+								});
+							} catch (InvocationTargetException | InterruptedException e1) {
+							}
+						}
+					});
+
+					// Accept client
+					final String authTokenF = authToken;
+					Thread clT = new Thread(() -> {
+						Socket cl;
 						try {
-							// Connect
-							int port = Integer.parseInt(Files.readString(
-									new File("client/build/launcherhandoff." + proc.pid() + ".port").toPath()));
-							Socket cl = new Socket("127.0.0.1", port);
+							cl = serverSock.accept();
+						} catch (IOException e) {
+							return;
+						}
+						try {
+							connected = true;
 							SwingUtilities.invokeAndWait(() -> {
 								log("Communicating with client...");
 								progressBar.setMaximum(100);
 								progressBar.setValue(0);
 								panel_1.repaint();
 							});
-							launcherHandoff(cl, authToken, hosts.get("api").getAsString(), serverInfo, hosts, ports,
+							launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), serverInfo, hosts, ports,
 									completedTutorial);
 							cl.close();
 							SwingUtilities.invokeAndWait(() -> {
@@ -909,22 +994,42 @@ public class LauncherMain {
 								frmCenturiaLauncher.dispose();
 							});
 							proc.waitFor();
+							try {
+								serverSock.close();
+							} catch (IOException e) {
+							}
 							System.exit(proc.exitValue());
 							return;
 						} catch (Exception e) {
-							proc.destroyForcibly();
-							throw e;
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									String stackTrace = "";
+									for (StackTraceElement ele : e.getStackTrace())
+										stackTrace += "\n     At: " + ele;
+									try {
+										serverSock.close();
+									} catch (IOException e2) {
+									}
+									JOptionPane.showMessageDialog(frmCenturiaLauncher,
+											"An error occured while running the launcher.\nUnable to continue, the launcher will now close.\n\nError details: "
+													+ e + stackTrace
+													+ "\nPlease report this error to the server operators.",
+											"Launcher Error", JOptionPane.ERROR_MESSAGE);
+									System.exit(1);
+								});
+							} catch (InvocationTargetException | InterruptedException e1) {
+							}
 						}
+					}, "Client Communication Trhead");
+					clT.setDaemon(true);
+					clT.start();
+				} catch (Exception e) {
+					try {
+						serverSock.close();
+					} catch (IOException e2) {
 					}
-					Thread.sleep(1000);
+					throw e;
 				}
-				SwingUtilities.invokeAndWait(() -> {
-					JOptionPane.showMessageDialog(
-							frmCenturiaLauncher, "Client process exited before the launch was completed!\nExit code: "
-									+ proc.exitValue() + "\n\nPlease open a support ticket!",
-							"Launcher Error", JOptionPane.ERROR_MESSAGE);
-					System.exit(proc.exitValue());
-				});
 			} catch (Exception e) {
 				try {
 					SwingUtilities.invokeAndWait(() -> {
@@ -1015,8 +1120,8 @@ public class LauncherMain {
 		cl.getOutputStream().write((cmd + "\n").getBytes("UTF-8"));
 	}
 
-	private void updateMods(String pth, JsonObject hosts, String authToken, JProgressBar progressBar, JPanel panel_1)
-			throws Exception {
+	private void updateMods(String pth, String baseOut, JsonObject hosts, String authToken, JProgressBar progressBar,
+			JPanel panel_1) throws Exception {
 		String api = hosts.get("api").getAsString();
 		if (!api.endsWith("/"))
 			api += "/";
@@ -1058,7 +1163,7 @@ public class LauncherMain {
 
 		// Download
 		for (String path : resp.keySet()) {
-			String output = "client/build/" + resp.get(path).getAsString();
+			String output = "client/build/" + baseOut + "/" + resp.get(path).getAsString();
 			if (path.startsWith("/"))
 				path = path.substring(1);
 
