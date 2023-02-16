@@ -156,11 +156,12 @@ namespace feraltweaks
             else
             {
                 // MacOS workaround
-                foreach (string arg in Environment.GetEnvironmentVariables()["DOORSTOP_EXECUTABLE_ARGS"].ToString().Split(" "))
+                string[] args = Environment.GetEnvironmentVariables()["DOORSTOP_EXECUTABLE_ARGS"].ToString().Split(" ");
+                foreach (string arg in args)
                 {
-                    if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
+                    if (arg == "--launcher-handoff" && i + 1 < args.Length)
                     {
-                        handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
+                        handoffPort = int.Parse(args[i + 1]);
                     }
                     i++;
                 }
