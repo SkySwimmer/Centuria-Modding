@@ -170,7 +170,14 @@ public class LauncherUpdaterMain {
 					dir = new File(System.getProperty("user.home") + "/.local/share");
 					if (!dir.exists())
 						dir = new File(System.getProperty("user.home"));
-					dir = new File(dir, ".centuria-launcher");
+					
+					// Check OSX
+					if (System.getProperty("os.name").toLowerCase().contains("darwin")
+						|| System.getProperty("os.name").toLowerCase().contains("mac")) {
+						dir = new File(dir, "centuria-launcher");
+					} else {
+						dir = new File(dir, ".centuria-launcher");
+					}
 				} else {
 					dir = new File(System.getenv("LOCALAPPDATA"));
 				}
