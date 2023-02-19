@@ -270,7 +270,7 @@ public class LauncherUpdaterMain {
 				if (!currentVersion.equals(launcherVersion))
 					Files.writeString(verFile.toPath(), launcherVersion);
 				SwingUtilities.invokeAndWait(() -> {
-					frmCenturiaLauncher.setVisible(false);
+					frmCenturiaLauncher.dispose();
 				});
 				proc.waitFor();
 				System.exit(proc.exitValue());

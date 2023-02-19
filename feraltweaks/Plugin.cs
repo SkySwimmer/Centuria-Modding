@@ -665,7 +665,7 @@ namespace feraltweaks
         /// <returns>True if a override is present, false otherwise</returns>
         public static bool HasDnsOverride(string host)
         {
-            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverride", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
+            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverrides", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
             foreach (string ov in overrides.Split(","))
             {
                 string domain = ov.Remove(ov.IndexOf(":"));
@@ -682,7 +682,7 @@ namespace feraltweaks
         /// <returns>IP string</returns>
         public static string GetDnsOverride(string host)
         {
-            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverride", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
+            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverrides", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
             foreach (string ov in overrides.Split(","))
             {
                 string domain = ov.Remove(ov.IndexOf(":"));
