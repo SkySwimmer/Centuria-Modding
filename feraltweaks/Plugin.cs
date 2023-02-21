@@ -135,8 +135,8 @@ namespace feraltweaks
             ApplyPatch(typeof(UI_VersionPatch));
             ApplyPatch(typeof(MessageRouterPatch));
             ApplyPatch(typeof(ChatPatches));
-            ApplyPatch(typeof(HttpRequestPatch));
             ApplyPatch(typeof(DOTweenAnimatorPatch));
+            ApplyPatch(typeof(GlobalSettingsManagerPatch));
 
             // Check command line
             LogInfo("Processing command line arguments...");
@@ -312,7 +312,7 @@ namespace feraltweaks
         /// </summary>
         public static void WriteDefaultConfig()
         {
-            File.WriteAllText(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\nJiggleResourceInteractions=false\nCityFeraMovingRocks=false\nCityFeraTeleporterSFX=false\nHttpDnsOverrides=game-assets.fer.al:23.218.218.148\n");
+            File.WriteAllText(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\nJiggleResourceInteractions=false\nCityFeraMovingRocks=false\nCityFeraTeleporterSFX=false\nGameAssetsProd=https://emuferal.ddns.net/feralassets/\nGameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\nGameAssetsDev=https://emuferal.ddns.net/feralassetsdev/\n");
         }
 
         /// <summary>
@@ -656,41 +656,6 @@ namespace feraltweaks
                 }
             }
             return null;
-        }
-        
-        /// <summary>
-        /// Checks if a dns override is present
-        /// </summary>
-        /// <param name="host">Host string</param>
-        /// <returns>True if a override is present, false otherwise</returns>
-        public static bool HasDnsOverride(string host)
-        {
-            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverrides", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
-            foreach (string ov in overrides.Split(","))
-            {
-                string domain = ov.Remove(ov.IndexOf(":"));
-                if (domain == host)
-                    return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Retrieves host overrides
-        /// </summary>
-        /// <param name="host">Host string</param>
-        /// <returns>IP string</returns>
-        public static string GetDnsOverride(string host)
-        {
-            string overrides = PatchConfig.GetValueOrDefault("HttpDnsOverrides", "game-assets.fer.al:23.218.218.148").Replace(" ", "");
-            foreach (string ov in overrides.Split(","))
-            {
-                string domain = ov.Remove(ov.IndexOf(":"));
-                string address = ov.Substring(ov.IndexOf(":") + 1);
-                if (domain == host)
-                    return address;
-            }
-            throw new ArgumentException("No override for " + host);
         }
     }
 }
