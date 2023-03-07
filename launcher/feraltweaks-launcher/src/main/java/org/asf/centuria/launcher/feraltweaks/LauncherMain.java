@@ -772,6 +772,7 @@ public class LauncherMain {
 						log("Preparing client communication...");
 						progressBar.setMaximum(100);
 						progressBar.setValue(0);
+						panel_1.repaint();
 					});
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
@@ -799,11 +800,14 @@ public class LauncherMain {
 				try {
 					// Check OS
 					if (os.equals("win64"))
-						builder = new ProcessBuilder(clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // Windows
+						builder = new ProcessBuilder(clientFile.getAbsolutePath(), "--launcher-handoff",
+								Integer.toString(port)); // Windows
 					else if (os.equals("osx"))
-						builder = new ProcessBuilder("sh", clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // MacOS
+						builder = new ProcessBuilder("sh", clientFile.getAbsolutePath(), "--launcher-handoff",
+								Integer.toString(port)); // MacOS
 					else if (os.equals("linux")) {
-						builder = new ProcessBuilder("wine", clientFile.getAbsolutePath(), "--launcher-handoff", Integer.toString(port)); // Linux, need wine
+						builder = new ProcessBuilder("wine", clientFile.getAbsolutePath(), "--launcher-handoff",
+								Integer.toString(port)); // Linux, need wine
 						File prefix = new File("wineprefix");
 						if (!new File(prefix, "completed").exists()) {
 							prefix.mkdirs();
@@ -813,6 +817,7 @@ public class LauncherMain {
 								log("Configuring wine...");
 								progressBar.setMaximum(100);
 								progressBar.setValue(0);
+								panel_1.repaint();
 							});
 							try {
 								ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
@@ -860,6 +865,7 @@ public class LauncherMain {
 								progressBar.setMaximum(100);
 								progressBar.setValue(0);
 								panel_5.setVisible(true);
+								panel_1.repaint();
 							});
 							String man = downloadString("https://api.github.com/repos/doitsujin/dxvk/releases/latest");
 							JsonArray assets = JsonParser.parseString(man).getAsJsonObject().get("assets")
@@ -905,16 +911,16 @@ public class LauncherMain {
 							wineSys.mkdirs();
 
 							// Install for x32
-							new File(wineSys, "system32").mkdirs();
+							new File(wineSys, "syswow64").mkdirs();
 							for (File f : new File(dxvkDir, "x32").listFiles()) {
-								Files.copy(f.toPath(), new File(wineSys, "system32/" + f.getName()).toPath(),
+								Files.copy(f.toPath(), new File(wineSys, "syswow64/" + f.getName()).toPath(),
 										StandardCopyOption.REPLACE_EXISTING);
 							}
 
 							// Install for x64
-							new File(wineSys, "syswow64").mkdirs();
+							new File(wineSys, "system32").mkdirs();
 							for (File f : new File(dxvkDir, "x64").listFiles()) {
-								Files.copy(f.toPath(), new File(wineSys, "syswow64/" + f.getName()).toPath(),
+								Files.copy(f.toPath(), new File(wineSys, "system32/" + f.getName()).toPath(),
 										StandardCopyOption.REPLACE_EXISTING);
 							}
 

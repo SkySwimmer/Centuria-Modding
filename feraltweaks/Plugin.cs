@@ -207,7 +207,10 @@ namespace feraltweaks
                                         if (args == "")
                                             LogError("Error: missing argument for autologin: token");
                                         else
+                                        {
                                             AutoLoginToken = args;
+                                            LogInfo("Enabled autologin.");
+                                        }
                                         break;
                                     }
                                 case "chartpatch":
@@ -223,6 +226,7 @@ namespace feraltweaks
                                                 string file = patch.Remove(patch.IndexOf("::"));
                                                 patch = patch.Substring(patch.IndexOf("::") + 2);
                                                 Patches[patch] = file;
+                                                LogInfo("Loaded chart patch: " + file);
                                             }
                                             catch
                                             {
@@ -248,6 +252,8 @@ namespace feraltweaks
                                                     string key = line.Remove(line.IndexOf("="));
                                                     string value = line.Substring(line.IndexOf("=") + 1);
                                                     PatchConfig[key] = value;
+
+                                                    LogInfo("Configuration updated: " + key + " = " + value);
                                                 }
                                             }
                                             catch
@@ -263,6 +269,7 @@ namespace feraltweaks
                     catch { }
                     client.Close();
                 }
+                LogInfo("Launcher disconnected, launching game...");
             }
             else
                 LogInfo("No command line parameters received for launcher handoff, starting regularly...");
@@ -277,23 +284,50 @@ namespace feraltweaks
             try
             {
                 if (payload.Length >= 1)
+                {
                     DirectorAddress = payload[0];
+                    LogInfo("Director: " + DirectorAddress);
+                }
                 if (payload.Length >= 2)
+                {
                     APIAddress = payload[1];
+                    LogInfo("API: " + APIAddress);
+                }
                 if (payload.Length >= 3)
+                {
                     ChatHost = payload[2];
+                    LogInfo("Chat: " + ChatHost);
+                }
                 if (payload.Length >= 4)
+                {
                     ChatPort = int.Parse(payload[3]);
+                    LogInfo("Chat port: " + ChatPort);
+                }
                 if (payload.Length >= 5)
+                {
                     GamePort = int.Parse(payload[4]);
+                    LogInfo("Game port: " + GamePort);
+                }
                 if (payload.Length >= 6)
+                {
                     VoiceChatHost = payload[5];
+                    LogInfo("Voice chat: " + VoiceChatHost);
+                }
                 if (payload.Length >= 7)
+                {
                     VoiceChatPort = int.Parse(payload[6]);
+                    LogInfo("Voice chat port: " + VoiceChatPort);
+                }
                 if (payload.Length >= 8)
+                {
                     BlueboxPort = int.Parse(payload[7]);
+                    LogInfo("Bluebox port: " + BlueboxPort);
+                }
                 if (payload.Length >= 9)
+                {
                     EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
+                    LogInfo("Encryped game server: " + EncryptedGame);
+                }
             }
             catch
             {
