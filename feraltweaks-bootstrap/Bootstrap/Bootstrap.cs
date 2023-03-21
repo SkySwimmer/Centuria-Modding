@@ -28,6 +28,19 @@ namespace FeralTweaksBootstrap
         private static StreamWriter LogWriter;
         private static string GameAssemblyPath;
 
+        /// <summary>
+        /// Assembly resolution hooks
+        /// </summary>
+        /// <param name="assemblyName">Assembly name</param>
+        /// <param name="requestingAssembly">The assembly whose dependencies are being resolved</param>
+        /// <returns>Assembly or null</returns>
+        public delegate Assembly AssemblyResolutionHookHandler(AssemblyName assemblyName, Assembly requestingAssembly);
+
+        /// <summary>
+        /// Assembly resolution hooks
+        /// </summary>
+        public static event AssemblyResolutionHookHandler ResolveAssembly;
+
         public static void LogInfo(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
@@ -314,6 +327,16 @@ namespace FeralTweaksBootstrap
             {
                 // Attempt to resolve
                 AssemblyName nm = new AssemblyName(args.Name);
+
+                // Hook
+                if (ResolveAssembly != null)
+                {
+                    Assembly res = ResolveAssembly.Invoke(nm, args.RequestingAssembly);
+                    if (res != null)
+                        return res;
+                }
+
+                // Handle it ourselves
                 if (File.Exists("FeralTweaks/cache/assemblies/" + nm.Name + ".dll")){
                     return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"));
                 }

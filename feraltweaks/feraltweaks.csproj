@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="HarmonyX" Version="2.10.1" />
-    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.3" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
     <Reference Include="FeralTweaksBootstrap">
       <HintPath>lib\ftl\FeralTweaksBootstrap.dll</HintPath>
       <Private>false</Private>

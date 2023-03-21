@@ -42,16 +42,16 @@ namespace FeralTweaksBootstrap
             // Create funchook
             funchook = Funchook.FunchookCreate();
 
+            // Create the detour pointer
+            IntPtr func = Marshal.GetFunctionPointerForDelegate(target);
+            detourPtr = func;
+
             // Create trampoline
             trampolinePtr = NativeDetours.CreateTrampoline(origPtr, detourPtr, funchook);
         }
 
         public void Apply()
         {
-            // Create the detour pointer
-            IntPtr func = Marshal.GetFunctionPointerForDelegate(target);
-            detourPtr = func;
-
             // Create trampoline if needed
             CreateTrampoline();
 
