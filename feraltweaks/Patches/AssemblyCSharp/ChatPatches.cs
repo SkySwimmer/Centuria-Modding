@@ -121,8 +121,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     return;
 
                 // Create GC tab
-                GameObject tab = new GameObject();
-                tab.AddComponent<RectTransform>();
+                GameObject tab = GameObject.Instantiate(__instance._conversationsPanel.gameObject);
                 tab.name = "Panel_GC";
                 tab.transform.parent = __instance._conversationsPanel.gameObject.transform.parent;
                 __instance._tabGroup._tabs[2].gameObject = tab;
@@ -137,41 +136,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 trans.sizeDelta = __instance._conversationsPanel.gameObject.GetComponent<RectTransform>().sizeDelta;
                 trans.localScale = __instance._conversationsPanel.gameObject.GetComponent<RectTransform>().localScale;
 
-                // Create modified conversation panel
-                GameObject convoPanel = GameObject.Instantiate(__instance._conversationsPanel._conversationItemList.gameObject);
-                convoPanel.transform.parent = tab.transform;
-                convoPanel.SetActive(true);
-                convoPanel.name = __instance._conversationsPanel._conversationItemList.gameObject.name;
-                GameObject.Destroy(GetChild(convoPanel, "Group_ConversationSearch"));
-                trans = convoPanel.GetComponent<RectTransform>();
-                trans.anchorMin = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().anchorMin;
-                trans.anchorMax = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().anchorMax;
-                trans.anchoredPosition = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().anchoredPosition;
-                trans.anchoredPosition3D = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().anchoredPosition3D;
-                trans.offsetMax = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().offsetMax;
-                trans.offsetMin = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().offsetMin;
-                trans.pivot = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().pivot;
-                trans.sizeDelta = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().sizeDelta;
-                trans.localScale = __instance._conversationsPanel._conversationItemList.gameObject.GetComponent<RectTransform>().localScale;
-
-                // Create DM panel
-                convoPanel = GameObject.Instantiate(__instance._conversationsPanel._privateChatPanel.gameObject);
-                convoPanel.transform.parent = tab.transform;
-                convoPanel.SetActive(false);
-                convoPanel.name = __instance._conversationsPanel._privateChatPanel.gameObject.name;
-                trans = convoPanel.GetComponent<RectTransform>();
-                trans.anchorMin = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().anchorMin;
-                trans.anchorMax = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().anchorMax;
-                trans.anchoredPosition = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().anchoredPosition;
-                trans.anchoredPosition3D = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().anchoredPosition3D;
-                trans.offsetMax = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().offsetMax;
-                trans.offsetMin = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().offsetMin;
-                trans.pivot = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().pivot;
-                trans.sizeDelta = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().sizeDelta;
-                trans.localScale = __instance._conversationsPanel._privateChatPanel.gameObject.GetComponent<RectTransform>().localScale;
-
                 // Bind panel
-                UI_ChatPanel_Conversations cont = tab.AddComponent<UI_ChatPanel_Conversations>();
+                UI_ChatPanel_Conversations cont = tab.GetComponent<UI_ChatPanel_Conversations>();
                 cont._closeConversationButtonGroup = GetChild(tab, "ChatPanel_Private/Group_Participant/Button_Back").GetComponent<CanvasGroup>();
                 cont._conversationItemList = GetChild(tab, "ConversationList").GetComponent<UI_LazyItemList_ChatConversation>();
                 cont._conversationListGroup = GetChild(tab, "ConversationList").GetComponent<CanvasGroup>();
@@ -190,9 +156,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Set inactive
                 tab.SetActive(false);
 
-                // Re-add emoji panel
-                // TODO
-
                 // Set public chat as active
                 __instance._inputField.gameObject.transform.parent.parent.gameObject.SetActive(true);
                 __instance._publicChatPanel.gameObject.SetActive(true);
@@ -207,6 +170,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Load it
                 lbl.GetComponent<UI_UnreadConversationCount>().Start();
+
+                // Find emoji panel and move it
+                GameObject emojiPanel = GetChild(__instance._conversationsPanel.transform.parent.gameObject, "Panel_Emoji");
+                emojiPanel.transform.SetSiblingIndex(tab.gameObject.transform.GetSiblingIndex() + 1);
+
+                // Add handler to send button for gcs
+                FeralButton sendBtn = GetChild(__instance._inputField.transform.parent.gameObject.transform.parent.gameObject, "Button_Send").GetComponent<FeralButton>();
+                sendBtn.onClick.m_PersistentCalls.m_Calls.Add(new UnityEngine.Events.PersistentCall()
+                {
+                    m_Target = cont._privateChatPanel,
+                    m_MethodName = "BtnClicked_SubmitChat"
+                });
             }
         }
 
