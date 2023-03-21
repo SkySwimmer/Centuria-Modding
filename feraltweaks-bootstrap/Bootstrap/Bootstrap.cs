@@ -22,7 +22,7 @@ namespace FeralTweaksBootstrap
 {
     public static class Bootstrap
     {
-        private const string VERSION = "v1.0.0-alpha-a1";
+        private const string VERSION = "v1.0.0-alpha-a2";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
         private static StreamWriter LogWriter;

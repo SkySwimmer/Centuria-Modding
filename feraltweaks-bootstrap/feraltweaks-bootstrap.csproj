@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net60</TargetFramework>
+    <Version>v1.0.0-alpha-a2</Version>
   </PropertyGroup>
   
   <PropertyGroup>

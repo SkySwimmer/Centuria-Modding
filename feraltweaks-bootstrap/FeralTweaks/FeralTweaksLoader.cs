@@ -14,7 +14,7 @@ namespace FeralTweaks
     /// </summary>
     public static class FeralTweaksLoader
     {
-        private const string VERSION = "v1.0.0-alpha-a1";
+        private const string VERSION = "v1.0.0-alpha-a2";
         private static StreamWriter LogWriter;
         private static List<FeralTweaksMod> mods;
 
