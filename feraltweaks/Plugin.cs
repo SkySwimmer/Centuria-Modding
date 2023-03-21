@@ -326,7 +326,7 @@ namespace feraltweaks
                 if (payload.Length >= 9)
                 {
                     EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
-                    LogInfo("Encryped game server: " + EncryptedGame);
+                    LogInfo("Encryped game server: " + (EncryptedGame == 1));
                 }
             }
             catch
@@ -644,7 +644,9 @@ namespace feraltweaks
                     case "unreadconversations":
                         {
                             // Add unreads
-                            Il2CppSystem.Collections.Generic.List<string> convos = JsonMapper.ToObject<Il2CppSystem.Collections.Generic.List<string>>(JsonMapper.ToJson(packet["conversations"])); 
+                            Il2CppSystem.Collections.Generic.List<string> convos = JsonMapper.ToObject<Il2CppSystem.Collections.Generic.List<string>>(JsonMapper.ToJson(packet["conversations"]));
+                            if (ChatManager.instance._unreadConversations == null)
+                                ChatManager.instance._unreadConversations = new Il2CppSystem.Collections.Generic.List<string>();
                             foreach (string convo in convos)
                                 ChatManager.instance._unreadConversations.Add(convo);
                             ShowWorldJoinChatUnreadPopup = true;

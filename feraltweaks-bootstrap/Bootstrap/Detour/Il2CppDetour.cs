@@ -12,10 +12,11 @@ namespace FeralTweaksBootstrap
         private static List<object> detourLock = new List<object>();
         private TDelegate target;
 
-        private IntPtr origPtr;
         private bool trampolineCreated;
+        private bool applied;
+
+        private IntPtr origPtr;
         private IntPtr detourPtr;
-        private MethodInfo trampolineMethod;
         private IntPtr trampolinePtr;
         private IntPtr funchook;
 
@@ -39,12 +40,12 @@ namespace FeralTweaksBootstrap
             lock (detourLock)
                 detourLock.Add(this);
 
-            // Create funchook
-            funchook = Funchook.FunchookCreate();
-
             // Create the detour pointer
             IntPtr func = Marshal.GetFunctionPointerForDelegate(target);
             detourPtr = func;
+
+            // Create funchook
+            funchook = Funchook.FunchookCreate();
 
             // Create trampoline
             trampolinePtr = NativeDetours.CreateTrampoline(origPtr, detourPtr, funchook);
@@ -57,27 +58,33 @@ namespace FeralTweaksBootstrap
 
             // Apply
             Funchook.FunchookInstall(funchook, 0);
+            applied = true;
         }
 
         public void Dispose()
         {
             // Unhook
-            Funchook.FunchookUninstall(funchook, 0);
-            Funchook.FunchookDestroy(funchook);
+            if (applied)
+                Funchook.FunchookUninstall(funchook, 0);
+            if (trampolineCreated)
+            {
+                Funchook.FunchookDestroy(funchook);
 
-            // Release lock
-            lock (detourLock)
-                detourLock.Remove(this);
+                // Release lock
+                lock (detourLock)
+                    detourLock.Remove(this);
+            }
+
+            funchook = IntPtr.Zero;
+            detourPtr = IntPtr.Zero;
+            applied = false;
+            trampolineCreated = false;
         }
 
         public T GenerateTrampoline<T>() where T : Delegate
         {
             // Create trampoline if needed
             CreateTrampoline();
-
-            // Create proxy
-            if (trampolineMethod == null)
-                trampolineMethod = DetourHelper.GenerateNativeProxy(trampolinePtr, typeof(T).GetMethod("Invoke"));
 
             // Return
             return Marshal.GetDelegateForFunctionPointer<T>(trampolinePtr);

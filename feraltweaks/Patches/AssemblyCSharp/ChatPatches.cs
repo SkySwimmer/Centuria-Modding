@@ -218,26 +218,29 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 // Filter it
                 inUnreadCount = 0;
-                foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                if (ChatManager.instance._cachedConversations != null)
                 {
-                    if (!convo.IsRoomChat && ChatManager.instance._unreadConversations.Contains(convo.id))
+                    foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
                     {
-                        if (convo.participants.Count > 0 && convo.participants[0].StartsWith("plaintext:[GC] "))
+                        if (!convo.IsRoomChat && ChatManager.instance._unreadConversations.Contains(convo.id))
                         {
-                            // GC
-                            if (__instance.gameObject.name.EndsWith("_GC"))
-                                inUnreadCount++;
-                        }
-                        else
-                        {
-                            // DM
-                            if (!__instance.gameObject.name.EndsWith("_GC"))
-                                inUnreadCount++;
+                            if (convo.participants.Count > 0 && convo.participants[0].StartsWith("plaintext:[GC] "))
+                            {
+                                // GC
+                                if (__instance.gameObject.name.EndsWith("_GC"))
+                                    inUnreadCount++;
+                            }
+                            else
+                            {
+                                // DM
+                                if (!__instance.gameObject.name.EndsWith("_GC"))
+                                    inUnreadCount++;
+                            }
                         }
                     }
                 }
             }
-            }
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ChatEntry), "GetTimeStampUIString")]
@@ -282,7 +285,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (inChatEntry == null)
                 return;
             GameObject marker = GetChild(__instance._lastChatTimeText.gameObject.transform.parent.gameObject, "UI_UnreadIndicator");
-            if (ChatManager.instance.UnreadConversations.Contains(inChatEntry.conversationId))
+            if (ChatManager.instance._unreadConversations != null && ChatManager.instance.UnreadConversations.Contains(inChatEntry.conversationId))
             {
                 // Enable unread marker
                 marker.SetActive(true);
@@ -340,7 +343,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (Plugin.ShowWorldJoinChatUnreadPopup)
                     {
                         Plugin.ShowWorldJoinChatUnreadPopup = false;
-                        if (ChatManager.instance._unreadConversations.Count > 0)
+                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0)
                         {
                             NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
                         }
