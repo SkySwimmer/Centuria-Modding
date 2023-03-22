@@ -141,6 +141,18 @@ public class LauncherUpdaterMain {
 			url = launcher.get("url").getAsString();
 			String version = launcher.get("version").getAsString();
 
+			// Handle relative paths for banner
+			if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
+				JsonObject serverInfo = info.get("server").getAsJsonObject();
+				JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
+				String api = hosts.get("api").getAsString();
+				if (!api.endsWith("/"))
+					api += "/";
+				while (splash.startsWith("/"))
+					splash = splash.substring(1);
+				splash = api + splash;
+			}
+
 			// Download splash and set image
 			BufferedImage img = ImageIO.read(new URL(splash));
 			panel_1.setImage(img);
@@ -170,10 +182,10 @@ public class LauncherUpdaterMain {
 					dir = new File(System.getProperty("user.home") + "/.local/share");
 					if (!dir.exists())
 						dir = new File(System.getProperty("user.home"));
-					
+
 					// Check OSX
 					if (System.getProperty("os.name").toLowerCase().contains("darwin")
-						|| System.getProperty("os.name").toLowerCase().contains("mac")) {
+							|| System.getProperty("os.name").toLowerCase().contains("mac")) {
 						dir = new File(dir, "centuria-launcher");
 					} else {
 						dir = new File(dir, ".centuria-launcher");
