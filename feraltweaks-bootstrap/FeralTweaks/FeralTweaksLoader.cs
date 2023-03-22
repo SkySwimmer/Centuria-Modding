@@ -165,37 +165,24 @@ namespace FeralTweaks
             List<string> modDirs = new List<string>();
             foreach (FileInfo mod in new DirectoryInfo("FeralTweaks/mods").GetFiles("*.dll", SearchOption.AllDirectories))
             {
-                try
+                LoadModFile(mod, modDirs);
+            }
+            foreach (DirectoryInfo dir in new DirectoryInfo("FeralTweaks/mods").GetDirectories())
+            {
+                // Load dlls
+                foreach (FileInfo mod in dir.GetFiles("*.dll", SearchOption.AllDirectories))
                 {
-                    // Add mod assembly folder to resolution if not done yet
-                    string dir = mod.DirectoryName;
-                    if (!modDirs.Contains(dir))
-                    {
-                        // Add folder to assembly resolution
-                        AppDomain.CurrentDomain.AssemblyResolve += (s, args) =>
-                        {
-                            // Attempt to resolve
-                            AssemblyName nm = new AssemblyName(args.Name);
-                            if (File.Exists(dir + "/" + nm.Name + ".dll"))
-                            {
-                                return Assembly.LoadFile(Path.GetFullPath(dir + "/" + nm.Name + ".dll"));
-                            }
-                            return null;
-                        };
-                        modDirs.Add(dir);
-                        LogDebug("Added " + dir + " to assembly resolution.");
-                    }
-
-                    // Load assembly
-                    LogDebug("Loading mod assembly: " + mod.FullName);
-                    Assembly asm = Assembly.Load(mod.Name.Remove(mod.Name.LastIndexOf(".dll")));
-
-                    // Find mod types
-                    LoadModsFrom(asm);
+                    LoadModFile(mod, modDirs);
                 }
-                catch (Exception e)
+
+                // Load dlls from folder
+                if (Directory.Exists(dir.FullName + "/assemblies"))
                 {
-                    LogError("Failed to load mod file: " + mod.Name + ": " + e);
+                    // Load dlls
+                    foreach (FileInfo mod in new DirectoryInfo(dir.FullName + "/assemblies").GetFiles("*.dll", SearchOption.AllDirectories))
+                    {
+                        LoadModFile(mod, modDirs);
+                    }
                 }
             }
 
@@ -224,6 +211,42 @@ namespace FeralTweaks
                 // Init
                 mod.Init();
             });
+        }
+
+        private static void LoadModFile(FileInfo mod, List<string> modDirs)
+        {
+            try
+            {
+                // Add mod assembly folder to resolution if not done yet
+                string dir = mod.DirectoryName;
+                if (!modDirs.Contains(dir))
+                {
+                    // Add folder to assembly resolution
+                    AppDomain.CurrentDomain.AssemblyResolve += (s, args) =>
+                    {
+                        // Attempt to resolve
+                        AssemblyName nm = new AssemblyName(args.Name);
+                        if (File.Exists(dir + "/" + nm.Name + ".dll"))
+                        {
+                            return Assembly.LoadFile(Path.GetFullPath(dir + "/" + nm.Name + ".dll"));
+                        }
+                        return null;
+                    };
+                    modDirs.Add(dir);
+                    LogDebug("Added " + dir + " to assembly resolution.");
+                }
+
+                // Load assembly
+                LogDebug("Loading mod assembly: " + mod.FullName);
+                Assembly asm = Assembly.Load(mod.Name.Remove(mod.Name.LastIndexOf(".dll")));
+
+                // Find mod types
+                LoadModsFrom(asm);
+            }
+            catch (Exception e)
+            {
+                LogError("Failed to load mod file: " + mod.Name + ": " + e);
+            }
         }
 
         private static void LoadModsFrom(Assembly asm)
