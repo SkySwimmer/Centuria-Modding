@@ -55,9 +55,6 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /s /i Funchook run\FeralTweaks\lib /Y" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="mkdir -p run/FeralTweaks/lib" Condition="'$(OS)' == 'Unix'" />
-    <Exec Command="cp -rf Funchook/. run/FeralTweaks/lib" Condition="'$(OS)' == 'Unix'" />
     <Exec Command="copy Libraries\MonoMod.Utils.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
     <Exec Command="copy Libraries\MonoMod.RuntimeDetour.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
     <Exec Command="cp -rf Libraries/MonoMod* run/FeralTweaks" Condition="'$(OS)' == 'Unix'" />
