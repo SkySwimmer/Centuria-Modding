@@ -1,4 +1,4 @@
-[![FTL Loader Build (Win64)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/win64-build.yml/badge.svg)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/win64-build.yml) 
+[![FTL Loader Build (Win64)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/win64-build.yml/badge.svg)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/win64-build.yml)  [![FTL Loader Build (OSX)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/osx-build.yml/badge.svg)](https://github.com/SkySwimmer/Centuria-Modding/actions/workflows/osx-build.yml) 
 
 # The Centuria Modding Project
 This is the repository for the official [Centuria](https://github.com/CPeers1/Centuria) modding project. This repository contains client modding code and server modules designed to patch up and modify parts of the original game.
