@@ -1,0 +1,251 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FeralTweaksBootstrap</name>
+    </assembly>
+    <members>
+        <member name="T:FeralTweaksBootstrap.Bootstrap.AssemblyResolutionHookHandler">
+            <summary>
+            Assembly resolution hooks
+            </summary>
+            <param name="assemblyName">Assembly name</param>
+            <param name="requestingAssembly">The assembly whose dependencies are being resolved</param>
+            <returns>Assembly or null</returns>
+        </member>
+        <member name="E:FeralTweaksBootstrap.Bootstrap.ResolveAssembly">
+            <summary>
+            Assembly resolution hooks
+            </summary>
+        </member>
+        <member name="T:FeralTweaksBootstrap.Detour.DetourContainer`1">
+            <summary>
+            Detour container
+            </summary>
+            <typeparam name="T">Delegate type</typeparam>
+        </member>
+        <member name="M:FeralTweaksBootstrap.Detour.DetourContainer`1.Unhook">
+            <summary>
+            Unhooks the detour
+            </summary>
+        </member>
+        <member name="T:FeralTweaksBootstrap.Detour.NativeDetours">
+            <summary>
+            Tool to create detours in native code
+            </summary>
+        </member>
+        <member name="M:FeralTweaksBootstrap.Detour.NativeDetours.CreateDetour``1(System.IntPtr,FeralTweaksBootstrap.Detour.DetourContainer{``0})">
+            <summary>
+            Creates a detour (TODO: running original code)
+            </summary>
+            <param name="location">Target pointer</param>
+            <param name="detourMethod">Detour method container</param>
+        </member>
+        <member name="M:FeralTweaksBootstrap.Detour.NativeDetours.CreateTrampoline(System.IntPtr,System.IntPtr,System.IntPtr)">
+            <summary>
+            Creates a trampoline pointer
+            </summary>
+            <param name="function">Target function</param>
+            <param name="hook">Hook pointer</param>
+            <param name="funchook">Funchook instance</param>
+            <returns>Trampoline pointer</returns>
+        </member>
+        <member name="T:FeralTweaksBootstrap.RuntimeInvokeDetour">
+            <summary>
+            Runtime invoke delegate
+            </summary>
+            <param name="method">Method pointer</param>
+            <param name="obj">Object pointer</param>
+            <param name="parameters">Parameter pointer</param>
+            <param name="exc">Exception pointer</param>
+            <returns>Result pointer</returns>
+        </member>
+        <member name="T:FeralTweaks.FeralTweaksLoader">
+            <summary>
+            FeralTweaks Modloader Type
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.FeralTweaksLoader.DebugLoggingEnabled">
+            <summary>
+            Checks if debug logging is enabled
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.GetLoadedMods">
+            <summary>
+            Retrieves all loaded mods
+            </summary>
+            <returns>Array of FeralTweaksMod instances</returns>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.IsModLoaded(System.String)">
+            <summary>
+            Checks if a mod is loaded by its ID
+            </summary>
+            <param name="id">Mod ID</param>
+            <returns>True if loaded, false otherwise</returns>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.GetLoadedMod(System.String)">
+            <summary>
+            Retrieves loaded mods by ID
+            </summary>
+            <param name="id">Mod ID</param>
+            <returns>FeralTweaksMod instance</returns>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.GetLoadedMod``1">
+            <summary>
+            Retrieves loaded mods by type
+            </summary>
+            <returns>FeralTweaksMod instance</returns>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogInfo(System.String)">
+            <summary>
+            Logs an info message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogDebug(System.String)">
+            <summary>
+            Logs a debug message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogWarn(System.String)">
+            <summary>
+            Logs a warning message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogError(System.String)">
+            <summary>
+            Logs an error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="T:FeralTweaks.Mods.FeralTweaksMod">
+            <summary>
+            FeralTweaks Mod Abstract
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogDebug(System.String)">
+            <summary>
+            Logs a debug message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogInfo(System.String)">
+            <summary>
+            Logs an info message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogWarn(System.String)">
+            <summary>
+            Logs a warning message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogError(System.String)">
+            <summary>
+            Logs an error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.ID">
+            <summary>
+            Mod ID
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.Version">
+            <summary>
+            Mod version
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.CacheDir">
+            <summary>
+            Mod cache directory, only available during init, null during preinit
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.ConfigDir">
+            <summary>
+            Mod config directory, only available during init, null during preinit
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.Define">
+            <summary>
+            Defines mod dependencies and information
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineDependency(System.String)">
+            <summary>
+            Defines a dependency
+            </summary>
+            <param name="id">Mod ID</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineOptionalDependency(System.String)">
+            <summary>
+            Defines a optional dependency
+            </summary>
+            <param name="id">Mod ID</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineLoadAfter(System.String)">
+            <summary>
+            Defines a mod ID that must load AFTER this mod
+            </summary>
+            <param name="id">Mod ID</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineConflict(System.String)">
+            <summary>
+            Defines which mods cannot load while having this mod loaded
+            </summary>
+            <param name="id">Mod ID</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.PreInit">
+            <summary>
+            Pre-initializes the mod
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.Init">
+            <summary>
+            Initializes the mod
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.PostInit">
+            <summary>
+            Post-initializes the mod
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.klassIndex">
+            <summary>
+            for VALUETYPE and CLASS
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.typeHandle">
+            <summary>
+            for VALUETYPE and CLASS at runtime
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.type">
+            <summary>
+            for PTR and SZARRAY
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.array">
+            <summary>
+            for ARRAY
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.genericParameterIndex">
+            <summary>
+            for VAR and MVAR
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.genericParameterHandle">
+            <summary>
+            for VAR and MVAR at runtime
+            </summary>
+        </member>
+        <member name="P:Il2CppDumper.Il2CppType.Union.generic_class">
+            <summary>
+            for GENERICINST
+            </summary>
+        </member>
+    </members>
+</doc>
