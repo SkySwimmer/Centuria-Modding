@@ -10,27 +10,29 @@ Note that this project is a HEAVY WIP and subject to change. Currently the launc
 <br/>
 
 # Building the client mods
-The project is split up into multiple parts, `feraltweaks`, the launcher and the server modules needed for the mod handshake and mod download system.
+The project is split up into multiple parts, `feraltweaks`, `feraltweaks-bootstrap` (FTL modloader), the launcher and the server modules needed for the mod handshake and mod download system.
 
 <br/>
 
 ## Building the Desktop client mod (feraltweaks)
-Feraltweaks is a BepInEx module, in order to build it you will need .NET cli installed.
+Feraltweaks is a FTL mod, in order to build it you will need .NET cli installed.
 You will also need to have a original fer.al client in order to mod it.
 
-1. Firstly, you need a Fer.al client, you can download it yourself from the WildWorks servers or by using the one downloaded by the EmuFeral launcher.
+1. Firstly, you need a Fer.al client, you can download it yourself from the EmuFeral servers or by using the one downloaded by the EmuFeral launcher.
 
-2. If you do not have a Fer.al client, go to https://download.fer.al/win64/launcher.ini
+2. If you do not have a Fer.al client, you can download it from https://emuferal.ddns.net/feraldownloads/win64/b444802d2ab386d50f57f641ff74422471910210fc9ef1faf3631404a8401630.7z
 
-3. Search for the line containing `ApplicationDownloadUrl`, open the link on that line in your browser.
+3. After downloading, extract the `.7z` file and the client should be in the folder named `build`.
 
-4. After downloading, extract the `.7z` file and the client should be in the folder named `build`.
+4. After that, you will need to install the FeralTweaks loader, you can download it from the [github workflows](https://github.com/SkySwimmer/Centuria-Modding/actions/), select your platform and select the latest build.
 
-5. After that, you will need to install BepInEx on your Fer.al client, currently only BepInEx 6 (Bleeding Edge) build #577 works, newer builds fail due to a bug in BepInEx.
+5. Extract the zip in the fer.al client, after extracting you should have the Fer.al exe, FeralTweaks folder and Fer.al_Data folder and some other files in the same folder.
 
-6. After the first run, BepInEx will have unhollowed the Fer.al client in `BepInEx/unhollowed`. These are the client assemblies, which are needed to build the mod, copy the contents of that folder to `feraltweaks/lib/feral` (you may need to create this folder)
+6. Run the client, it should generate the assemblies for the game, note that first startup **always takes a very very long time**.
 
-7. Create the folder `run` in `feraltweaks`, and copy your client to it (make sure to include BepInEx while copying), it should end up looking like this:<br/>
+6. After the first run, FTL will have generated the proxy assemblies in `FEralTweaks/cache/assemblies`. These are the client assemblies, which are needed to build the mod, copy the contents of that folder to `feraltweaks/lib/feral` (you may need to create this folder)
+
+7. Create the folder `run` in `feraltweaks`, and copy your client to it (make sure to include FeralTweaks while copying), it should end up looking like this:<br/>
 -- feraltweaks<br/>
 --- lib<br/>
 ---- feral<br/>
@@ -38,10 +40,11 @@ You will also need to have a original fer.al client in order to mod it.
 ----- Assembly-CSharp-firstpass.dll<br/>
 ----- etc...<br/>
 --- run<br/>
----- BepInEx<br/>
+---- CoreCLR<br/>
 ---- Fer.al_Data<br/>
----- mono<br/>
+---- FeralTweaks<br/>
 ---- Fer.al.exe<br/>
+---- winhttp.dll<br/>
 ---- etc...<br/>
 
 8. Run the following command in the root of the project
@@ -52,9 +55,9 @@ dotnet build
 9. You can find the plugin at `feraltweaks/run/plugins/netstandard2.1/feraltweaks.dll`
 
 ## Using the Desktop mod
-After putting it in the `BepInEx/plugins/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have BepInEx installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
+After putting it in the `FeralTweaks/mods/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have FTL installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
 
-You can however change client-specific options in `BepInEx/feraltweaks/settings.props` which contains some settings you may find useful. Note that client settings are overriden by the server when playing on a feral-tweaks enabled Centuria server.
+You can however change client-specific options in `FeralTweaks/config/feraltweaks/settings.props` which contains some settings you may find useful. Note that client settings are overriden by the server when playing on a feral-tweaks enabled Centuria server.
 
 <br/>
 
