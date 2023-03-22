@@ -52,7 +52,7 @@ You will also need to have a original fer.al client in order to mod it.
 dotnet build
 ```
 
-9. You can find the plugin at `feraltweaks/run/plugins/netstandard2.1/feraltweaks.dll`
+9. You can find the plugin at `feraltweaks/run/FeralTweaks/mods/net60/feraltweaks.dll`
 
 ## Using the Desktop mod
 After putting it in the `FeralTweaks/mods/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have FTL installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
