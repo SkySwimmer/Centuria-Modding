@@ -2,7 +2,10 @@ package org.asf.centuria.feraltweaks.http;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.Socket;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.Base64;
 
@@ -11,6 +14,7 @@ import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.feraltweaks.FeralTweaksModule;
 import org.asf.centuria.modules.ModuleManager;
+import org.asf.connective.https.ConnectiveHTTPSServer;
 import org.asf.rats.processors.HttpGetProcessor;
 
 import com.google.gson.JsonArray;
@@ -130,8 +134,8 @@ public class DataProcessor extends HttpGetProcessor {
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
 							.startsWith(new File(module.ftDataPath).getCanonicalPath().toLowerCase() + File.separator)))
 					&& !path.equals("/feraltweaks/chartpatches/index.json")
-					&& !path.equals("/clientmods/assemblies/index.json")
-					&& !path.equals("/clientmods/assets/index.json")) {
+					&& !path.equals("/feraltweaks/settings.props") && !path.equals("/clientmods/assemblies/index.json")
+					&& !path.equals("/clientmods/assets/index.json") && !path.equals("/server.json")) {
 
 				// Check if its a index json request of a different folder
 				if (path.endsWith("/index.json")) {
@@ -156,7 +160,9 @@ public class DataProcessor extends HttpGetProcessor {
 			// Check feraltweaks requests
 			if (path.equals("/feraltweaks/settings.props")) {
 				// Append to the settings properties file
-				String res = Files.readString(reqFile.toPath()).replace("\r", "");
+				String res = "";
+				if (reqFile.exists())
+					res = Files.readString(reqFile.toPath()).replace("\r", "");
 				res = res.replace("${server:version}", Centuria.SERVER_UPDATE_VERSION);
 
 				// Add replication
@@ -192,6 +198,78 @@ public class DataProcessor extends HttpGetProcessor {
 				return;
 			}
 
+			// Handle server.json
+			if (path.equals("/server.json")) {
+				// Create cache
+				File cacheDir = new File("cache/feraltweaks");
+				cacheDir.mkdirs();
+
+				// Attempt to update upstream
+				JsonObject serverInfo = new JsonObject();
+				boolean successfulUpdate = false;
+				if (!module.upstreamServerJsonURL.isEmpty() && !module.upstreamServerJsonURL.equals("undefined")
+						&& !module.upstreamServerJsonURL.equals("disabled")) {
+					try {
+						HttpURLConnection conn = (HttpURLConnection) new URL(module.upstreamServerJsonURL)
+								.openConnection();
+						InputStream strm = conn.getInputStream();
+						String data = new String(strm.readAllBytes(), "UTF-8");
+						Files.writeString(new File(cacheDir, "upstream.server.json").toPath(), data);
+						serverInfo = JsonParser.parseString(data).getAsJsonObject();
+						successfulUpdate = true;
+					} catch (Exception e) {
+					}
+				}
+
+				if (!successfulUpdate) {
+					// Load existing
+					try {
+						File serverFile = new File(cacheDir, "upstream.server.json");
+						if (serverFile.exists())
+							serverInfo = JsonParser.parseString(Files.readString(serverFile.toPath()))
+									.getAsJsonObject();
+					} catch (Exception e) {
+					}
+				}
+
+				// Generate data
+				JsonObject serverBlock = createOrGetJsonObject(serverInfo, "server");
+				JsonObject hosts = createOrGetJsonObject(serverBlock, "hosts");
+				hosts.addProperty("director",
+						((Centuria.directorServer instanceof ConnectiveHTTPSServer) ? "https" : "http") + "://"
+								+ Centuria.discoveryAddress + ":" + Centuria.directorServer.getPort() + "/");
+				hosts.addProperty("api", ((this.getServer() instanceof ConnectiveHTTPSServer) ? "https" : "http")
+						+ "://" + Centuria.discoveryAddress + ":" + this.getServer().getPort() + "/");
+				hosts.addProperty("chat", Centuria.discoveryAddress);
+				hosts.addProperty("voiceChat", Centuria.discoveryAddress);
+				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
+				ports.addProperty("game", Centuria.gameServer.getServerSocket().getLocalPort());
+				ports.addProperty("chat", Centuria.chatServer.getServerSocket().getLocalPort());
+				ports.addProperty("voiceChat", -1);
+				ports.addProperty("bluebox", -1);
+				serverBlock.addProperty("encryptedGame", Centuria.encryptGame);
+				serverBlock.addProperty("encryptedChat", Centuria.encryptChat);
+				serverBlock.addProperty("modVersion", module.modDataVersion);
+				serverBlock.addProperty("assetVersion", module.modDataVersion);
+
+				// Load existing data over it
+				if (reqFile.exists()) {
+					try {
+						JsonObject localServerInfo = JsonParser.parseString(Files.readString(reqFile.toPath()))
+								.getAsJsonObject();
+
+						// Load existing data over the server info block
+						mergeObject(localServerInfo, serverInfo);
+					} catch (Exception e) {
+					}
+				}
+
+				// Set content
+				getResponse().setResponseStatus(200, "OK");
+				getResponse().setContent("application/json", serverInfo.toString());
+				return;
+			}
+
 			// Set content
 			getResponse().setResponseStatus(200, "OK");
 			getResponse().setContent(MainFileMap.getInstance().getContentType(reqFile.getName()),
@@ -201,6 +279,25 @@ public class DataProcessor extends HttpGetProcessor {
 			setResponseMessage("Internal Server Error");
 			Centuria.logger.error(getRequest().path + " failed: 500: Internal Server Error", e);
 		}
+	}
+
+	private void mergeObject(JsonObject source, JsonObject target) {
+		// Merge each entry
+		for (String key : source.keySet()) {
+			if (source.get(key).isJsonObject()) {
+				JsonObject chT = createOrGetJsonObject(target, key);
+				mergeObject(source.get(key).getAsJsonObject(), chT);
+			} else
+				target.add(key, source.get(key));
+		}
+	}
+
+	private JsonObject createOrGetJsonObject(JsonObject obj, String name) {
+		if (obj.has(name))
+			return obj.get(name).getAsJsonObject();
+		JsonObject res = new JsonObject();
+		obj.add(name, res);
+		return res;
 	}
 
 	private void scan(File source, JsonArray res, String prefix) {
