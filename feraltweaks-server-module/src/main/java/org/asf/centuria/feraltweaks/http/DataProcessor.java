@@ -43,7 +43,8 @@ public class DataProcessor extends HttpGetProcessor {
 			}
 
 			FeralTweaksModule module = (FeralTweaksModule) ModuleManager.getInstance().getModule("feraltweaks");
-			if (!path.equals("/server.json")) {
+			if (path.startsWith("/feraltweaks/") || path.equals("/feraltweaks") || path.startsWith("/clientmods/")
+					|| path.equals("/clientmods")) {
 				// Parse JWT payload
 				if (!getRequest().headers.containsKey("Authorization")) {
 					this.setResponseCode(401);
@@ -131,6 +132,21 @@ public class DataProcessor extends HttpGetProcessor {
 					&& !path.equals("/feraltweaks/chartpatches/index.json")
 					&& !path.equals("/clientmods/assemblies/index.json")
 					&& !path.equals("/clientmods/assets/index.json")) {
+
+				// Check if its a index json request of a different folder
+				if (path.endsWith("/index.json")) {
+					// Find path
+					File parent = reqFile.getParentFile();
+					if (parent.exists() && parent.isDirectory() && !parent.equals(new File(module.ftDataPath))) {
+						// Handle
+						JsonArray res = new JsonArray();
+						scan(parent, res, path.substring(0, path.lastIndexOf("index.json")));
+						getResponse().setResponseStatus(200, "OK");
+						getResponse().setContent("text/json", res.toString());
+						return;
+					}
+				}
+
 				this.setResponseCode(404);
 				this.setResponseMessage("Not found");
 				this.setBody("text/json", "{\"error\":\"file_not_found\"}");
