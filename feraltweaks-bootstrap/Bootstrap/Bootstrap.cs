@@ -22,11 +22,20 @@ namespace FeralTweaksBootstrap
 {
     public static class Bootstrap
     {
-        private const string VERSION = "v1.0.0-alpha-a2";
+        private const string VERSION = "v1.0.0-alpha-a3";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
         private static StreamWriter LogWriter;
         private static string GameAssemblyPath;
+        private static bool logDebug;
+
+        public static bool DebugLogging
+        {
+            get
+            {
+                return logDebug;
+            }
+        }
 
         /// <summary>
         /// Assembly resolution hooks
@@ -41,19 +50,30 @@ namespace FeralTweaksBootstrap
         /// </summary>
         public static event AssemblyResolutionHookHandler ResolveAssembly;
 
+        public static void LogDebug(string message)
+        {
+            if (!DebugLogging)
+                return;
+            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Preloader] " + message);
+        }
+
         public static void LogInfo(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Preloader] " + message);
         }
 
         public static void LogWarn(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Preloader] " + message);
         }
 
         public static void LogError(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Preloader] " + message);
         }
 
         public static void Start()
@@ -69,6 +89,55 @@ namespace FeralTweaksBootstrap
             // Log
             LogInfo("Preparing...");
             LogInfo("FeralTweaks Bootstrapper version " + VERSION + " loading...");
+
+            // Handle arguments
+            LogInfo("Processing arguments...");
+            bool dumpOnly = false;
+            bool loadMods = false;
+            bool regenerateAssemblies = false;
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 1; i < args.Length; i++)
+            {
+                if (args[i].StartsWith("--"))
+                {
+                    string opt = args[i].Substring(2);
+                    string val = null;
+                    if (opt.Contains("="))
+                    {
+                        val = opt.Substring(opt.IndexOf("=") + 1);
+                        opt = opt.Remove(opt.IndexOf("="));
+                    }
+
+                    // Handle argument
+                    
+                    switch (opt)
+                    {
+                        case "debug-log":
+                            {
+                                logDebug = true;
+                                break;
+                            }
+                        case "dryrun-load-mods":
+                            {
+                                loadMods = true;
+                                dumpOnly = true;
+                                break;
+                            }
+                        case "dry-run":
+                            {
+                                dumpOnly = true;
+                                break;
+                            }
+                        case "regenerate-interop-assemblies":
+                            {
+                                regenerateAssemblies = true;
+                                break;
+                            }
+
+                            // TODO: launcher handoff log
+                    }
+                }
+            }
 
             // Determine platform
             LogInfo("Determining platform...");
@@ -124,7 +193,7 @@ namespace FeralTweaksBootstrap
             LogInfo("Unity version: " + unityVer);
 
             // Generate assemblies
-            if (!File.Exists("FeralTweaks/cache/assemblies/complete"))
+            if (!File.Exists("FeralTweaks/cache/assemblies/complete") || regenerateAssemblies)
             {
                 LogInfo("Dumping dummy assemblies...");
 
@@ -321,6 +390,13 @@ namespace FeralTweaksBootstrap
                 File.Create("FeralTweaks/cache/assemblies/complete");
             }
 
+            // Close if dump-only
+            if (dumpOnly && !loadMods)
+            {
+                LogInfo("EXITING! Dry run finished!");
+                Environment.Exit(0);
+            }
+
             // Bind resolve
             LogInfo("Binding assembly resolution...");
             AppDomain.CurrentDomain.AssemblyResolve += (s, args) =>
@@ -409,6 +485,13 @@ namespace FeralTweaksBootstrap
             LogInfo("Preloader finished!");
             LogInfo("Starting FeralTweaks loader...");
             StartLoader();
+
+            // Exit if needed
+            if (loadMods)
+            {
+                LogInfo("EXITING! Dry run finished!");
+                Environment.Exit(0);
+            }
         }
 
         private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)

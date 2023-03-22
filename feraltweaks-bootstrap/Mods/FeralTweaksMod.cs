@@ -19,7 +19,7 @@ namespace FeralTweaks.Mods
         internal List<string> _loadAfter = new List<string>();
         private StreamWriter LogWriter;
         private bool locked;
-
+        
         internal void Initialize()
         {
             if (!Regex.Match(ID, "^[0-9A-Za-z._,]+$").Success)
@@ -31,12 +31,25 @@ namespace FeralTweaks.Mods
         }
 
         /// <summary>
+        /// Logs a debug message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public void LogDebug(string message)
+        {
+            if (!FeralTweaksLoader.DebugLoggingEnabled)
+                return;
+            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Loader] " + message);
+        }
+
+        /// <summary>
         /// Logs an info message
         /// </summary>
         /// <param name="message">Message to log</param>
         public void LogInfo(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [" + ID + "] " + message);
         }
 
         /// <summary>
@@ -46,6 +59,7 @@ namespace FeralTweaks.Mods
         public void LogWarn(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [" + ID + "] " + message);
         }
 
         /// <summary>
@@ -55,6 +69,7 @@ namespace FeralTweaks.Mods
         public void LogError(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [" + ID + "] " + message);
         }
 
         /// <summary>

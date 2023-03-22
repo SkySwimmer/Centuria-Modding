@@ -11,16 +11,19 @@ namespace FeralTweaksBootstrap
         public static void LogInfo(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Interop] " + message);
         }
 
         public static void LogWarn(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Interop] " + message);
         }
 
         public static void LogError(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Interop] " + message);
         }
 
         static InteropLogger()

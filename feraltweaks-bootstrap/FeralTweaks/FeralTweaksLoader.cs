@@ -12,9 +12,20 @@ namespace FeralTweaks
     /// </summary>
     public static class FeralTweaksLoader
     {
-        private const string VERSION = "v1.0.0-alpha-a2";
+        private const string VERSION = "v1.0.0-alpha-a3";
         private static StreamWriter LogWriter;
         private static List<FeralTweaksMod> mods;
+
+        /// <summary>
+        /// Checks if debug logging is enabled
+        /// </summary>
+        public static bool DebugLoggingEnabled
+        {
+            get
+            {
+                return FeralTweaksBootstrap.Bootstrap.DebugLogging;
+            }
+        }
 
         /// <summary>
         /// Retrieves all loaded mods
@@ -65,6 +76,19 @@ namespace FeralTweaks
         public static void LogInfo(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Loader] " + message);
+        }
+
+        /// <summary>
+        /// Logs a debug message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public static void LogDebug(string message)
+        {
+            if (!FeralTweaksLoader.DebugLoggingEnabled)
+                return;
+            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Loader] " + message);
         }
 
         /// <summary>
@@ -74,6 +98,7 @@ namespace FeralTweaks
         public static void LogWarn(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Loader] " + message);
         }
 
         /// <summary>
@@ -83,6 +108,7 @@ namespace FeralTweaks
         public static void LogError(string message)
         {
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
+            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Loader] " + message);
         }
 
         private static void Logger_MessageReceived(object sender, HarmonyLib.Tools.Logger.LogEventArgs e)
@@ -157,9 +183,11 @@ namespace FeralTweaks
                             return null;
                         };
                         modDirs.Add(dir);
+                        LogDebug("Added " + dir + " to assembly resolution.");
                     }
 
                     // Load assembly
+                    LogDebug("Loading mod assembly: " + mod.FullName);
                     Assembly asm = Assembly.Load(mod.Name.Remove(mod.Name.LastIndexOf(".dll")));
 
                     // Find mod types
@@ -200,25 +228,36 @@ namespace FeralTweaks
 
         private static void LoadModsFrom(Assembly asm)
         {
+            LogDebug("Finding mod types...");
             foreach (Type t in asm.GetTypes())
             {
+                LogDebug("Verifying type: " + t.FullName + "...");
                 if (t.IsAssignableTo(typeof(FeralTweaksMod)) && !t.IsAbstract)
                 {
                     try
                     {
+                        LogDebug("Loading mod type: " + t.FullName + "...");
+
                         // Attempt to load type
+                        LogDebug("Finding parameterless constructor...");
                         ConstructorInfo constr = t.GetConstructor(new Type[0]);
                         if (constr == null)
                             throw new ArgumentException("No empty constructor");
+
+                        // Instantiate
+                        LogDebug("Creating mod instance...");
                         FeralTweaksMod inst = (FeralTweaksMod)constr.Invoke(new object[0]);
                         try
                         {
                             // Attempt to load mod instance
+                            LogDebug("Setting up mod... Defining dependencies and loading logger...");
                             inst.Initialize();
 
                             // Find existing mod
+                            LogDebug("Verifying mod ID...");
                             if (IsModLoaded(inst.ID))
                                 throw new ArgumentException("Duplicate mod detected! ID: " + inst.ID + " was loaded twice!");
+                            LogDebug("Discovered mod ID: " + inst.ID);
                             mods.Add(inst);
                         }
                         catch (Exception e)
