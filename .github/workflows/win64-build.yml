@@ -27,13 +27,13 @@ jobs:
       - name: Compile FTL
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-win64/ftl.sh
 
-      - name: Download and compile external lib: Funchook
+      - name: 'Download and compile external lib: Funchook'
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-win64/funchook.sh
 
-      - name: Download external lib: Doorstop
+      - name: 'Download external lib: Doorstop'
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-win64/doorstop.sh
 
-      - name: Download external lib: CoreCLR
+      - name: 'Download external lib: CoreCLR'
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-win64/coreclr.sh
 
       - name: Create package
