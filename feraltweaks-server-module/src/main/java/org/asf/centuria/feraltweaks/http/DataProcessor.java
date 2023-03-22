@@ -273,7 +273,7 @@ public class DataProcessor extends HttpGetProcessor {
 			// Set content
 			getResponse().setResponseStatus(200, "OK");
 			getResponse().setContent(MainFileMap.getInstance().getContentType(reqFile.getName()),
-					new FileInputStream(reqFile));
+					new FileInputStream(reqFile), reqFile.length());
 		} catch (Exception e) {
 			setResponseCode(500);
 			setResponseMessage("Internal Server Error");
