@@ -1,4 +1,4 @@
-name: FTL (Win64)
+name: FTL Loader Build (Win64)
 
 on:
   push:
