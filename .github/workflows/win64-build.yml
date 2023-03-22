@@ -42,5 +42,5 @@ jobs:
       - name: Publish build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: 'FeralTweaksLoader Latest (Win64).zip'
-          path: feraltweaks-bootstrap/build/ftl-win64-latest.zip
+          name: 'FeralTweaksLoader Latest (Win64)'
+          path: feraltweaks-bootstrap/build/package
