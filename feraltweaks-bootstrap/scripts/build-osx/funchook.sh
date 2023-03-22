@@ -33,7 +33,7 @@ make install
 # Copy result
 echo Copying results...
 mkdir ../../libfunchook
-cp -rfv install/bin/* ../../libfunchook
+cp -rfv install/lib/libfunchook.2.0.0.dylib ../../libfunchook/libfunchook.dylib
 cp -rfv install/include/* ../../libfunchook
 cd ../..
 rm -rf funchook
