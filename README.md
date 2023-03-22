@@ -5,7 +5,7 @@ This is the repository for the official [Centuria](https://github.com/CPeers1/Ce
 
 Centuria is a work-in-progress server emulator for the now-defunct MMORPG Fer.al. The main server project can be found [here](https://github.com/CPeers1/Centuria). Centuria is developed by a group of developers from the Fer.ever discord. The software was originally released by the AerialWorks Software Foundation (SkySwimmer's small organization) but is now owned [Owenvii](https://github.com/CPeers1).
 
-Note that this project is a HEAVY WIP and subject to change. Currently the launcher and android mod are not yet functional, only the desktop mod and server module PARTIALLY work.
+Note that this project is a HEAVY WIP and subject to change. Currently the android mod is not yet functional, only the desktop mod, launcher and server module PARTIALLY work.
 
 <br/>
 
@@ -30,7 +30,7 @@ You will also need to have a original fer.al client in order to mod it.
 
 6. Run the client, it should generate the assemblies for the game, note that first startup **always takes a very very long time**.
 
-6. After the first run, FTL will have generated the proxy assemblies in `FEralTweaks/cache/assemblies`. These are the client assemblies, which are needed to build the mod, copy the contents of that folder to `feraltweaks/lib/feral` (you may need to create this folder)
+6. After the first run, FTL will have generated the proxy assemblies in `FeralTweaks/cache/assemblies`. These are the client assemblies, which are needed to build the mod, copy the contents of that folder to `feraltweaks/lib/feral` (you may need to create this folder)
 
 7. Create the folder `run` in `feraltweaks`, and copy your client to it (make sure to include FeralTweaks while copying), it should end up looking like this:<br/>
 -- feraltweaks<br/>
