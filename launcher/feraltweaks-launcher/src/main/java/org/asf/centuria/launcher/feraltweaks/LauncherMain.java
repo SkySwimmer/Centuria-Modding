@@ -938,6 +938,7 @@ public class LauncherMain {
 							log("Starting client...");
 							progressBar.setMaximum(100);
 							progressBar.setValue(0);
+							panel_1.repaint();
 						});
 					} catch (InvocationTargetException | InterruptedException e) {
 					}

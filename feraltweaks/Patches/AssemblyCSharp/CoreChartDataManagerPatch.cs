@@ -35,6 +35,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         public static Dictionary<string, BaseDef> DefCache = new Dictionary<string, BaseDef>();
         private static bool patched;
+        private static bool safeToLoad;
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CraftableItemChartData), "CreateDef")]
+        public static void CreateDef(CraftableItemChartData __instance)
+        {
+            safeToLoad = true;
+            SetChartObjectInstances();
+        }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LocalizationChartData), "Get")]
@@ -64,6 +73,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
         public static void SetChartObjectInstances()
         {
+            if (!safeToLoad)
+                return;
             if (patched)
                 return;
             patched = true;

@@ -4,7 +4,6 @@
     <TargetFramework>net60</TargetFramework>
     <AssemblyName>feraltweaks</AssemblyName>
     <Description>Chart modification system and various tweaks</Description>
-    <Version>1.0.0.A2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>  
