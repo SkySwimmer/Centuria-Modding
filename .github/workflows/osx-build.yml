@@ -1,0 +1,46 @@
+name: FTL Loader Build (OSX)
+
+on:
+  push:
+    branches: [ "main", "stable" ]
+  pull_request:
+    branches: [ "main", "stable" ]
+
+jobs:
+  build:
+    runs-on: macos-10.13
+    strategy:
+      matrix:
+        dotnet-version: [ '6.0.x' ]
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+          
+      - name: Setup project
+        run: bash feraltweaks-bootstrap/scripts/build-osx/setup.sh
+
+      - name: Compile FTL
+        run: bash feraltweaks-bootstrap/scripts/build-osx/ftl.sh
+
+      - name: 'Download and compile external lib: Funchook'
+        run: bash feraltweaks-bootstrap/scripts/build-osx/funchook.sh
+
+      - name: 'Download external lib: Doorstop'
+        run: bash feraltweaks-bootstrap/scripts/build-osx/doorstop.sh
+
+      - name: 'Download external lib: CoreCLR'
+        run: bash feraltweaks-bootstrap/scripts/build-osx/coreclr.sh
+
+      - name: Create package
+        run: bash feraltweaks-bootstrap/scripts/build-osx/package.sh
+
+      - name: Publish build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'FeralTweaksLoader Latest (OSX)'
+          path: feraltweaks-bootstrap/build/package
