@@ -46,6 +46,7 @@ namespace feraltweaks
         public static int ChatPort = -1;
         public static int BlueboxPort = -1;
         public static int EncryptedGame = -1; // -1 = unset, 0 = false, 1 = true
+        public static int EncryptedChat = -1; // -1 = unset, 0 = false, 1 = true
 
         // Error message container for when login fails and the server includes a feraltweaks message field in the response
         public static string LoginErrorMessage = null;
@@ -280,7 +281,7 @@ namespace feraltweaks
             // Parse environment
             string[] payload = args.Split(" ");
             if (payload.Length == 0)
-                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
+                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false]");
             try
             {
                 if (payload.Length >= 1)
@@ -328,10 +329,15 @@ namespace feraltweaks
                     EncryptedGame = payload[8].ToLower() == "true" ? 1 : 0;
                     LogInfo("Encryped game server: " + (EncryptedGame == 1));
                 }
+                if (payload.Length >= 9)
+                {
+                    EncryptedChat = payload[9].ToLower() == "true" ? 1 : 0;
+                    LogInfo("Encryped chat server: " + (EncryptedChat == 1));
+                }
             }
             catch
             {
-                LogError("Error: invalid server environment arguments, expected: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false]");
+                LogError("Error: invalid server environment arguments, expected: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false]");
             }
         }
 

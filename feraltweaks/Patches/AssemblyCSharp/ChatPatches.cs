@@ -272,6 +272,20 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
+        public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
+        {
+            if (__instance is ChatServiceConnection)
+            {
+                // Override encryption if needed
+                if (Plugin.EncryptedChat != -1)
+                {
+                    isSecured = Plugin.EncryptedChat == 1;
+                }
+            }
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_LazyListItem_ChatConversation), "RefreshReadState")]
         public static void RefreshReadState(ref UI_LazyListItem_ChatConversation __instance, bool inIsRead)

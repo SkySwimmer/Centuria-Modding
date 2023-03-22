@@ -1094,7 +1094,8 @@ public class LauncherMain {
 		sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
 				hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
 				hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
-				ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean());
+				ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean(),
+				serverInfo.get("encryptedChat").getAsBoolean());
 
 		// Send autologin
 		if (completedTutorial) {
