@@ -259,6 +259,16 @@ public class LauncherMain {
 			client = launcher.get("client").getAsJsonObject();
 			JsonObject loader = launcher.get("modloader").getAsJsonObject();
 
+			// Handle relative paths for banner
+			if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
+				String api = hosts.get("api").getAsString();
+				if (!api.endsWith("/"))
+					api += "/";
+				while (banner.startsWith("/"))
+					banner = banner.substring(1);
+				banner = api + banner;
+			}
+
 			// Determine platform
 			if (System.getProperty("os.name").toLowerCase().contains("win")
 					&& !System.getProperty("os.name").toLowerCase().contains("darwin")) { // Windows
