@@ -17,6 +17,7 @@ import org.asf.centuria.modules.ModuleManager;
 import org.asf.connective.https.ConnectiveHTTPSServer;
 import org.asf.rats.processors.HttpGetProcessor;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -266,7 +267,8 @@ public class DataProcessor extends HttpGetProcessor {
 
 				// Set content
 				getResponse().setResponseStatus(200, "OK");
-				getResponse().setContent("application/json", serverInfo.toString());
+				getResponse().setContent("application/json",
+						new Gson().newBuilder().setPrettyPrinting().create().toJson(serverInfo));
 				return;
 			}
 
