@@ -58,7 +58,7 @@ public class ServerMessenger {
 				// Parse
 				pkt = pkt.instantiate();
 				pkt.parse(reader);
-				return pkt.handle(player);
+				return pkt.handle(player, this);
 			}
 		}
 
@@ -85,7 +85,6 @@ public class ServerMessenger {
 		XtWriter wr = new XtWriter();
 		packet.build(wr);
 		pkt.payload = wr.encode().substring(4);
-		pkt.payload = pkt.payload.substring(0, pkt.payload.lastIndexOf("%"));
 
 		// Send
 		if (player.client == null)

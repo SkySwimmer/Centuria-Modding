@@ -48,10 +48,11 @@ public interface IFeralTweaksPacket<T extends IFeralTweaksPacket<T>> {
 	/**
 	 * Called to handle the packet
 	 * 
-	 * @param player Player instance
+	 * @param player    Player instance
+	 * @param messenger ServerMessenger instance
 	 * @return True if handled, false otherwise
 	 * @throws IOException If handling fails
 	 */
-	public boolean handle(Player player) throws IOException;
+	public boolean handle(Player player, ServerMessenger messenger) throws IOException;
 
 }

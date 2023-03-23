@@ -4,6 +4,11 @@ import java.io.IOException;
 
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.data.XtWriter;
+import org.asf.centuria.entities.players.Player;
+import org.asf.centuria.feraltweaks.api.networking.IModNetworkHandler;
+import org.asf.centuria.feraltweaks.api.networking.ServerMessenger;
+import org.asf.centuria.modules.ICenturiaModule;
+import org.asf.centuria.modules.ModuleManager;
 import org.asf.centuria.networking.smartfox.SmartfoxClient;
 import org.asf.centuria.packets.xt.IXtPacket;
 
@@ -65,6 +70,15 @@ public class FtModPacket implements IXtPacket<FtModPacket> {
 
 	@Override
 	public boolean handle(SmartfoxClient client) throws IOException {
+		// Find mod
+		ICenturiaModule mod = ModuleManager.getInstance().getModule(modID);
+		if (mod instanceof IModNetworkHandler) {
+			// Retrieve messenger
+			ServerMessenger messenger = ((IModNetworkHandler) mod).getMessenger();
+			return messenger.handlePacket(modID, new XtReader(payload), (Player) client.container);
+		}
+
+		// Not found
 		return false;
 	}
 }
