@@ -12,7 +12,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(MessageRouter), "OnServerMessage")]
         public static bool OnServerMessage(INetMessageReader data)
         {
-            return !Plugin.HandlePacket(data.Cmd, data);
+            return !FeralTweaks.HandlePacket(data.Cmd, data);
         }
     }
 }

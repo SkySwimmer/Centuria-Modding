@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using FeralTweaks;
+using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
 
@@ -16,15 +17,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Log
-            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching display name change window...");
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Patching display name change window...");
 
             // Check FlexibleDisplayNames
-            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 __instance._usernameInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._usernameInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (Plugin.PatchConfig.ContainsKey("DisplayNameMaxLength"))
-                    __instance._usernameInput.characterLimit = int.Parse(Plugin.PatchConfig["DisplayNameMaxLength"]);
+                if (FeralTweaks.PatchConfig.ContainsKey("DisplayNameMaxLength"))
+                    __instance._usernameInput.characterLimit = int.Parse(FeralTweaks.PatchConfig["DisplayNameMaxLength"]);
             }
         }
     }

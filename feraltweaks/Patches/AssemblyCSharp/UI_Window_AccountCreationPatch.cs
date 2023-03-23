@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using FeralTweaks;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,24 +28,24 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void OnOpen(ref UI_Window_AccountCreation __instance)
         {
             // Log
-            FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Patching account creation...");
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Patching account creation...");
 
             // Check AllowNonEmailUsernames
-            if (Plugin.PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("AllowNonEmailUsernames", "false").ToLower() == "true")
             {
                 __instance._emailInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._emailInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (Plugin.PatchConfig.ContainsKey("UserNameMaxLength"))
-                    __instance._emailInput.characterLimit = int.Parse(Plugin.PatchConfig["UserNameMaxLength"]);
+                if (FeralTweaks.PatchConfig.ContainsKey("UserNameMaxLength"))
+                    __instance._emailInput.characterLimit = int.Parse(FeralTweaks.PatchConfig["UserNameMaxLength"]);
             }
 
             // Check FlexibleDisplayNames
-            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 __instance._usernameInput.contentType = TMPro.TMP_InputField.ContentType.Standard;
                 __instance._usernameInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.None;
-                if (Plugin.PatchConfig.ContainsKey("DisplayNameMaxLength"))
-                    __instance._usernameInput.characterLimit = int.Parse(Plugin.PatchConfig["DisplayNameMaxLength"]);
+                if (FeralTweaks.PatchConfig.ContainsKey("DisplayNameMaxLength"))
+                    __instance._usernameInput.characterLimit = int.Parse(FeralTweaks.PatchConfig["DisplayNameMaxLength"]);
             }
         }
 
@@ -52,7 +53,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "RefreshUsernameStatus")]
         private static bool RefreshUsernameStatus(UI_Window_AccountCreation __instance)
         {
-            if (!Plugin.PatchConfig.ContainsKey("DisplayNameRegex"))
+            if (!FeralTweaks.PatchConfig.ContainsKey("DisplayNameRegex"))
                 return true;
             if (usernameVerifyWaiter != null)
                 usernameVerifyWaiter = null;
@@ -70,11 +71,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             Action ac = () => {
                  __instance._usernameStatusIndicator.SetStatus(UI_FieldStatusIndicator.FieldStatus.Verifying, true);
                 string status = RegisterUserStatus.SUCCESS;
-                if (!Regex.Match(__instance.Username, Plugin.PatchConfig["DisplayNameRegex"]).Success || user.EndsWith(" ") || user.StartsWith(" "))
+                if (!Regex.Match(__instance.Username, FeralTweaks.PatchConfig["DisplayNameRegex"]).Success || user.EndsWith(" ") || user.StartsWith(" "))
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_INVALID_FORMAT;
                 else if (__instance.Username.Length < 2)
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_TOO_SHORT;
-                else if (__instance.Username.Length > int.Parse(Plugin.PatchConfig.GetValueOrDefault("DisplayNameMaxLength", "16")))
+                else if (__instance.Username.Length > int.Parse(FeralTweaks.PatchConfig.GetValueOrDefault("DisplayNameMaxLength", "16")))
                     status = RegisterUserStatus.ERROR_DISPLAY_NAME_TOO_LONG;
                 else
                 {
@@ -141,7 +142,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             status = resp["error"];
                     }
                     catch (Exception e) {
-                        FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().LogError("error " + e);
+                        FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("error " + e);
                     }
                 }
                 if (user == __instance.Username)
@@ -176,7 +177,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "CheckEmail")]
         private static bool CheckEmail(ref UI_Window_AccountCreation __instance, ref string __result)
         {
-            if (!Plugin.PatchConfig.ContainsKey("UserNameRegex"))
+            if (!FeralTweaks.PatchConfig.ContainsKey("UserNameRegex"))
                 return true;
             if (__instance._cachedEmailValidations.ContainsKey(__instance.Email))
             {
@@ -184,7 +185,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return false;
             }
             string status = RegisterUserStatus.SUCCESS;
-            if (!Regex.Match(__instance.Email, Plugin.PatchConfig["UserNameRegex"]).Success)
+            if (!Regex.Match(__instance.Email, FeralTweaks.PatchConfig["UserNameRegex"]).Success)
                 status = RegisterUserStatus.ERROR_USERNAME_INVALID_FORMAT;
             __instance._cachedEmailValidations[__instance.Email] = status;
             __result = status;
@@ -195,7 +196,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_AccountCreation), "CreateAccount")]
         public static void CreateAccount(ref UI_Window_AccountCreation __instance, ref string inUsername)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("FlexibleDisplayNames", "false").ToLower() == "true")
             {
                 inUsername = inUsername.ToLower();
             }

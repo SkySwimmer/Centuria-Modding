@@ -48,7 +48,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             obj.OnObjectInfo(message);
 
             // Patch
-            if (Plugin.PatchConfig.GetValueOrDefault("JiggleResourceInteractions", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("JiggleResourceInteractions", "false").ToLower() == "true")
             {
                 NetworkedObjectInfo info = obj.gameObject.GetComponent<NetworkedObjectInfo>();
                 if (info != null && info.actorType == NetworkedObjectInfo.EActorType.harvestItem)
@@ -64,7 +64,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Override position and rotation
-            if ((Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() == "true") || (Plugin.PatchConfig.ContainsKey("EnableReplication") && Plugin.PatchConfig["EnableReplication"].ToLower() == "true" && (!Plugin.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || Plugin.PatchConfig["OverrideReplicate-" + message.Id].ToLower() != "false")))
+            if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) && FeralTweaks.PatchConfig["OverrideReplicate-" + message.Id].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + message.Id) || FeralTweaks.PatchConfig["OverrideReplicate-" + message.Id].ToLower() != "false")))
             {
                 // Only do this if its enabled, otherwise it can be buggy
                 obj.transform.position = new Vector3(message.LastMove.position.x, message.LastMove.position.y, message.LastMove.position.z);
@@ -73,7 +73,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Move the npc if its a npc
                 try
                 {
-                    ActorNPCSpawner spawner = Plugin.GetNpcSpawnerFrom(obj);
+                    ActorNPCSpawner spawner = FeralTweaks.GetNpcSpawnerFrom(obj);
                     if (spawner != null)
                     {
                         // Move

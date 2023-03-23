@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using FeralTweaks;
+using HarmonyLib;
 using Il2CppInterop.Runtime;
 using LitJson;
 using Server;
@@ -23,7 +24,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "OnConversationAdded")]
         public static bool OnConversationAdded(ref UI_LazyItemList_ChatConversation __instance, CachedConversationAddedMessage inMessage)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Check type
                 if (!inMessage.Conversation.IsRoomChat)
@@ -49,7 +50,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "OnConversationRemoved")]
         public static bool OnConversationRemoved(ref UI_LazyItemList_ChatConversation __instance, CachedConversationRemovedMessage inMessage)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Check type
                 if (!inMessage.Conversation.IsRoomChat)
@@ -75,7 +76,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "Setup")]
         public static bool SetupConvoList(ref UI_LazyItemList_ChatConversation __instance)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Filter it
                 Il2CppSystem.Collections.Generic.List<ChatConversationData> convos = new Il2CppSystem.Collections.Generic.List<ChatConversationData>();
@@ -111,7 +112,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_Chat), "OnOpen")]
         public static void OnOpen(ref UI_Window_Chat __instance)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Enable GC tab button
                 __instance._tabGroup._tabs[2].button.gameObject.SetActive(true);
@@ -189,7 +190,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "RefreshText")]
         public static void RefreshText(ref UI_UnreadConversationCount __instance, ref int inUnreadCount)
         {
-            if (Plugin.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Filter it
                 inUnreadCount = 0;
@@ -279,9 +280,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (__instance.ToString() == "ChatServiceConnection")
             {
                 // Override encryption if needed
-                if (Plugin.EncryptedChat != -1)
+                if (FeralTweaks.EncryptedChat != -1)
                 {
-                    isSecured = Plugin.EncryptedChat == 1;
+                    isSecured = FeralTweaks.EncryptedChat == 1;
                 }
             }
         }
@@ -322,16 +323,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            Plugin.actions.Add(() =>
+            FeralTweaks.actions.Add(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                Plugin.uiActions.Add(() =>
+                FeralTweaks.uiActions.Add(() =>
                 {
-                    if (Plugin.ShowWorldJoinChatUnreadPopup)
+                    if (FeralTweaks.ShowWorldJoinChatUnreadPopup)
                     {
-                        Plugin.ShowWorldJoinChatUnreadPopup = false;
+                        FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
                         if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0)
                         {
                             NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
@@ -349,7 +350,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // Handle chat packets
             JsonData packet = JsonMapper.ToObject(jsonData);
             string evt = (string)packet["eventId"];
-            return !Plugin.HandleChatPacket(evt, packet);
+            return !FeralTweaks.HandleChatPacket(evt, packet);
         }
 
         [HarmonyPrefix]
@@ -365,8 +366,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 pkt["uuid"] = UserManager.Me.UUID;
                 pkt["auth_token"] = NetworkManager.autoLoginAuthToken;
                 pkt["feraltweaks"] = "enabled";
-                pkt["feraltweaks_protocol"] = Plugin.ProtocolVersion.ToString();
-                pkt["feraltweaks_version"] = FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().Version;
+                pkt["feraltweaks_protocol"] = FeralTweaks.ProtocolVersion.ToString();
+                pkt["feraltweaks_version"] = FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version;
                 string msg = JsonMapper.ToJson(pkt);
                 NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
                 return false;

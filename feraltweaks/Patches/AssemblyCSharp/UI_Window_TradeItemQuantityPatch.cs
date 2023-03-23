@@ -12,10 +12,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(MethodType.Setter)]
         public static bool ChosenQuantity_SET(ref UI_Window_TradeItemQuantity __instance, ref int value)
         {
-            if (!Plugin.PatchConfig.ContainsKey("TradeItemLimit"))
+            if (!FeralTweaks.PatchConfig.ContainsKey("TradeItemLimit"))
                 return true;
 
-            int limit = int.Parse(Plugin.PatchConfig["TradeItemLimit"]);
+            int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
             if (value < 0)
                 value = 0;
             else if (value > limit)
@@ -31,10 +31,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_TradeItemQuantity), "BtnClicked_Increase")]
         public static bool BtnClicked_Increase(ref UI_Window_TradeItemQuantity __instance)
         {
-            if (!Plugin.PatchConfig.ContainsKey("TradeItemLimit"))
+            if (!FeralTweaks.PatchConfig.ContainsKey("TradeItemLimit"))
                 return true;
 
-            int limit = int.Parse(Plugin.PatchConfig["TradeItemLimit"]);
+            int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
             int newQuantity = __instance._chosenQuantity + 1;
             if (newQuantity < 0)
                 newQuantity = 0;
@@ -51,10 +51,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_TradeItemQuantity), "BtnClicked_Decrease")]
         public static bool BtnClicked_Decrease(ref UI_Window_TradeItemQuantity __instance)
         {
-            if (!Plugin.PatchConfig.ContainsKey("TradeItemLimit"))
+            if (!FeralTweaks.PatchConfig.ContainsKey("TradeItemLimit"))
                 return true;
 
-            int limit = int.Parse(Plugin.PatchConfig["TradeItemLimit"]);
+            int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
             int newQuantity = __instance._chosenQuantity - 1;
             if (newQuantity < 0)
                 newQuantity = 0;

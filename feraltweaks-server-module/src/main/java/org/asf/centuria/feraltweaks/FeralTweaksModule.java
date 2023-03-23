@@ -16,6 +16,7 @@ import org.asf.centuria.entities.players.Player;
 import org.asf.centuria.feraltweaks.chatpackets.MarkConvoReadPacket;
 import org.asf.centuria.feraltweaks.gamepackets.DisconnectPacket;
 import org.asf.centuria.feraltweaks.gamepackets.ErrorPopupPacket;
+import org.asf.centuria.feraltweaks.gamepackets.FtModPacket;
 import org.asf.centuria.feraltweaks.gamepackets.NotificationPacket;
 import org.asf.centuria.feraltweaks.gamepackets.OkPopupPacket;
 import org.asf.centuria.feraltweaks.gamepackets.YesNoPopupPacket;
@@ -179,6 +180,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void gameServerStartup(GameServerStartupEvent event) {
 		event.registerPacket(new YesNoPopupPacket());
+		event.registerPacket(new FtModPacket());
 	}
 
 	@EventListener

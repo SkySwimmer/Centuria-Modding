@@ -20,7 +20,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 if (obj.transform.parent != null && obj.transform.parent.gameObject.name.ToLower().Contains("floatingrocks"))
                 {
                     // Check patch state
-                    if (Plugin.PatchConfig.GetValueOrDefault("CityFeraMovingRocks", "false").ToLower() == "true")
+                    if (FeralTweaks.PatchConfig.GetValueOrDefault("CityFeraMovingRocks", "false").ToLower() == "true")
                     {
                         // Patch
                         MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
@@ -32,7 +32,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     }
 
                     // Check portal patch
-                    if (Plugin.PatchConfig.GetValueOrDefault("CityFeraTeleporterSFX", "false").ToLower() == "true")
+                    if (FeralTweaks.PatchConfig.GetValueOrDefault("CityFeraTeleporterSFX", "false").ToLower() == "true")
                     {
                         // Patch portals
                         GameObject portals = GameObject.Find("Portals");

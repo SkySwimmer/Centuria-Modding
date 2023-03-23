@@ -44,11 +44,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Assign label
-            Plugin.actions.Add(() =>
+            FeralTweaks.actions.Add(() =>
             {
                 if (CoreBase<Core>.Loaded)
                 {
-                    Plugin.uiActions.Add(() =>
+                    FeralTweaks.uiActions.Add(() =>
                     {
                         // Update UI
 
@@ -56,8 +56,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         string lbl = "${global:7358}\n${game:version} (${game:build})";
 
                         // Load if present in config
-                        if (Plugin.PatchConfig.ContainsKey("VersionLabel"))
-                            lbl = Plugin.PatchConfig["VersionLabel"].Replace("\\n", "\n");
+                        if (FeralTweaks.PatchConfig.ContainsKey("VersionLabel"))
+                            lbl = FeralTweaks.PatchConfig["VersionLabel"].Replace("\\n", "\n");
 
                         // Replace variables
                         bool inVar = false;

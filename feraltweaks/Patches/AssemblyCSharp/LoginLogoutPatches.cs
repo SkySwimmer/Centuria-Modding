@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using FeralTweaks;
+using HarmonyLib;
 using Iss;
 using LitJson;
 using System;
@@ -61,21 +62,21 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
             }
 
-            if (Plugin.uiActions.Count != 0)
+            if (FeralTweaks.uiActions.Count != 0)
             {
                 Action[] actions;
                 while (true)
                 {
                     try
                     {
-                        actions = Plugin.uiActions.ToArray();
+                        actions = FeralTweaks.uiActions.ToArray();
                         break;
                     }
                     catch { }
                 }
                 foreach (Action ac in actions)
                 {
-                    Plugin.uiActions.Remove(ac);
+                    FeralTweaks.uiActions.Remove(ac);
                     ac.Invoke();
                 }
             }
@@ -149,7 +150,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         ChatManager.instance._unreadConversations.Clear();
                         CoreWindowManager.CloseAllWindows();
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
-                        Plugin.uiActions.Add(() =>
+                        FeralTweaks.uiActions.Add(() =>
                         {
                             CoreLoadingManager.HideProgressScreen();
                         });
@@ -164,7 +165,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void InitNetworkManager()
         {
             // Automatic login
-            if (Plugin.AutoLoginToken != null)
+            if (FeralTweaks.AutoLoginToken != null)
             {
                 // TODO: we should improve this its so ugly but the client code is hard to navigate
                 //
@@ -175,7 +176,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // so this will have to do for now
                 NetworkManager.AutoLogin = NetworkManager.AutoLoginState.DoAutoLogin;
                 NetworkManager.autoLoginEmailUsername = "sys://fromtoken";
-                NetworkManager.autoLoginPassword = Plugin.AutoLoginToken;
+                NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
             }
         }
 
@@ -185,27 +186,27 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Server environment
             GlobalSettingsManager.instance.currentServerEnvironment = NetworkManager.Environment;
-            if (Plugin.DirectorAddress != null)
-                NetworkManager.Environment.directorHost = Plugin.DirectorAddress;
-            if (Plugin.APIAddress != null)
+            if (FeralTweaks.DirectorAddress != null)
+                NetworkManager.Environment.directorHost = FeralTweaks.DirectorAddress;
+            if (FeralTweaks.APIAddress != null)
             {
-                NetworkManager.Environment.serviceApiHost = Plugin.APIAddress;
-                NetworkManager.Environment.webAPIHost = Plugin.APIAddress;
+                NetworkManager.Environment.serviceApiHost = FeralTweaks.APIAddress;
+                NetworkManager.Environment.webAPIHost = FeralTweaks.APIAddress;
             }
-            if (Plugin.BlueboxPort != -1)
-                NetworkManager.Environment.blueboxPort = Plugin.BlueboxPort;
-            if (Plugin.ChatHost != null)
-                NetworkManager.Environment.chatHost = Plugin.ChatHost;
-            if (Plugin.ChatPort != -1)
-                NetworkManager.Environment.chatPort = Plugin.ChatPort;
-            if (Plugin.EncryptedGame != -1)
-                NetworkManager.Environment.useSecure = Plugin.EncryptedGame == 1;
-            if (Plugin.GamePort != -1)
-                NetworkManager.Environment.gameServerPort = Plugin.GamePort;
-            if (Plugin.VoiceChatHost != null)
-                NetworkManager.Environment.voiceChatHost = Plugin.VoiceChatHost;
-            if (Plugin.VoiceChatPort != -1)
-                NetworkManager.Environment.voiceChatPort = Plugin.VoiceChatPort;
+            if (FeralTweaks.BlueboxPort != -1)
+                NetworkManager.Environment.blueboxPort = FeralTweaks.BlueboxPort;
+            if (FeralTweaks.ChatHost != null)
+                NetworkManager.Environment.chatHost = FeralTweaks.ChatHost;
+            if (FeralTweaks.ChatPort != -1)
+                NetworkManager.Environment.chatPort = FeralTweaks.ChatPort;
+            if (FeralTweaks.EncryptedGame != -1)
+                NetworkManager.Environment.useSecure = FeralTweaks.EncryptedGame == 1;
+            if (FeralTweaks.GamePort != -1)
+                NetworkManager.Environment.gameServerPort = FeralTweaks.GamePort;
+            if (FeralTweaks.VoiceChatHost != null)
+                NetworkManager.Environment.voiceChatHost = FeralTweaks.VoiceChatHost;
+            if (FeralTweaks.VoiceChatPort != -1)
+                NetworkManager.Environment.voiceChatPort = FeralTweaks.VoiceChatPort;
         }
 
         public static bool reloadGlidingManager = false;
@@ -238,7 +239,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             loggingOut = false;
             doLogout = false;
             long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            Plugin.actions.Add(() =>
+            FeralTweaks.actions.Add(() =>
             {
                 if (errorDisplayed)
                 {
@@ -246,7 +247,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                 {
-                    Plugin.uiActions.Add(() =>
+                    FeralTweaks.uiActions.Add(() =>
                     {
                         RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
                         UI_ProgressScreen.instance.UpdateLevel();
@@ -269,7 +270,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void DoLogin()
         {
             // Clean first
-            Plugin.LoginErrorMessage = null;
+            FeralTweaks.LoginErrorMessage = null;
         }
 
         [HarmonyPrefix]
@@ -277,10 +278,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool GetLoginStatusErrorMessage(ref string __result)
         {
             errorDisplayed = true;
-            if (Plugin.LoginErrorMessage != null)
+            if (FeralTweaks.LoginErrorMessage != null)
             {
                 // Override error message
-                __result = Plugin.LoginErrorMessage;
+                __result = FeralTweaks.LoginErrorMessage;
                 return false;
             }
             return true;
@@ -291,11 +292,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void ProcessLoginData(JsonData json)
         {
             // Clean first
-            Plugin.LoginErrorMessage = null;
+            FeralTweaks.LoginErrorMessage = null;
 
             // If present, set error message
             if (json["params"].Contains("errorMessage"))
-                Plugin.LoginErrorMessage = json["params"]["errorMessage"].ToString();
+                FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();
             errorDisplayed = true;
         }
 
@@ -304,7 +305,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void Login(ref string name)
         {
             // Mention feraltweaks support
-            name = name + "%feraltweaks%enabled%" + Plugin.ProtocolVersion.ToString() + "%" + FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().Version + "%" + Plugin.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
+            name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
         }
 
     }
