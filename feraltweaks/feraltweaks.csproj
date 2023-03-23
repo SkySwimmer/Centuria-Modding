@@ -6,11 +6,17 @@
     <Description>Chart modification system and various tweaks</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>  
 </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>run\FeralTweaks\mods\</OutputPath>
+    <OutputPath>run\FeralTweaks\mods\feraltweaks\assemblies\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>run\FeralTweaks\mods\feraltweaks\feraltweaks.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -64,4 +70,9 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy assets\clientmod.json run\FeralTweaks\mods\feraltweaks" Condition="'$(OS)' != 'Unix'" />
+    <Exec Command="cp -rf assets/. run/FeralTweaks/mods/feraltweaks" Condition="'$(OS)' == 'Unix'" />
+  </Target>
 </Project>

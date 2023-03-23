@@ -9,10 +9,6 @@ namespace TestFtlMod
 {
     public class TestMod : FeralTweaksMod
     {
-        public override string ID => "test";
-
-        public override string Version => "1.0.0.0";
-
         public override void Init()
         {
             Harmony.CreateAndPatchAll(typeof(TestPatches));

@@ -11,6 +11,9 @@
     <ProjectReference Include="..\feraltweaks-bootstrap\feraltweaks-bootstrap.csproj">
       <Private>false</Private>
     </ProjectReference>
+    <ProjectReference Include="..\feraltweaks\feraltweaks.csproj">
+      <Private>false</Private>
+    </ProjectReference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\feraltweaks\lib\feral\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>

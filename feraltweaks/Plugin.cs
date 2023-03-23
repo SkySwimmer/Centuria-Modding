@@ -23,9 +23,6 @@ namespace feraltweaks
     {
         public const int ProtocolVersion = 1;
 
-        public override string ID => "feraltweaks";
-        public override string Version => "beta-1.0.0-b2";
-
         protected override void Define()
         {
         }

@@ -23,6 +23,9 @@ namespace FeralTweaks.Mods
         private bool locked;
         private string baseFolder;
 
+        internal string _id;
+        internal string _version;
+
         internal void Initialize(string baseFolder)
         {
             if (!Regex.Match(ID, "^[0-9A-Za-z._,]+$").Success)
@@ -79,12 +82,24 @@ namespace FeralTweaks.Mods
         /// <summary>
         /// Mod ID
         /// </summary>
-        public abstract string ID { get; }
+        public virtual string ID
+        {
+            get
+            {
+                return _id;
+            }
+        }
 
         /// <summary>
         /// Mod version
         /// </summary>
-        public abstract string Version { get; }
+        public virtual string Version
+        {
+            get
+            {
+                return _version;
+            }
+        }
 
         /// <summary>
         /// Mod cache directory, only available during init, null during preinit

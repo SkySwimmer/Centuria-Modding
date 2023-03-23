@@ -290,7 +290,7 @@ namespace FeralTweaks
                 DirectoryInfo dir = new DirectoryInfo(modInfo.path);
 
                 // Load dlls
-                foreach (FileInfo mod in dir.GetFiles("*.dll", SearchOption.AllDirectories))
+                foreach (FileInfo mod in dir.GetFiles("*.dll"))
                 {
                     LoadModFile(mod, modInfo, dir.FullName, modDirs);
                 }
@@ -432,6 +432,8 @@ namespace FeralTweaks
                             LogDebug("Setting up mod... Defining dependencies and loading logger...");
                             if (structuredMod != null)
                             {
+                                inst._id = structuredMod.id;
+                                inst._version = structuredMod.version;
                                 inst._priority = structuredMod.loadPriority;
                                 inst._conflicts.AddRange(structuredMod.conflictsWith);
                                 inst._depends.AddRange(structuredMod.dependencies);
