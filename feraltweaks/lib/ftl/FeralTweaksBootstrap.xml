@@ -168,10 +168,28 @@
             Mod config directory, only available during init, null during preinit
             </summary>
         </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.ModBaseDirectory">
+            <summary>
+            Retrieves the directory containing mod files, <b>may return null depending on how the mod loaded.</b>
+            </summary>
+        </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.Define">
             <summary>
             Defines mod dependencies and information
             </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefinePriority(System.Int32)">
+            <summary>
+            Defines the mod loading priority
+            </summary>
+            <param name="priority">Mod load priority, higher loads earlier</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineDependencyVersion(System.String,System.String)">
+            <summary>
+            Defines dependency versions (applies to both dependencies and optional dependencies)
+            </summary>
+            <param name="id">Dependency ID</param>
+            <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, spaces are stripped during parsing)</param>
         </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineDependency(System.String)">
             <summary>
@@ -186,6 +204,12 @@
             <param name="id">Mod ID</param>
         </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineLoadAfter(System.String)">
+            <summary>
+            Defines a mod ID that must load AFTER this mod
+            </summary>
+            <param name="id">Mod ID</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineLoadBefore(System.String)">
             <summary>
             Defines a mod ID that must load AFTER this mod
             </summary>

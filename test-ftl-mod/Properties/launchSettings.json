@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FTL Test Mod": {
+      "commandName": "Executable",
+      "executablePath": ".\\Fer.al.exe",
+      "commandLineArgs": "--load-mod-from ../../test-ftl-mod/assets --debug-log --debug-mod-assemblies:test ../../test-ftl-mod/bin/Debug/net6.0",
+      "workingDirectory": "..\\feraltweaks-bootstrap\\run"
+    }
+  }
+}

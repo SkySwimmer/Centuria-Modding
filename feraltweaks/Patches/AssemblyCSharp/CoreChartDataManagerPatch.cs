@@ -5,6 +5,8 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using System.Threading;
+using FeralTweaks.Mods;
+using FeralTweaks;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -89,6 +91,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 Directory.CreateDirectory(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/chartpatches");
 
                 // Read patches
+                FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Applying chart patches from configuration...");
                 foreach (FileInfo file in new DirectoryInfo(FeralTweaks.FeralTweaksLoader.GetLoadedMod<Plugin>().ConfigDir + "/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
                 {
                     string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
@@ -96,7 +99,28 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
             }
 
+            // Mod patches
+            foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+            {
+                if (mod.ModBaseDirectory != null)
+                {
+                    // Check if a mod patch folder exists
+                    if (Directory.Exists(mod.ModBaseDirectory + "/chartpatches"))
+                    {
+                        // Apply patches from it
+                        FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Applying chart patches from mod '" + mod.ID + "'...");
+                        foreach (FileInfo file in new DirectoryInfo(mod.ModBaseDirectory + "/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
+                        {
+                            string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
+                            ApplyPatch(patch, file.Name);
+                        }
+                    }
+                }
+            }
+
             // Other patches
+            if (Plugin.Patches.Count != 0) 
+                FeralTweaksLoader.GetLoadedMod<Plugin>().LogInfo("Applying chart patches from server...");
             foreach ((string patch, string fileName) in Plugin.Patches)
             {
                 ApplyPatch(patch, fileName);

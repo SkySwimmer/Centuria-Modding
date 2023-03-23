@@ -15,6 +15,7 @@ using UnityEngine;
 using Random = System.Random;
 using LitJson;
 using FeralTweaks.Mods;
+using FeralTweaks;
 
 namespace feraltweaks
 {
@@ -138,6 +139,34 @@ namespace feraltweaks
             ApplyPatch(typeof(ChatPatches));
             ApplyPatch(typeof(DOTweenAnimatorPatch));
             ApplyPatch(typeof(GlobalSettingsManagerPatch));
+            ApplyPatch(typeof(BundlePatches));
+
+            // Scan mods for assets
+            LogInfo("Scanning for mod assets...");
+            foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+            {
+                if (mod.ModBaseDirectory != null)
+                {
+                    // Check files
+                    if (Directory.Exists(mod.ModBaseDirectory + "/assetbundles"))
+                    {
+                        LogDebug("Finding assets in mod '" + mod.ID + "'...");
+
+                        // Find files
+                        DirectoryInfo dir = new DirectoryInfo(mod.ModBaseDirectory + "/assetbundles");
+                        foreach (FileInfo file in dir.GetFiles("*.unity3d", SearchOption.AllDirectories))
+                        {
+                            // Get path
+                            string filePath = Path.GetRelativePath(dir.FullName, file.FullName).Replace(Path.DirectorySeparatorChar, '/');
+                            string bundleId = filePath.Replace("/", "_").Remove(filePath.LastIndexOf(".unity3d"));
+
+                            // Log
+                            LogInfo("Found asset for '" + bundleId + "', file path: " + file.FullName);
+                            BundlePatches.AssetBundlePaths[bundleId] = file.FullName;
+                        }
+                    }
+                }
+            }
 
             // Check command line
             LogInfo("Processing command line arguments...");

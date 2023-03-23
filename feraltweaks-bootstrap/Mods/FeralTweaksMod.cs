@@ -13,18 +13,22 @@ namespace FeralTweaks.Mods
     /// </summary>
     public abstract class FeralTweaksMod
     {
+        internal int _priority = 0;
         internal List<string> _depends = new List<string>();
         internal List<string> _optDepends = new List<string>();
         internal List<string> _conflicts = new List<string>();
-        internal List<string> _loadAfter = new List<string>();
+        internal List<string> _loadBefore = new List<string>();
+        internal Dictionary<string, string> _dependencyVersions = new Dictionary<string, string>();
         private StreamWriter LogWriter;
         private bool locked;
-        
-        internal void Initialize()
+        private string baseFolder;
+
+        internal void Initialize(string baseFolder)
         {
             if (!Regex.Match(ID, "^[0-9A-Za-z._,]+$").Success)
                 throw new ArgumentException("Invalid mod ID: " + ID);
             Define();
+            this.baseFolder = baseFolder;
             locked = true;
             LogWriter = new StreamWriter("FeralTweaks/logs/" + ID + ".log");
             LogWriter.AutoFlush = true;
@@ -93,9 +97,43 @@ namespace FeralTweaks.Mods
         public string ConfigDir { get; internal set; }
 
         /// <summary>
+        /// Retrieves the directory containing mod files, <b>may return null depending on how the mod loaded.</b>
+        /// </summary>
+        public string ModBaseDirectory
+        {
+            get
+            {
+                return baseFolder;
+            }
+        }
+
+        /// <summary>
         /// Defines mod dependencies and information
         /// </summary>
-        protected abstract void Define();
+        protected virtual void Define() { }
+
+        /// <summary>
+        /// Defines the mod loading priority
+        /// </summary>
+        /// <param name="priority">Mod load priority, higher loads earlier</param>
+        protected void DefinePriority(int priority)
+        {
+            if (locked)
+                throw new ArgumentException("Locked registry");
+            _priority = priority;
+        }
+
+        /// <summary>
+        /// Defines dependency versions (applies to both dependencies and optional dependencies)
+        /// </summary>
+        /// <param name="id">Dependency ID</param>
+        /// <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, spaces are stripped during parsing)</param>
+        protected void DefineDependencyVersion(string id, string version)
+        {
+            if (locked)
+                throw new ArgumentException("Locked registry");
+            _dependencyVersions[id] = version;
+        }
 
         /// <summary>
         /// Defines a dependency
@@ -125,12 +163,22 @@ namespace FeralTweaks.Mods
         /// Defines a mod ID that must load AFTER this mod
         /// </summary>
         /// <param name="id">Mod ID</param>
+        [Obsolete("Use DefineLoadBefore instead, this method is incorrectly named")]
         protected void DefineLoadAfter(string id)
+        {
+            DefineLoadBefore(id);
+        }
+
+        /// <summary>
+        /// Defines a mod ID that must load AFTER this mod
+        /// </summary>
+        /// <param name="id">Mod ID</param>
+        protected void DefineLoadBefore(string id)
         {
             if (locked)
                 throw new ArgumentException("Locked registry");
-            if (!_loadAfter.Contains(id))
-                _loadAfter.Add(id);
+            if (!_loadBefore.Contains(id))
+                _loadBefore.Add(id);
         }
 
         /// <summary>
