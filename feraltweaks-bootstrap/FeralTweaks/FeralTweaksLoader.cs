@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -31,6 +32,13 @@ namespace FeralTweaks
             public List<string> conflictsWith = new List<string>();
             public List<string> loadBefore = new List<string>();
             public Dictionary<string, string> dependencyVersions = new Dictionary<string, string>();
+        }
+
+        private class FTMManifest
+        {
+            public string id;
+            public string version;
+            public long timestamp;
         }
 
         /// <summary>
@@ -231,6 +239,115 @@ namespace FeralTweaks
             Directory.CreateDirectory("FeralTweaks/mods");
             Directory.CreateDirectory("FeralTweaks/config");
             mods = new List<FeralTweaksMod>();
+
+            // Discover packaged mods
+            LogInfo("Finding mod packages...");
+            foreach (FileInfo mod in new DirectoryInfo("FeralTweaks/mods").GetFiles("*.ftm"))
+            {
+                // Log
+                LogDebug("Examining FTM package: " + mod.FullName);
+
+                try
+                {
+                    // Attempt to read
+                    ZipArchive zip = ZipFile.OpenRead(mod.FullName);
+                    try
+                    {
+                        // Read mod manifest
+                        ZipArchiveEntry manEnt = zip.GetEntry("mod.json");
+                        if (manEnt == null)
+                            throw new ArgumentException("Missing mod manifest JSON");
+                        Stream strm = manEnt.Open();
+                        StreamReader rd = new StreamReader(strm);
+                        string json = rd.ReadToEnd();
+                        rd.Close();
+
+                        // Parse
+                        FTMManifest man = JsonConvert.DeserializeObject<FTMManifest>(json);
+                        if (man == null || man.id == null || man.version == null || man.timestamp == 0)
+                            throw new ArgumentException("Inavlid mod manifest JSON");
+
+                        // Check current version
+                        long current = -1;
+                        if (File.Exists("FeralTweaks/mods/" + man.id + "/version.info"))
+                        {
+                            // Load version
+                            current = long.Parse(File.ReadAllText("FeralTweaks/mods/" + man.id + "/version.info"));
+                        }
+                        else if (Directory.Exists("FeralTweaks/mods/" + man.id))
+                            throw new ArgumentException("Conflict: folder " + man.id + " exists and is not related to the mod package.");
+                        LogInfo("Discovered package: " + man.id + ", version: " + man.version);
+
+                        // Check
+                        if (current != man.timestamp)
+                        {
+                            LogInfo("Updating " + man.id + " from local package...");
+
+                            // Delete old
+                            if (Directory.Exists("FeralTweaks/mods/" + man.id))
+                            {
+                                try
+                                {
+                                    Directory.Delete("FeralTweaks/mods/" + man.id, true);
+                                }
+                                catch
+                                {
+                                    Directory.Delete("FeralTweaks/mods/" + man.id);
+                                }
+                            }
+
+                            // Write placeholder while we update
+                            Directory.CreateDirectory("FeralTweaks/mods/" + man.id);
+                            File.WriteAllText("FeralTweaks/mods/" + man.id + "/version.info", "-1");
+
+                            // Begin update
+                            foreach (ZipArchiveEntry ent in zip.Entries)
+                            {
+                                string nm = ent.FullName;
+                                nm = nm.Replace("\\", "/");
+                                while (nm.StartsWith("/"))
+                                    nm = nm.Substring(1);
+
+                                // Verify path
+                                if (nm.StartsWith("clientmod/") && nm != "clientmod/")
+                                {
+                                    // Extract entry
+                                    string outp = nm.Substring("clientmod/".Length);
+                                    LogDebug("Updating file: " + outp + "...");
+
+                                    // Check if a directory
+                                    if (outp.EndsWith("/"))
+                                        Directory.CreateDirectory("FeralTweaks/mods/" + man.id + "/" + outp);
+                                    else
+                                    {
+                                        // Create parent
+                                        Directory.CreateDirectory(Path.GetDirectoryName("FeralTweaks/mods/" + man.id + "/" + outp));
+
+                                        // Write
+                                        Stream source = ent.Open();
+                                        Stream dest = File.OpenWrite("FeralTweaks/mods/" + man.id + "/" + outp);
+                                        source.CopyTo(dest);
+                                        source.Close();
+                                        dest.Close();
+                                    }
+                                }
+                            }
+
+                            // Write version
+                            File.WriteAllText("FeralTweaks/mods/" + man.id + "/version.info", man.timestamp.ToString());
+                        }
+                    }
+                    finally
+                    {
+                        // Close
+                        zip.Dispose();
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogError("Failed to parse FTM package: " + mod.FullName + ": " + e.GetType().FullName + (e.Message != null && e.Message != "" ? ": " + e.Message : ""));
+                }
+            }
 
             // Discover mods
             LogInfo("Discovering mods...");
