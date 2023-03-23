@@ -276,7 +276,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
         public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
         {
-            if (__instance is ChatServiceConnection)
+            if (__instance.ToString() == "ChatServiceConnection")
             {
                 // Override encryption if needed
                 if (Plugin.EncryptedChat != -1)
