@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ftl-cli": {
+      "commandName": "Project",
+      "workingDirectory": "..\\feraltweaks-bootstrap\\run"
+    }
+  }
+}

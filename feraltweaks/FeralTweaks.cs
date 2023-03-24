@@ -22,7 +22,7 @@ namespace feraltweaks
 {
     public class FeralTweaks : FeralTweaksMod
     {
-        public const int ProtocolVersion = 1;
+        public const int ProtocolVersion = 2;
 
         protected override void Define()
         {

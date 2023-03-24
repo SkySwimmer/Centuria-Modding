@@ -19,6 +19,7 @@ namespace TestFtlMod
         {
             Harmony.CreateAndPatchAll(typeof(TestPatches));
             RegisterPacket(new TestPacket());
+            AddModHandshakeRequirement("test123");
         }
 
         public override void PostInit()

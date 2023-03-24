@@ -139,12 +139,17 @@ namespace FeralTweaksBootstrap
                 }
             }
 
+            // Find game
+            string game = "Fer.al";
+            if (File.Exists("game.info"))
+                game = File.ReadAllLines("game.info")[0]; // Override
+
             // Determine platform
             LogInfo("Determining platform...");
             PlatformType plat;
             if (File.Exists("GameAssembly.dll"))
                 plat = PlatformType.WINDOWS;
-            else if (File.Exists("Fer.al.app/Contents/Frameworks/GameAssembly.dylib"))
+            else if (File.Exists(game + ".app/Contents/Frameworks/GameAssembly.dylib"))
                 plat = PlatformType.OSX;
             else
                 plat = PlatformType.ANDROID;
@@ -158,11 +163,11 @@ namespace FeralTweaksBootstrap
             {
                 case PlatformType.WINDOWS:
                     gameAssemblyPath = "GameAssembly.dll";
-                    dataPath = "Fer.al_Data";
+                    dataPath = game + "_Data";
                     break;
                 case PlatformType.OSX:
-                    gameAssemblyPath = "Fer.al.app/Contents/Frameworks/GameAssembly.dylib";
-                    dataPath = "Fer.al.app/Contents/Resources/Data";
+                    gameAssemblyPath = game + ".app/Contents/Frameworks/GameAssembly.dylib";
+                    dataPath = game + ".app/Contents/Resources/Data";
                     break;
                 case PlatformType.ANDROID:
                     // TODO: idfk how to do this atm

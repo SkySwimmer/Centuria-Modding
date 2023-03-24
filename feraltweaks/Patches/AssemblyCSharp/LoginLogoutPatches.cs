@@ -1,4 +1,6 @@
 ﻿using FeralTweaks;
+using FeralTweaks.Mods;
+using FeralTweaks.Versioning;
 using HarmonyLib;
 using Iss;
 using LitJson;
@@ -17,7 +19,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool doLogout = false;
         public static bool errorDisplayed = false;
         public static bool loggingOut = false;
-        private static List<Action> actionsToRun = new List<Action>();
+        private static List<Func<bool>> actionsToRun = new List<Func<bool>>();
         private static LoadingScreenAction loadWaiter;
         private class LoadingScreenAction
         {
@@ -45,7 +47,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             if (actionsToRun.Count != 0)
             {
-                Action[] actions;
+                Func<bool>[] actions;
                 while (true)
                 {
                     try
@@ -55,10 +57,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     }
                     catch { }
                 }
-                foreach (Action ac in actions)
+                foreach (Func<bool> ac in actions)
                 {
-                    actionsToRun.Remove(ac);
-                    ac.Invoke();
+                    if (ac == null || ac())
+                        actionsToRun.Remove(ac);
                 }
             }
 
@@ -77,7 +79,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 foreach (Action ac in actions)
                 {
                     FeralTweaks.uiActions.Remove(ac);
-                    ac.Invoke();
+                    if (ac != null)
+                        ac.Invoke();
                 }
             }
         }
@@ -93,7 +96,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             CoreReset(SplashError.NONE, ErrorCode.None);
             return false;
         }
-         
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreSharedUtils), "CoreReset", new Type[] { typeof(SplashError), typeof(ErrorCode) })]
         public static bool CoreReset(SplashError inSplashError, ErrorCode inErrorCode)
@@ -154,6 +157,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         {
                             CoreLoadingManager.HideProgressScreen();
                         });
+                        return true;
                     });
                 }
             };
@@ -239,19 +243,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
             loggingOut = false;
             doLogout = false;
             long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            FeralTweaks.actions.Add(() =>
+            actionsToRun.Add(() =>
             {
                 if (errorDisplayed)
-                {
                     return true;
-                }
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                 {
-                    FeralTweaks.uiActions.Add(() =>
-                    {
-                        RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
-                        UI_ProgressScreen.instance.UpdateLevel();
-                    });
+                    RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
+                    UI_ProgressScreen.instance.UpdateLevel();
                     return true;
                 }
                 return false;
@@ -297,6 +296,39 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // If present, set error message
             if (json["params"].Contains("errorMessage"))
                 FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();
+
+            // If present, log mods
+            if (json["params"].Contains("serverMods"))
+            {
+                // Log
+                string logMsg = "";
+                var arr = json["params"]["serverMods"];
+                var enumerator = json["params"]["serverMods"].System_Collections_IDictionary_GetEnumerator().Cast<Il2CppSystem.Collections.IEnumerator>();
+                while (enumerator.MoveNext())
+                {
+                    Il2CppSystem.Collections.DictionaryEntry v = enumerator.Current.Cast<Il2CppSystem.Collections.DictionaryEntry>();
+                    string id = v.Key.ToString();
+                    string version = v.Value.ToString();
+                    if (logMsg != "")
+                        logMsg += ", ";
+                    logMsg += id + " (" + version + ")";
+                }
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Server has " + arr.Count + " server mod" + (arr.Count == 1 ? "" : "s") + " installed. [" + logMsg + "]");
+            }
+
+            // Log error for mods if present
+            if (json["params"].Contains("incompatibleServerMods"))
+            {
+                // Error
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleServerModCount"].ToString() + " incompatible SERVER mod" + (json["params"]["incompatibleServerModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleServerMods"].ToString() + "]");
+            }
+            if (json["params"].Contains("incompatibleClientMods"))
+            {
+                // Error
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleClientModCount"].ToString() + " incompatible CLIENT mod" + (json["params"]["incompatibleClientModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleClientMods"].ToString() + "]");
+            }
+
+            // Prevent loading screen from showing
             errorDisplayed = true;
         }
 
@@ -306,6 +338,39 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Mention feraltweaks support
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
+
+            // Length
+            name = name + "%" + FeralTweaksLoader.GetLoadedMods().Length.ToString();
+            foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+            {
+                // ID
+                name = name + "%" + mod.ID;
+
+                // Version
+                name = name + "%" + mod.Version;
+
+                //
+                // Handshake rules
+                //
+                // int - length
+                // --
+                // id
+                // version check string
+                // --
+                if (mod is IModVersionHandler)
+                {
+                    Dictionary<string, string> rules = ((IModVersionHandler)mod).GetServerModVersionRules();
+                    name = name + "%" + rules.Count;
+                    foreach ((string key, string val) in rules)
+                    {
+                        name = name + "%" + key;
+                        name = name + "%" + val;
+                    }
+                }
+                else
+                    name = name + "%0";
+            }
+            name = name + "%end";
         }
 
     }

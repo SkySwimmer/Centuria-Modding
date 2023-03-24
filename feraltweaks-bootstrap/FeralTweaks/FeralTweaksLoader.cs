@@ -477,6 +477,11 @@ namespace FeralTweaks
                 mod.path = dir.FullName;
                 if (mod.id == null || mod.id == "" || mod.id.Replace(" ", "") == "" || mod.version == null || mod.version == "" || mod.version.Replace(" ", "") == "")
                     throw new ArgumentException();
+                if (!Regex.Match(mod.id, "^[0-9A-Za-z_.]+$").Success)
+                {
+                    LogError("Failed to load mod " + dir.Name + ": invalid mod ID.");
+                    return;
+                }
                 LogDebug("Loading structured ftl mod manifest for: " + mod.id + "...");
                 structuredMods.Add(mod);
             }
@@ -564,6 +569,8 @@ namespace FeralTweaks
                             LogDebug("Verifying mod ID...");
                             if (IsModLoaded(inst.ID))
                                 throw new ArgumentException("Duplicate mod detected! ID: " + inst.ID + " was loaded twice!");
+                            if (!Regex.Match(inst.ID, "^[0-9A-Za-z_.]+$").Success)
+                                throw new ArgumentException("invalid mod ID.");
                             LogDebug("Discovered mod ID: " + inst.ID);
                             mods.Add(inst);
                         }
@@ -757,6 +764,17 @@ namespace FeralTweaks
         }
 
         private static bool VerifyVersionRequirement(string version, string versionCheck)
+        {
+            foreach (string filterRaw in versionCheck.Split("||"))
+            {
+                string filter = filterRaw.Trim();
+                if (VerifyVersionRequirementPart(version, filter))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool VerifyVersionRequirementPart(string version, string versionCheck)
         {
             // Handle versions
             foreach (string filterRaw in versionCheck.Split("&"))

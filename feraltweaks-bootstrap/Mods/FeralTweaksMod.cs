@@ -142,7 +142,7 @@ namespace FeralTweaks.Mods
         /// Defines dependency versions (applies to both dependencies and optional dependencies)
         /// </summary>
         /// <param name="id">Dependency ID</param>
-        /// <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, spaces are stripped during parsing)</param>
+        /// <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, '||' functions as the OR operator, spaces are stripped during parsing)</param>
         protected void DefineDependencyVersion(string id, string version)
         {
             if (locked)

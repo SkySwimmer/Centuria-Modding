@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.asf.centuria.Centuria;
 import org.asf.centuria.accounts.AccountManager;
@@ -13,6 +14,7 @@ import org.asf.centuria.accounts.SaveMode;
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.dms.DMManager;
 import org.asf.centuria.entities.players.Player;
+import org.asf.centuria.feraltweaks.api.versioning.IModVersionHandler;
 import org.asf.centuria.feraltweaks.chatpackets.MarkConvoReadPacket;
 import org.asf.centuria.feraltweaks.gamepackets.DisconnectPacket;
 import org.asf.centuria.feraltweaks.gamepackets.ErrorPopupPacket;
@@ -22,6 +24,7 @@ import org.asf.centuria.feraltweaks.gamepackets.OkPopupPacket;
 import org.asf.centuria.feraltweaks.gamepackets.YesNoPopupPacket;
 import org.asf.centuria.feraltweaks.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
+import org.asf.centuria.modules.ModuleManager;
 import org.asf.centuria.modules.eventbus.EventBus;
 import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
@@ -51,7 +54,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	/**
 	 * FeralTweaks Protocol Version
 	 */
-	public static int FT_VERSION = 1;
+	public static int FT_VERSION = 2;
 	public String ftUnsupportedErrorMessage;
 	public String ftOutdatedErrorMessage;
 	public String modDataVersion;
@@ -246,6 +249,20 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void handleGamePrelogin(AccountPreloginEvent event) {
 		// Handshake feraltweaks
+
+		// Add mods to result json
+		JsonObject modsJ = new JsonObject();
+		modsJ.addProperty("feraltweaks", version());
+		for (ICenturiaModule module : ModuleManager.getInstance().getAllModules()) {
+			if (module instanceof IModVersionHandler) {
+				modsJ.addProperty(module.id(), module.version());
+			}
+		}
+		event.getLoginResponseParameters().addProperty("serverSoftwareName", "Centuria");
+		event.getLoginResponseParameters().addProperty("serverSoftwareVersion", Centuria.SERVER_UPDATE_VERSION);
+		event.getLoginResponseParameters().add("serverMods", modsJ);
+
+		// Handshake
 		try {
 			// Parse nick variable
 			boolean feralTweaks = false;
@@ -268,6 +285,46 @@ public class FeralTweaksModule implements ICenturiaModule {
 					if (!rd.hasNext())
 						break; // Invalid
 					String dataVer = rd.read();
+					if (!rd.hasNext())
+						break; // Invalid
+					int modCount = rd.readInt();
+					HashMap<String, String> mods = new HashMap<String, String>();
+					HashMap<String, HashMap<String, String>> handshakeRules = new HashMap<String, HashMap<String, String>>();
+					for (int i = 0; i < modCount; i++) {
+						// Read id
+						if (!rd.hasNext())
+							break; // Invalid
+						String id = rd.read();
+
+						// Read version
+						if (!rd.hasNext())
+							break; // Invalid
+						String version = rd.read();
+
+						// Read handshake rules
+						if (!rd.hasNext())
+							break; // Invalid
+						int l = rd.readInt();
+						HashMap<String, String> rules = new HashMap<String, String>();
+						for (int i2 = 0; i2 < l; i2++) {
+							// Read id
+							if (!rd.hasNext())
+								break; // Invalid
+							String rID = rd.read();
+
+							// Read version check string
+							if (!rd.hasNext())
+								break; /// Invalid
+							String rVer = rd.read();
+							rules.put(rID, rVer);
+						}
+
+						// Add
+						mods.put(id, version);
+						handshakeRules.put(id, rules);
+					}
+					if (!rd.hasNext() || !rd.read().equals("end"))
+						break; // Invalid
 					if (rd.hasNext())
 						break; // Invalid
 
@@ -295,6 +352,153 @@ public class FeralTweaksModule implements ICenturiaModule {
 						event.setStatus(-26);
 						event.getLoginResponseParameters().addProperty("errorMessage",
 								"Please migrate to managed save data before continuing, you can do this from the account panel.");
+						return;
+					}
+
+					// Log
+					String modsStr = "";
+					for (String id : mods.keySet()) {
+						if (!modsStr.isEmpty())
+							modsStr += ", ";
+						modsStr += id + " (" + mods.get(id) + ")";
+					}
+					Centuria.logger.info("Player " + event.getAccount().getDisplayName() + " is logging in with "
+							+ mods.size() + " client mod" + (mods.size() == 1 ? "" : "s") + " [" + modsStr + "]");
+
+					// Verify handshake rules of server
+					HashMap<String, String> localMods = new HashMap<String, String>();
+					ArrayList<String> missingMods = new ArrayList<String>();
+					ArrayList<String> incompatibleMods = new ArrayList<String>();
+					localMods.put("feraltweaks", version());
+					for (ICenturiaModule module : ModuleManager.getInstance().getAllModules()) {
+						if (module instanceof IModVersionHandler) {
+							localMods.put(module.id(), module.version());
+							IModVersionHandler handler = (IModVersionHandler) module;
+							Map<String, String> rules = handler.getClientModVersionRules();
+
+							// Verify rules
+							for (String id : rules.keySet()) {
+								if (!mods.containsKey(id)) {
+									// Missing
+									if (!missingMods.contains(id))
+										missingMods.add(id);
+								} else {
+									// Check version
+									if (!verifyVersionRequirement(mods.get(id), rules.get(id))) {
+										// Incompatible
+										if (!incompatibleMods.contains(id))
+											incompatibleMods.add(id);
+									}
+								}
+							}
+						}
+					}
+
+					// Verify
+					if (missingMods.size() != 0 || incompatibleMods.size() != 0) {
+						// Handshake error
+
+						event.setStatus(-26);
+						String msg = "Your current game installation is not compatible with the server.\n\n";
+
+						// Build message
+						String logMsg = "";
+						if (missingMods.size() != 0) {
+							msg += "Missing client mods:\n";
+							boolean first = true;
+							for (String mod : missingMods) {
+								if (!first)
+									msg += ", ";
+								msg += mod;
+								if (!logMsg.isEmpty())
+									logMsg += ", ";
+								logMsg += mod;
+								first = false;
+							}
+						}
+						if (incompatibleMods.size() != 0) {
+							if (missingMods.size() != 0)
+								msg += "\n\n";
+							msg += "Incorrect mod versions for:\n";
+							boolean first = true;
+							for (String mod : incompatibleMods) {
+								if (!first)
+									msg += ", ";
+								if (!logMsg.isEmpty())
+									logMsg += ", ";
+								logMsg += mod;
+								msg += mod;
+								first = false;
+							}
+						}
+
+						// Log
+						Centuria.logger
+								.error("Player " + event.getAccount().getDisplayName() + " failed to log in due to "
+										+ (missingMods.size() + incompatibleMods.size()) + " incompatible CLIENT mod"
+										+ ((missingMods.size() + incompatibleMods.size()) == 1 ? "" : "s") + " ["
+										+ logMsg + "]");
+						event.getLoginResponseParameters().addProperty("incompatibleClientMods", logMsg);
+						event.getLoginResponseParameters().addProperty("incompatibleClientModCount",
+								(missingMods.size() + incompatibleMods.size()));
+
+						// Set result
+						event.getLoginResponseParameters().addProperty("errorMessage", msg);
+						return;
+					}
+
+					// Verify client mod rules
+					incompatibleMods.clear();
+					for (HashMap<String, String> rules : handshakeRules.values()) {
+						// Verify rules
+						for (String id : rules.keySet()) {
+							if (!localMods.containsKey(id)) {
+								// Missing
+								if (!incompatibleMods.contains(id))
+									incompatibleMods.add(id);
+							} else {
+								// Check version
+								if (!verifyVersionRequirement(localMods.get(id), rules.get(id))) {
+									// Incompatible
+									if (!incompatibleMods.contains(id))
+										incompatibleMods.add(id);
+								}
+							}
+						}
+					}
+
+					// Verify
+					if (incompatibleMods.size() != 0) {
+						// Handshake error
+
+						// Set status
+						event.setStatus(-26);
+
+						// Build message
+						String logMsg = "";
+						String msg = "You are running mods that require mods that require a up-to-date server mod:\n";
+						boolean first = true;
+						for (String mod : incompatibleMods) {
+							if (!first)
+								msg += ", ";
+							if (!logMsg.isEmpty())
+								logMsg += ", ";
+							logMsg += mod;
+							msg += mod;
+							first = false;
+						}
+
+						// Log
+						Centuria.logger
+								.error("Player " + event.getAccount().getDisplayName() + " failed to log in due to "
+										+ incompatibleMods.size() + " incompatible/missing SERVER mod"
+										+ (incompatibleMods.size() == 1 ? "" : "s") + " [" + logMsg + "]");
+						event.getLoginResponseParameters().addProperty("incompatibleServerMods", logMsg);
+						event.getLoginResponseParameters().addProperty("incompatibleServerModCount",
+								incompatibleMods.size());
+
+						// Set result
+						event.getLoginResponseParameters().addProperty("errorMessage", msg);
 						return;
 					}
 
@@ -619,5 +823,168 @@ public class FeralTweaksModule implements ICenturiaModule {
 			}
 			}
 		}
+	}
+
+	private boolean verifyVersionRequirement(String version, String versionCheck) {
+		for (String filter : versionCheck.split("||")) {
+			filter = filter.trim();
+			if (verifyVersionRequirementPart(version, filter))
+				return true;
+		}
+		return false;
+	}
+
+	private boolean verifyVersionRequirementPart(String version, String versionCheck) {
+		// Handle versions
+		for (String filter : versionCheck.split("&")) {
+			filter = filter.trim();
+
+			// Verify filter string
+			if (filter.startsWith("!=")) {
+				// Not equal
+				if (version.equals(filter.substring(2)))
+					return false;
+			} else if (filter.startsWith("==")) {
+				// Equal to
+				if (!version.equals(filter.substring(2)))
+					return false;
+			} else if (filter.startsWith(">=")) {
+				int[] valuesVersionCurrent = parseVersionValues(version);
+				int[] valuesVersionCheck = parseVersionValues(filter.substring(2));
+
+				// Handle each
+				for (int i = 0; i < valuesVersionCheck.length; i++) {
+					int val = valuesVersionCheck[i];
+
+					// Verify lengths
+					if (i > valuesVersionCurrent.length)
+						break;
+
+					// Verify value
+					if (valuesVersionCurrent[i] < val)
+						return false;
+				}
+			} else if (filter.startsWith("<=")) {
+				int[] valuesVersionCurrent = parseVersionValues(version);
+				int[] valuesVersionCheck = parseVersionValues(filter.substring(2));
+
+				// Handle each
+				for (int i = 0; i < valuesVersionCheck.length; i++) {
+					int val = valuesVersionCheck[i];
+
+					// Verify lengths
+					if (i > valuesVersionCurrent.length)
+						break;
+
+					// Verify value
+					if (valuesVersionCurrent[i] > val)
+						return false;
+				}
+			} else if (filter.startsWith(">")) {
+				int[] valuesVersionCurrent = parseVersionValues(version);
+				int[] valuesVersionCheck = parseVersionValues(filter.substring(1));
+
+				// Handle each
+				for (int i = 0; i < valuesVersionCheck.length; i++) {
+					int val = valuesVersionCheck[i];
+
+					// Verify lengths
+					if (i > valuesVersionCurrent.length)
+						break;
+
+					// Verify value
+					if (valuesVersionCurrent[i] <= val)
+						return false;
+				}
+			} else if (filter.startsWith("<")) {
+				int[] valuesVersionCurrent = parseVersionValues(version);
+				int[] valuesVersionCheck = parseVersionValues(filter.substring(1));
+
+				// Handle each
+				for (int i = 0; i < valuesVersionCheck.length; i++) {
+					int val = valuesVersionCheck[i];
+
+					// Verify lengths
+					if (i > valuesVersionCurrent.length)
+						break;
+
+					// Verify value
+					if (valuesVersionCurrent[i] >= val)
+						return false;
+				}
+			} else {
+				// Equal to
+				if (!version.equals(filter))
+					return false;
+			}
+		}
+
+		// Valid
+		return true;
+	}
+
+	private int[] parseVersionValues(String version) {
+		ArrayList<Integer> values = new ArrayList<Integer>();
+
+		// Parse version string
+		String buffer = "";
+		for (char ch : version.toCharArray()) {
+			if (ch == '-' || ch == '.') {
+				// Handle segment
+				if (!buffer.isEmpty()) {
+					// Check if its a number
+					if (buffer.matches("^[0-9]+$")) {
+						// Add value
+						try {
+							values.add(Integer.parseInt(buffer));
+						} catch (Exception e) {
+							// ... okay... add first char value instead
+							values.add((int) buffer.charAt(0));
+						}
+					} else {
+						// Check if its a full word and doesnt contain numbers
+						if (buffer.matches("^[^0-9]+$")) {
+							// It is, add first char value
+							values.add((int) buffer.charAt(0));
+						} else {
+							// Add each value
+							for (char ch2 : buffer.toCharArray())
+								values.add((int) ch2);
+						}
+					}
+				}
+				buffer = "";
+			} else {
+				// Add to segment buffer
+				buffer += ch;
+			}
+		}
+		if (!buffer.isEmpty()) {
+			// Check if its a number
+			if (buffer.matches("^[0-9]+$")) {
+				// Add value
+				try {
+					values.add(Integer.parseInt(buffer));
+				} catch (Exception e) {
+					// ... okay... add first char value instead
+					values.add((int) buffer.charAt(0));
+				}
+			} else {
+				// Check if its a full word and doesnt contain numbers
+				if (buffer.matches("^[^0-9]+$")) {
+					// It is, add first char value
+					values.add((int) buffer.charAt(0));
+				} else {
+					// Add each value
+					for (char ch : buffer.toCharArray())
+						values.add((int) ch);
+				}
+			}
+		}
+
+		int[] arr = new int[values.size()];
+		for (int i = 0; i < arr.length; i++)
+			arr[i] = values.get(i);
+		return arr;
 	}
 }
