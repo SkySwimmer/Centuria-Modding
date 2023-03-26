@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using AssetRipper.VersionUtilities;
 using FeralTweaks;
 using FeralTweaksBootstrap.Detour;
@@ -17,6 +20,7 @@ using Il2CppInterop.HarmonySupport;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.Startup;
+using Newtonsoft.Json;
 
 namespace FeralTweaksBootstrap
 {
@@ -28,6 +32,19 @@ namespace FeralTweaksBootstrap
         private static StreamWriter LogWriter;
         private static string GameAssemblyPath;
         private static bool logDebug;
+
+        private class ModInfo
+        {
+            public string id;
+            public string version;
+
+            public int loadPriority = 0;
+            public List<string> dependencies = new List<string>();
+            public List<string> optionalDependencies = new List<string>();
+            public List<string> conflictsWith = new List<string>();
+            public List<string> loadBefore = new List<string>();
+            public Dictionary<string, string> dependencyVersions = new Dictionary<string, string>();
+        }
 
         public static bool DebugLogging
         {
@@ -96,6 +113,15 @@ namespace FeralTweaksBootstrap
             bool loadMods = false;
             bool regenerateAssemblies = false;
             string[] args = Environment.GetCommandLineArgs();
+
+            // Packaging
+            string packageSource = null;
+            string packageOutput = null;
+            string packageVersion = null;
+            string packageID = null;
+            bool packageOutputOverwrite = false;
+            Dictionary<string, string> packageIncludeSources = new Dictionary<string, string>();
+            List<string> packageIncludeSourceZips = new List<string>();
             for (int i = 1; i < args.Length; i++)
             {
                 if (args[i].StartsWith("--"))
@@ -107,9 +133,9 @@ namespace FeralTweaksBootstrap
                         val = opt.Substring(opt.IndexOf("=") + 1);
                         opt = opt.Remove(opt.IndexOf("="));
                     }
+                    LogDebug("Handling argument: " + opt);
 
-                    // Handle argument
-                    
+                    // Handle argument                    
                     switch (opt)
                     {
                         case "debug-log":
@@ -133,10 +159,440 @@ namespace FeralTweaksBootstrap
                                 regenerateAssemblies = true;
                                 break;
                             }
+                        case "build-package":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Build previous
+                                if (packageSource != null)
+                                    BuildPackage();
+
+                                // Assign
+                                LogDebug("Processing package build command...");
+                                LogDebug("Source package: " + val);
+                                packageSource = val;
+                                packageOutputOverwrite = false;
+                                packageIncludeSources.Clear();
+
+                                // Verify package
+                                if (File.Exists(val + "/clientmod.json"))
+                                {
+                                    ModInfo mod = JsonConvert.DeserializeObject<ModInfo>(File.ReadAllText(val + "/clientmod.json"));
+                                    if (mod.id == null || mod.id == "" || mod.id.Replace(" ", "") == "" || mod.version == null || mod.version == "" || mod.version.Replace(" ", "") == "")
+                                        throw new ArgumentException();
+                                    if (!Regex.Match(mod.id, "^[0-9A-Za-z_.]+$").Success)
+                                    {
+                                        LogError("Failed to load mod manifest for " + Path.GetFullPath(val) + ": invalid mod ID.");
+                                        Environment.Exit(1);
+                                    }
+                                    LogDebug("ID: " + mod.id);
+                                    LogDebug("Version: " + mod.version);
+
+                                    // Load arguments
+                                    packageID = mod.id;
+                                    packageVersion = mod.version;
+                                    packageOutput = "FeralTweaks/mods/" + mod.id + ".ftm";
+                                    Directory.CreateDirectory("FeralTweaks/mods");
+                                }
+                                else
+                                {
+                                    LogError("Invalid mod folder: " + val);
+                                    Environment.Exit(1);
+                                }
+
+                                break;
+                            }
+                        case "force-overwrite":
+                            {
+                                // Check
+                                if (packageSource == null)
+                                {
+                                    LogError("No sources specified for '--package-output', please use '--build-package' before any other package arguments.");
+                                    Environment.Exit(1);
+                                }
+                                packageOutputOverwrite = true;
+                                LogDebug("Overwriting existing package files is now allowed.");
+                                break;
+                            }
+                        case "package-include-assemblies":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Check
+                                if (packageSource == null)
+                                {
+                                    LogError("No sources specified for '--package-output', please use '--build-package' before any other package arguments.");
+                                    Environment.Exit(1);
+                                }
+
+                                // Verify folder
+                                if (!Directory.Exists(val))
+                                {
+                                    LogWarn("Invalid package assembly source path: " + val + ": does not exist.");
+                                    break;
+                                }
+
+                                // Scan directory
+                                scanFiles(new DirectoryInfo(val), "clientmod/assemblies/");
+                                void scanFiles(DirectoryInfo src, string prefix)
+                                {
+                                    foreach (DirectoryInfo dir in src.GetDirectories())
+                                    {
+                                        packageIncludeSources[prefix + dir.Name + "/"] = null;
+                                        scanFiles(dir, prefix + dir.Name + "/");
+                                    }
+                                    foreach (FileInfo file in src.GetFiles("*.dll"))
+                                    {
+                                        packageIncludeSources[prefix + file.Name] = file.FullName;
+                                        LogDebug("Queued file for pacakge: " + prefix + file.Name);
+                                    }
+                                }
+
+                                break;
+                            }
+                        case "package-include":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Check
+                                if (packageSource == null)
+                                {
+                                    LogError("No sources specified for '--package-output', please use '--build-package' before any other package arguments.");
+                                    Environment.Exit(1);
+                                }
+
+                                // Verify file
+                                if (File.Exists(val) || Directory.Exists(val))
+                                {
+                                    // Check if file and if its a zip
+                                    bool sourceIsZip = false;
+                                    if (File.Exists(val))
+                                    {
+                                        try
+                                        {
+                                            // Check if zip
+
+                                            // Open stream
+                                            Stream strm = File.OpenRead(val);
+
+                                            // Check first four bytes
+                                            if (strm.ReadByte() == 0x50 && strm.ReadByte() == 0x4b)
+                                            {
+                                                // Check next byte
+                                                int b = strm.ReadByte();
+                                                switch (b)
+                                                {
+                                                    case 0x03:
+                                                        {
+                                                            // Next should be 0x04
+                                                            if (strm.ReadByte() == 0x04)
+                                                                sourceIsZip = true;
+                                                            break;
+                                                        }
+                                                    case 0x05:
+                                                        {
+                                                            // Next should be 0x06
+                                                            if (strm.ReadByte() == 0x06)
+                                                                sourceIsZip = true;
+                                                            break;
+                                                        }
+                                                    case 0x07:
+                                                        {
+                                                            // Next should be 0x08
+                                                            if (strm.ReadByte() == 0x08)
+                                                                sourceIsZip = true;
+                                                            break;
+                                                        }
+                                                }
+                                            }
+
+                                            // Close
+                                            strm.Close();
+                                        }
+                                        catch
+                                        {
+                                            // Not a zip
+                                        }
+                                    }
+
+                                    // Handle result
+                                    if (sourceIsZip)
+                                    {
+                                        // Add to zip sources
+                                        packageIncludeSourceZips.Add(val);
+                                        LogDebug("Queued zip merge for package: " + val);
+                                    }
+                                    else
+                                    {
+                                        if (File.Exists(val))
+                                        {
+                                            // File
+
+                                            // Needs to be a relative path
+                                            if (Path.IsPathFullyQualified(val))
+                                            {
+                                                // Invalid
+                                                LogWarn("Invalid source file: " + val + ": not a zip file and not relative to the current directory, unable to add to the destination FTM package.");
+                                            }
+                                            else
+                                            {
+                                                // Add it
+                                                if (val.StartsWith("." + Path.DirectorySeparatorChar) || val.StartsWith("." + Path.AltDirectorySeparatorChar))
+                                                    val = val.Substring(2);
+                                                packageIncludeSources[val] = Path.GetFullPath(val);
+                                                LogDebug("Queued file for pacakge: " + val);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Directory
+
+                                            // Scan directory
+                                            scanFiles(new DirectoryInfo(val), "");
+                                            void scanFiles(DirectoryInfo src, string prefix)
+                                            {
+                                                foreach (DirectoryInfo dir in src.GetDirectories())
+                                                {
+                                                    scanFiles(dir, prefix + dir.Name + "/");
+                                                }
+                                                foreach (FileInfo file in src.GetFiles())
+                                                {
+                                                    packageIncludeSources[prefix + file.Name] = file.FullName;
+                                                    LogDebug("Queued file for pacakge: " + prefix + file.Name);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    LogWarn("Invalid package source path: " + val + ": does not exist.");
+                                }
+                                break;
+                            }
+                        case "package-output":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Check
+                                if (packageSource == null)
+                                {
+                                    LogError("No sources specified for '--package-output', please use '--build-package' before any other package arguments.");
+                                    Environment.Exit(1);
+                                }
+
+                                // Verify path
+                                try
+                                {
+                                    if (Directory.Exists(Path.GetDirectoryName(val)) || Path.GetDirectoryName(val) == "")
+                                    {
+                                        packageOutput = val;
+                                        LogDebug("Package output path assigned: " + val);
+                                    }
+                                    else
+                                        throw new ArgumentException();
+                                }
+                                catch
+                                {
+                                    LogError("Invalid package output file path: " + val);
+                                    Environment.Exit(1);
+                                }
+
+                                break;
+                            }
 
                             // TODO: launcher handoff log
                     }
                 }
+            }
+
+            // Build previous
+            if (packageSource != null)
+            {
+                BuildPackage();
+                Environment.Exit(0);
+            }
+            void BuildPackage()
+            {
+                // Check output
+                if (File.Exists(packageOutput) &&!packageOutputOverwrite)
+                {
+                    LogWarn("Aborting package build for " + packageOutput + ": file already exists!");
+                    LogWarn("To continue anyways, add '--force-overwrite' to the command arguments.");
+                    return;
+                }
+
+                // Prepare to build
+                LogInfo("Building package...");
+                LogInfo("Package source path: " + packageSource);
+                LogInfo("Package output path: " + packageOutput);
+                LogInfo("Creating output file...");
+                if (File.Exists(packageOutput))
+                    File.Delete(packageOutput);
+                List<string> dirs = new List<string>();
+                ZipArchive outp = ZipFile.Open(packageOutput, ZipArchiveMode.Create);
+
+                // Write mod info
+                Dictionary<string, ZipArchiveEntry> ents = new Dictionary<string, ZipArchiveEntry>();
+                Stream strm = CreateOrOpen("mod.json").Open();
+                Dictionary<string, object> man = new Dictionary<string, object>();
+                man["id"] = packageID;
+                man["version"] = packageVersion;
+                man["timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                strm.Write(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(man)));
+                strm.Close();
+                LogDebug("Added mod.json");
+
+                // Write source entries
+                List<string> includedFiles = new List<string>();
+                scanFiles(new DirectoryInfo(packageSource), "clientmod/");
+                void scanFiles(DirectoryInfo src, string prefix)
+                {
+                    foreach (DirectoryInfo dir in src.GetDirectories())
+                    {
+                        if (!dirs.Contains(prefix + dir.Name + "/"))
+                        {
+                            // Add directory
+                            CreateOrOpen(prefix + dir.Name + "/");
+                            dirs.Add(prefix + dir.Name + "/");
+                        }
+                        if (packageIncludeSources.ContainsKey(prefix + dir.Name + "/"))
+                            packageIncludeSources.Remove(prefix + dir.Name + "/");
+                        includedFiles.Add(prefix + dir.Name + "/");
+                        scanFiles(dir, prefix + dir.Name + "/");
+                    }
+                    foreach (FileInfo file in src.GetFiles())
+                    {
+                        // File
+                        if (packageIncludeSources.ContainsKey(prefix + file.Name))
+                            packageIncludeSources.Remove(prefix + file.Name);
+                        Stream destS = CreateOrOpen(prefix + file.Name).Open();
+                        FileStream sourceS = file.OpenRead();
+                        sourceS.CopyTo(destS);
+                        sourceS.Close();
+                        destS.Close();
+                        includedFiles.Add(prefix + file.Name);
+                        LogDebug("Added " + prefix + file.Name);
+                    }
+                }
+
+                // Write included zips
+
+                foreach (string zip in packageIncludeSourceZips)
+                {
+                    LogDebug("Adding files from zip " + zip);
+
+                    // Load
+                    ZipArchive archive = ZipFile.OpenRead(zip);
+
+                    // Go through each entry
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        string ent = entry.FullName.Replace("\\", "/");
+                        while (ent.StartsWith("/"))
+                            ent = ent.Substring(1);
+
+                        // Check
+                        if (includedFiles.Contains(ent) || ent == "")
+                            continue;
+                        includedFiles.Add(ent);
+
+                        // Handle
+                        if (ent.EndsWith("/"))
+                        {
+                            // Folder
+                            if (!dirs.Contains(ent))
+                            {
+                                // Add directory
+                                CreateOrOpen(ent);
+                                dirs.Add(ent);
+                                includedFiles.Add(ent);
+                            }
+                        }
+                        else
+                        {
+                            // File
+                            Stream destS = CreateOrOpen(ent).Open();
+                            Stream sourceS = entry.Open();
+                            sourceS.CopyTo(destS);
+                            sourceS.Close();
+                            destS.Close();
+                            LogDebug("Added " + ent);
+                            includedFiles.Add(ent);
+                        }
+                    }
+                    archive.Dispose();
+                }
+
+                // Write source files
+                foreach ((string ent, string source) in packageIncludeSources)
+                {
+                    if (includedFiles.Contains(ent))
+                        continue;
+                    // Add each
+                    if (ent.EndsWith("/"))
+                    {
+                        // Directory
+                        if (!dirs.Contains(ent))
+                        {
+                            // Add directory
+                            CreateOrOpen(ent);
+                            dirs.Add(ent);
+                            includedFiles.Add(ent);
+                        }
+                    }
+                    else
+                    {
+                        // File
+                        Stream destS = CreateOrOpen(ent).Open();
+                        FileStream sourceS = File.OpenRead(source);
+                        sourceS.CopyTo(destS);
+                        sourceS.Close();
+                        destS.Close();
+                        LogDebug("Added " + ent);
+                        includedFiles.Add(ent);
+                    }
+                }
+
+                // Utility
+                ZipArchiveEntry CreateOrOpen(string entName)
+                {
+                    if (!ents.ContainsKey(entName))
+                        ents[entName] = outp.CreateEntry(entName);
+                    return ents[entName];
+                }
+
+                // Finish
+                outp.Dispose();
+                LogInfo("Package build completed for " + packageOutput);
             }
 
             // Find game
@@ -236,7 +692,7 @@ namespace FeralTweaksBootstrap
 
                 // Process
                 LogInfo("Processing binary type...");
-                switch(magic)
+                switch (magic)
                 {
                     // NSO
                     case 0x304F534E:
@@ -418,7 +874,8 @@ namespace FeralTweaksBootstrap
                 }
 
                 // Handle it ourselves
-                if (File.Exists("FeralTweaks/cache/assemblies/" + nm.Name + ".dll")){
+                if (File.Exists("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"))
+                {
                     return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"));
                 }
                 return null;
@@ -511,5 +968,4 @@ namespace FeralTweaksBootstrap
             FeralTweaksLoader.Start();
         }
     }
-
 }

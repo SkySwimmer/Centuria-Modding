@@ -472,7 +472,7 @@ namespace FeralTweaks
             // Load mod info
             try
             {
-                LogInfo("Parsing mod manifest...");
+                LogDebug("Parsing mod manifest...");
                 ModInfo mod = JsonConvert.DeserializeObject<ModInfo>(File.ReadAllText(dir.FullName + "/clientmod.json"));
                 mod.path = dir.FullName;
                 if (mod.id == null || mod.id == "" || mod.id.Replace(" ", "") == "" || mod.version == null || mod.version == "" || mod.version.Replace(" ", "") == "")

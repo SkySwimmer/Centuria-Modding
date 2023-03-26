@@ -138,6 +138,7 @@ namespace feraltweaks
             ApplyPatch(typeof(DOTweenAnimatorPatch));
             ApplyPatch(typeof(GlobalSettingsManagerPatch));
             ApplyPatch(typeof(BundlePatches));
+            ApplyPatch(typeof(InitialLoadingPatches));
 
             // Scan mods for assets
             LogInfo("Scanning for mod assets...");

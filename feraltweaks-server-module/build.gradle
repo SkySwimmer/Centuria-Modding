@@ -17,7 +17,7 @@ plugins {
 
 
 // Basic information
-version = "1.0.0-b2"
+version = "1.0.0-b3"
 group = "org.asf.centuria"
 
 ext.modulePackage = "org.asf.centuria.feraltweaks"

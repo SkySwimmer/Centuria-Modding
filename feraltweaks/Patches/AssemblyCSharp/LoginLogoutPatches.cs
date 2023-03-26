@@ -18,6 +18,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
     {
         public static bool doLogout = false;
         public static bool errorDisplayed = false;
+        public static bool ignoreUpdateLevel = false;
         public static bool loggingOut = false;
         private static List<Func<bool>> actionsToRun = new List<Func<bool>>();
         private static LoadingScreenAction loadWaiter;
@@ -235,6 +236,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_ProgressScreen), "UpdateLevel")]
+        public static bool UpdateLevel()
+        {
+            if (ignoreUpdateLevel)
+            {
+                ignoreUpdateLevel = false;
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_Window_Login), "BtnClicked_Login")]
         public static void BtnClicked_Login(UI_Window_Login __instance)
         {
@@ -242,6 +255,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             errorDisplayed = false;
             loggingOut = false;
             doLogout = false;
+            ignoreUpdateLevel = false;
             long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             actionsToRun.Add(() =>
             {
@@ -251,6 +265,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
                     UI_ProgressScreen.instance.UpdateLevel();
+                    ignoreUpdateLevel = true;
                     return true;
                 }
                 return false;

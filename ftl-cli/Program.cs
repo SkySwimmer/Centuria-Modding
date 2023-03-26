@@ -32,6 +32,9 @@ namespace ftl_cli
             Console.WriteLine("Copyright(c) AerialWorks Technologies, licensed GPL-2.0");
             Console.WriteLine("Use `ftl --help` for a list of arguments.");
             Console.WriteLine();
+            Console.WriteLine("Please be aware that doing anything other than dry runs has a huge chance of causing errors.");
+            Console.WriteLine("This tool does NOT start the actual game.");
+            Console.WriteLine();
             FeralTweaksBootstrap.Bootstrap.Start();
             FeralTweaksBootstrap.Bootstrap.LogInfo("FTL exited, running through the CLI wrapper, not starting the game!");
         }

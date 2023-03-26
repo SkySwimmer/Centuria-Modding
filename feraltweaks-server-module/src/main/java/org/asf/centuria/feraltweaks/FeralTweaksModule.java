@@ -403,41 +403,33 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 						// Build message
 						String logMsg = "";
-						if (missingMods.size() != 0) {
-							msg += "Missing client mods:\n";
-							boolean first = true;
-							for (String mod : missingMods) {
-								if (!first)
-									msg += ", ";
-								msg += mod;
-								if (!logMsg.isEmpty())
-									logMsg += ", ";
-								logMsg += mod;
-								first = false;
-							}
+						msg += "Missing/outdated client mods:\n";
+						boolean first = true;
+						for (String mod : missingMods) {
+							if (!first)
+								msg += ", ";
+							msg += mod;
+							if (!logMsg.isEmpty())
+								logMsg += ", ";
+							logMsg += mod;
+							first = false;
 						}
-						if (incompatibleMods.size() != 0) {
-							if (missingMods.size() != 0)
-								msg += "\n\n";
-							msg += "Incorrect mod versions for:\n";
-							boolean first = true;
-							for (String mod : incompatibleMods) {
-								if (!first)
-									msg += ", ";
-								if (!logMsg.isEmpty())
-									logMsg += ", ";
-								logMsg += mod;
-								msg += mod;
-								first = false;
-							}
+						for (String mod : incompatibleMods) {
+							if (!first)
+								msg += ", ";
+							if (!logMsg.isEmpty())
+								logMsg += ", ";
+							logMsg += mod;
+							msg += mod;
+							first = false;
 						}
 
 						// Log
-						Centuria.logger
-								.error("Player " + event.getAccount().getDisplayName() + " failed to log in due to "
-										+ (missingMods.size() + incompatibleMods.size()) + " incompatible CLIENT mod"
-										+ ((missingMods.size() + incompatibleMods.size()) == 1 ? "" : "s") + " ["
-										+ logMsg + "]");
+						Centuria.logger.error("Player " + event.getAccount().getDisplayName()
+								+ " failed to log in due to " + (missingMods.size() + incompatibleMods.size())
+								+ " incompatible/missing CLIENT mod"
+								+ ((missingMods.size() + incompatibleMods.size()) == 1 ? "" : "s") + " [" + logMsg
+								+ "]");
 						event.getLoginResponseParameters().addProperty("incompatibleClientMods", logMsg);
 						event.getLoginResponseParameters().addProperty("incompatibleClientModCount",
 								(missingMods.size() + incompatibleMods.size()));
@@ -826,7 +818,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	}
 
 	private boolean verifyVersionRequirement(String version, String versionCheck) {
-		for (String filter : versionCheck.split("||")) {
+		for (String filter : versionCheck.split("\\|\\|")) {
 			filter = filter.trim();
 			if (verifyVersionRequirementPart(version, filter))
 				return true;
