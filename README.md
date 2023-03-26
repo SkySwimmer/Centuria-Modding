@@ -55,7 +55,7 @@ dotnet build
 9. You can find the built mod at `feraltweaks/run/FeralTweaks/mods/feraltweaks`
 
 ## Using the Desktop mod
-After putting it in the `FeralTweaks/mods/feraltweaks` folder of your client (you may need to create this directory), it should load automatically as long as you have FTL installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
+After putting the mod folder in the `FeralTweaks/mods` folder of your client (you may need to create this directory), it should load automatically as long as you have FTL installed. Note that the client mod doesn't have content, content is streamed (or will stream) from the  server.
 
 You can however change client-specific options in `FeralTweaks/config/feraltweaks/settings.props` which contains some settings you may find useful. Note that client settings are overriden by the server when playing on a feral-tweaks enabled Centuria server.
 
