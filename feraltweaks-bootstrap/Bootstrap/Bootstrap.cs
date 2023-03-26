@@ -26,7 +26,7 @@ namespace FeralTweaksBootstrap
 {
     public static class Bootstrap
     {
-        private const string VERSION = "v1.0.0-alpha-a3";
+        public const string VERSION = "v1.0.0-alpha-a3";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
         private static StreamWriter LogWriter;
@@ -138,6 +138,49 @@ namespace FeralTweaksBootstrap
                     // Handle argument                    
                     switch (opt)
                     {
+                        case "help":
+                            {
+                                // Show help
+
+                                // Header
+                                LogInfo("");
+                                LogInfo("");
+                                string msg = "FeralTweaksLoader (FTL), Preloader " + VERSION + ", FTL " + FeralTweaksLoader.VERSION;
+                                string longest = "                                              of fat mod packages, such as universal packages containing both server and client code as long as the server can    ";
+                                string ln = "";
+                                for (int i2 = 0; i2 < (msg.Length > longest.Length ? msg.Length : longest.Length); i2++)
+                                    ln += "-";
+                                LogInfo(msg);
+                                LogInfo(ln);
+                                LogInfo("");
+
+                                // Help page
+                                LogInfo("  Preloader arguments:");
+                                LogInfo("    --debug-log                            -  enables debug logging in the loader, preloader and mods");
+                                LogInfo("    --dry-run                              -  instructs FTL to not do anything apart from early-load actions");
+                                LogInfo("    --dryrun-load-mods                     -  same as dry-run however mod are also preloaded");
+                                LogInfo("    --regenerate-interop-assemblies        -  regenerates the interop assembly cache even if it exists");
+                                LogInfo("");
+                                LogInfo("  Modloader arguments:");
+                                LogInfo("    --load-mod-from \"<path>\"               -  instructs FTL to load a structured mod from the specified folder path");
+                                LogInfo("    --debug-mod-assemblies:<id> \"<path>\"   -  instructs FTL to load assemblies from the given folder path for the given mod ID");
+                                LogInfo("");
+                                LogInfo("  Mod packaging arguments:");
+                                LogInfo("    --build-package \"<path>\"               -  instructs FTL to build a mod package for the given structured mod folder");
+                                LogInfo("    --package-output \"<path>\"              -  changes the output path for mod packages (can only be used after build-package)");
+                                LogInfo("    --force-overwrite                      -  instructs FTL to overwrite existing packages during build (can only be used after build-package)");
+                                LogInfo("    --package-include \"<path>\"             -  instructs FTL to include directories in the mod package during build (can only be used after build-package)");
+                                LogInfo("                                              if the specified path is a zip or jar file, FTL will merge the contents of it instead, this allows for creation");
+                                LogInfo("                                              of fat mod packages, such as universal packages containing both server and client code as long as the server can");
+                                LogInfo("                                              accept FTM files.");
+                                LogInfo("    --package-include-assemblies \"<path>\"  -  instructs FTL to include assemblies from the given directory during package build");
+
+                                // Footer
+                                LogInfo("");
+                                LogInfo(ln);
+                                Environment.Exit(0);
+                                break;
+                            }
                         case "debug-log":
                             {
                                 logDebug = true;

@@ -2,8 +2,8 @@
   "profiles": {
     "ftl-cli": {
       "commandName": "Project",
-      "commandLineArgs": "--debug-log --build-package ../../feraltweaks/assets --package-include ../../feraltweaks-server-module/build/moduledata/modules/feraltweaks-server-module.jar --package-include-assemblies ../../feraltweaks/run/FeralTweaks/mods/feraltweaks/assemblies --package-output feraltweaks-test.ftm --force-overwrite",
-      "workingDirectory": "..\\feraltweaks-bootstrap\\run"
+      "commandLineArgs": "--dry-run",
+      "workingDirectory": "..\\feraltweaks-bootstrap\\run\\test"
     }
   }
 }
