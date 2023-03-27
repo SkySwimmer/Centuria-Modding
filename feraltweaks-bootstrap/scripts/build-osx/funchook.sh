@@ -24,7 +24,7 @@ mkdir build
 cd build
 
 # Prepare
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .. -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .. -DFUNCHOOK_DISASM=zydis -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
 
 # Build
 make
