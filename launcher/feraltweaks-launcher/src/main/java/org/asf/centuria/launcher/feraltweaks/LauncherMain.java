@@ -613,6 +613,14 @@ public class LauncherMain {
 						// Check OS
 						if (feralPlat.equals("osx")) {
 							unZip(tmpOut, new File("client"), progressBar, panel_1); // OSX
+
+							// Remove attributes
+							ProcessBuilder proc = new ProcessBuilder("xattr", "-cr",
+									new File("client/build/Fer.al.app").getCanonicalPath());
+							try {
+								proc.start().waitFor();
+							} catch (InterruptedException e1) {
+							}
 						} else {
 							unzip7z(tmpOut, new File("client"), progressBar, panel_1); // Windows or linux
 						}

@@ -87,9 +87,6 @@ case ${os_type} in
         lib_extension="so"
     ;;
     Darwin*)
-        # Make sure that the game can run and wont be blocked by quarantine
-        xattr -cr "${BASEDIR}"
-    
         real_executable_name="${executable_name}"
 
         # Handle relative directories

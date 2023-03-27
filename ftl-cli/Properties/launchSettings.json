@@ -2,8 +2,8 @@
   "profiles": {
     "ftl-cli": {
       "commandName": "Project",
-      "commandLineArgs": "--dry-run",
-      "workingDirectory": "..\\feraltweaks-bootstrap\\run\\test"
+      "commandLineArgs": "--help",
+      "workingDirectory": "..\\feraltweaks-bootstrap\\run"
     }
   }
 }

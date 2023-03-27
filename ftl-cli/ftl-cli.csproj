@@ -6,6 +6,7 @@
     <RootNamespace>ftl_cli</RootNamespace>
     <AssemblyName>ftl</AssemblyName>
     <LangVersion>latest</LangVersion>
+    <CopyLocalLockFileAssemblies>fakse</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
