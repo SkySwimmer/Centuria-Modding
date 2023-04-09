@@ -307,7 +307,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
         public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
         {
