@@ -174,7 +174,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 			event.getAccount().getOnlinePlayerInstance().client.sendPacket(pkt);
 			try {
 				// Give time to disconnect
-				Thread.sleep(300);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 			}
 		}
