@@ -22,7 +22,7 @@ namespace feraltweaks
 {
     public class FeralTweaks : FeralTweaksMod
     {
-        public const int ProtocolVersion = 2;
+        public static int ProtocolVersion = 2;
 
         protected override void Define()
         {
@@ -109,6 +109,8 @@ namespace feraltweaks
                 }
             }
             LogInfo("Configuration loaded.");
+            if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
+                ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
 
             // Load environment
             if (PatchConfig.ContainsKey("ServerEnvironment"))

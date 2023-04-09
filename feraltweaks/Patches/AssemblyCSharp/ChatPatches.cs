@@ -190,6 +190,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "RefreshText")]
         public static void RefreshText(ref UI_UnreadConversationCount __instance, ref int inUnreadCount)
         {
+            GameObject obj = __instance.gameObject.transform.parent.parent.gameObject;
+            if (obj.name == "Button_Chat")
+                return; // Main UI
             if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Filter it
@@ -304,16 +307,19 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "OnConversationItemClicked")]
-        public static void OnConversationItemClicked(ChatConversationData inConversation)
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
+        public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
         {
-            if (ChatManager.instance._unreadConversations.Contains(inConversation.id))
+            if (inData == null || inFromSetup)
+                return;
+            ChatConversationData inConv = inData;
+            if (ChatManager.instance._unreadConversations.Contains(inConv.id))
             {
                 // Send packet
                 Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
                 pkt["cmd"] = "feraltweaks.markread";
-                pkt["conversation"] = inConversation.id;
+                pkt["conversation"] = inConv.id;
                 string msg = JsonMapper.ToJson(pkt);
                 NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
             }

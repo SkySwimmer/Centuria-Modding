@@ -354,38 +354,41 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // Mention feraltweaks support
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
 
-            // Length
-            name = name + "%" + FeralTweaksLoader.GetLoadedMods().Length.ToString();
-            foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+            if (!FeralTweaks.PatchConfig.ContainsKey("DebugOldServer") || FeralTweaks.PatchConfig["DebugOldServer"].ToLower() != "true") 
             {
-                // ID
-                name = name + "%" + mod.ID;
-
-                // Version
-                name = name + "%" + mod.Version;
-
-                //
-                // Handshake rules
-                //
-                // int - length
-                // --
-                // id
-                // version check string
-                // --
-                if (mod is IModVersionHandler)
+                // Length
+                name = name + "%" + FeralTweaksLoader.GetLoadedMods().Length.ToString();
+                foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
                 {
-                    Dictionary<string, string> rules = ((IModVersionHandler)mod).GetServerModVersionRules();
-                    name = name + "%" + rules.Count;
-                    foreach ((string key, string val) in rules)
+                    // ID
+                    name = name + "%" + mod.ID;
+
+                    // Version
+                    name = name + "%" + mod.Version;
+
+                    //
+                    // Handshake rules
+                    //
+                    // int - length
+                    // --
+                    // id
+                    // version check string
+                    // --
+                    if (mod is IModVersionHandler)
                     {
-                        name = name + "%" + key;
-                        name = name + "%" + val;
+                        Dictionary<string, string> rules = ((IModVersionHandler)mod).GetServerModVersionRules();
+                        name = name + "%" + rules.Count;
+                        foreach ((string key, string val) in rules)
+                        {
+                            name = name + "%" + key;
+                            name = name + "%" + val;
+                        }
                     }
+                    else
+                        name = name + "%0";
                 }
-                else
-                    name = name + "%0";
+                name = name + "%end";
             }
-            name = name + "%end";
         }
 
     }
