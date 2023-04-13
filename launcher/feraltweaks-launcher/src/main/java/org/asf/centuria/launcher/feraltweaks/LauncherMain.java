@@ -353,18 +353,22 @@ public class LauncherMain {
 				String authToken = "";
 				String accountID = "";
 				if (new File("login.json").exists()) {
-					JsonObject login = JsonParser.parseString(Files.readString(Path.of("login.json")))
-							.getAsJsonObject();
-					lastToken = login.get("token").getAsString();
-					lastAccountName = login.get("loginName").getAsString();
+					try {
+						JsonObject login = JsonParser.parseString(Files.readString(Path.of("login.json")))
+								.getAsJsonObject();
+						lastToken = login.get("token").getAsString();
+						lastAccountName = login.get("loginName").getAsString();
 
-					// Check if shift is down
-					for (int i = 0; i < 30; i++) {
-						if (shiftDown) {
-							lastToken = "";
-							break;
+						// Check if shift is down
+						for (int i = 0; i < 30; i++) {
+							if (shiftDown) {
+								lastToken = "";
+								break;
+							}
+							Thread.sleep(100);
 						}
-						Thread.sleep(100);
+					} catch (Exception e) {
+						// Corrupted login data file likely
 					}
 				}
 				boolean requireRelogin = true;
