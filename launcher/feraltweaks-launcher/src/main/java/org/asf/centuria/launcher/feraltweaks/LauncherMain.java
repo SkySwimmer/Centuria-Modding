@@ -540,7 +540,8 @@ public class LauncherMain {
 				// Load version and download URL
 				String cVer = properties.get("ApplicationVersion");
 				String url = properties.get("ApplicationDownloadUrl");
-				if (!currentClient.equals(cVer)) {
+				if (!currentClient.equals(cVer)
+						|| (feralPlat.equals("osx") && !new File("client/build/osxgamecache").exists())) {
 					// Download new client
 					oUrl = new URL(url);
 					ip = oUrl.getHost();
@@ -617,16 +618,74 @@ public class LauncherMain {
 						// Check OS
 						if (feralPlat.equals("osx")) {
 							unZip(tmpOut, new File("client"), progressBar, panel_1); // OSX
-
-							// Remove attributes
-							ProcessBuilder proc = new ProcessBuilder("xattr", "-cr",
-									new File("client/build/Fer.al.app").getCanonicalPath());
-							try {
-								proc.start().waitFor();
-							} catch (InterruptedException e1) {
-							}
 						} else {
 							unzip7z(tmpOut, new File("client"), progressBar, panel_1); // Windows or linux
+						}
+
+						// Delete FTL assembly caches
+						if (new File("client/build/FeralTweaks/cache/dummy").exists()) {
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									log("Erasing dummy assembly cache for regeneration...");
+									progressBar.setMaximum(100);
+									progressBar.setValue(0);
+									panel_5.setVisible(false);
+									panel_1.repaint();
+								});
+							} catch (InvocationTargetException | InterruptedException e) {
+							}
+							deleteDir(new File("client/build/FeralTweaks/cache/dummy"));
+						}
+						if (new File("client/build/FeralTweaks/cache/assemblies").exists()) {
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									log("Erasing proxy assembly cache for regeneration...");
+									progressBar.setMaximum(100);
+									progressBar.setValue(0);
+									panel_5.setVisible(false);
+									panel_1.repaint();
+								});
+							} catch (InvocationTargetException | InterruptedException e) {
+							}
+							deleteDir(new File("client/build/FeralTweaks/cache/assemblies"));
+						}
+
+						// OSX workaround
+						if (feralPlat.equals("osx")) {
+							if (new File("client/build/osxgamecache").exists()) {
+								try {
+									SwingUtilities.invokeAndWait(() -> {
+										log("Erasing OSX game file cache for regeneration...");
+										progressBar.setMaximum(100);
+										progressBar.setValue(0);
+										panel_5.setVisible(false);
+										panel_1.repaint();
+									});
+								} catch (InvocationTargetException | InterruptedException e) {
+								}
+								deleteDir(new File("client/build/osxgamecache"));
+							}
+
+							// Back up game assembly and metadata
+							try {
+								SwingUtilities.invokeAndWait(() -> {
+									log("Backing up critical OSX game files...");
+									progressBar.setMaximum(100);
+									progressBar.setValue(0);
+									panel_5.setVisible(false);
+									panel_1.repaint();
+								});
+							} catch (InvocationTargetException | InterruptedException e) {
+							}
+							new File("client/build/osxgamecache").mkdirs();
+							File gameResources = new File("client/build/Fer.al.app/Contents");
+							new File("client/build/osxgamecache/Frameworks").mkdirs();
+							new File("client/build/osxgamecache/Resources/Data").mkdirs();
+							copyBackupFileFrom(gameResources,
+									"/Resources/Data/il2cpp_data/Metadata/global-metadata.dat",
+									new File("client/build/osxgamecache"));
+							copyBackupFileFrom(gameResources, "/Frameworks/GameAssembly.dylib",
+									new File("client/build/osxgamecache"));
 						}
 
 						// Save version
@@ -824,10 +883,28 @@ public class LauncherMain {
 					if (os.equals("win64"))
 						builder = new ProcessBuilder(clientFile.getAbsolutePath(), "--launcher-handoff",
 								Integer.toString(port)); // Windows
-					else if (os.equals("osx"))
+					else if (os.equals("osx")) {
 						builder = new ProcessBuilder("sh", clientFile.getAbsolutePath(), "--launcher-handoff",
 								Integer.toString(port)); // MacOS
-					else if (os.equals("linux")) {
+
+						// Restore backup
+						File gameResources = new File("client/build/Fer.al.app/Contents");
+						new File("client/build/osxgamecache/Frameworks").mkdirs();
+						new File("client/build/osxgamecache/Resources/Data").mkdirs();
+						copyBackupFileFrom(new File("client/build/osxgamecache"),
+								"/Resources/Data/il2cpp_data/Metadata/global-metadata.dat", gameResources);
+						copyBackupFileFrom(new File("client/build/osxgamecache"), "/Frameworks/GameAssembly.dylib",
+								gameResources);
+
+						// Remove attributes (workaround for OSX issues)
+						// FIXME: improve this solution as this ain't a good solution
+						ProcessBuilder proc = new ProcessBuilder("xattr", "-cr",
+								new File("client/build").getCanonicalPath());
+						try {
+							proc.start().waitFor();
+						} catch (InterruptedException e1) {
+						}
+					} else if (os.equals("linux")) {
 						builder = new ProcessBuilder("wine", clientFile.getAbsolutePath(), "--launcher-handoff",
 								Integer.toString(port)); // Linux, need wine
 						File prefix = new File("wineprefix");
@@ -1079,6 +1156,16 @@ public class LauncherMain {
 		th.start();
 	}
 
+	private void copyBackupFileFrom(File gameResources, String path, File dest) throws IOException {
+		File destFile = new File(dest, path);
+		if (!destFile.getParentFile().exists())
+			destFile.getParentFile().mkdirs();
+		File srcFile = new File(gameResources, path);
+
+		// Copy source
+		Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+	}
+
 	private void launcherHandoff(Socket cl, String authToken, String api, JsonObject serverInfo, JsonObject hosts,
 			JsonObject ports, boolean completedTutorial) throws Exception {
 		if (!api.endsWith("/"))
@@ -1148,6 +1235,16 @@ public class LauncherMain {
 		for (Object obj : params)
 			cmd += " " + obj;
 		cl.getOutputStream().write((cmd + "\n").getBytes("UTF-8"));
+	}
+
+	private void deleteDir(File dir) {
+		for (File subDir : dir.listFiles(t -> t.isDirectory())) {
+			deleteDir(subDir);
+		}
+		for (File file : dir.listFiles(t -> !t.isDirectory())) {
+			file.delete();
+		}
+		dir.delete();
 	}
 
 	private void updateMods(String pth, String baseOut, JsonObject hosts, String authToken, JProgressBar progressBar,
