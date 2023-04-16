@@ -956,7 +956,7 @@ namespace FeralTweaksBootstrap
             switch (plat)
             {
                 case PlatformType.WINDOWS:
-                    NativeLibrary.Load("FeralTweaks/lib/win/funchook.dll");
+                    NativeLibrary.Load("funchook.dll");
                     break;
                 case PlatformType.OSX:
                     NativeLibrary.Load("libfunchook.dylib");

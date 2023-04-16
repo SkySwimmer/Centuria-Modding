@@ -889,8 +889,6 @@ public class LauncherMain {
 
 						// Restore backup
 						File gameResources = new File("client/build/Fer.al.app/Contents");
-						new File("client/build/osxgamecache/Frameworks").mkdirs();
-						new File("client/build/osxgamecache/Resources/Data").mkdirs();
 						copyBackupFileFrom(new File("client/build/osxgamecache"),
 								"/Resources/Data/il2cpp_data/Metadata/global-metadata.dat", gameResources);
 						copyBackupFileFrom(new File("client/build/osxgamecache"), "/Frameworks/GameAssembly.dylib",

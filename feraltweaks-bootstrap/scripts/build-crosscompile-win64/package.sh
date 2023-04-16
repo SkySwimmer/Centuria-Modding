@@ -25,7 +25,7 @@ cp -rfv work/ftl/. package/FeralTweaks/
 # Copy funchook
 echo Copying Funchook...
 mkdir -vp package/FeralTweaks/lib/win
-cp -rfv work/libfunchook/*.dll package/FeralTweaks/lib/win/
+cp -rfv work/libfunchook/*.dll package/FeralTweaks/
 echo Zipping...
 
 # Copy CoreCLR
