@@ -87,6 +87,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_Reset), "BtnClicked_Button", new Type[] { })]
+        public static bool BtnClicked_Button(UI_Reset __instance)
+        {
+            if (ChartDataManager.instance == null || ChartDataManager.instance.levelChartData == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu") == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera") == null)
+                return true;
+            Logout("Reloading...");
+            __instance.Hide();
+            // FIXME: some issues with resetting
+            return false;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreSharedUtils), "CoreReset", new Type[] { })]
         public static bool CoreReset()
         {
@@ -111,19 +123,24 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             loggingOut = true;
             doLogout = false;
+            Logout("Logging Out...");
+            return false;
+        }
+
+        private static void Logout(string msg)
+        {
+            CoreWindowManager.CloseAllWindows();
             if (CoreManagerBase<CoreNotificationManager>.coreInstance != null)
-            {
                 CoreManagerBase<CoreNotificationManager>.coreInstance.ClearAndScheduleAllLocalNotifications();
-            }
             CoreBundleManager2.UnloadAllLevelAssetBundles();
             UI_ProgressScreen.instance.ClearLabels();
-            UI_ProgressScreen.instance.SetSpinnerLabelWithIndex(0, "Logging Out...");
+            UI_ProgressScreen.instance.SetSpinnerLabelWithIndex(0, msg);
             RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
             RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera");
             UI_ProgressScreen.instance.UpdateLevel();
             CoreLoadingManager.ShowProgressScreen(null);
             if (Application.wantsToQuit != null)
-                return false;
+                return;
             loadWaiter = new LoadingScreenAction()
             {
                 action = () =>
@@ -162,7 +179,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     });
                 }
             };
-            return false;
         }
 
         [HarmonyPrefix]
