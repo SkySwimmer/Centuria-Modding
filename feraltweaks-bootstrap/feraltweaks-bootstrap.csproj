@@ -55,9 +55,14 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy Libraries\MonoMod.Utils.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="copy Libraries\MonoMod.RuntimeDetour.dll run\FeralTweaks" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="cp -rf Libraries/MonoMod* run/FeralTweaks" Condition="'$(OS)' == 'Unix'" />
+	<Copy
+		SourceFiles="Libraries\MonoMod.Utils.dll"
+		DestinationFolder="run\FeralTweaks"
+	/>
+	<Copy
+		SourceFiles="Libraries\MonoMod.RuntimeDetour.dll"
+		DestinationFolder="run\FeralTweaks"
+	/>
   </Target>
   
 </Project>

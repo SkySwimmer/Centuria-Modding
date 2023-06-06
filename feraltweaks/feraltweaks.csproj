@@ -72,7 +72,9 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy assets\clientmod.json run\FeralTweaks\mods\feraltweaks" Condition="'$(OS)' != 'Unix'" />
-    <Exec Command="cp -rf assets/. run/FeralTweaks/mods/feraltweaks" Condition="'$(OS)' == 'Unix'" />
+	<Copy
+		SourceFiles="assets\clientmod.json"
+		DestinationFolder="run\FeralTweaks\mods\feraltweaks"
+	/>
   </Target>
 </Project>
