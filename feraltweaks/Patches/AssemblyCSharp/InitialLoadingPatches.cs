@@ -25,11 +25,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (_timeInitialFadeStart == 0)
             {
                 UI_ProgressScreen.instance._backgroundImage.color = UI_ProgressScreen.instance._transparent;
-                _timeInitialFadeStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 800;
+                _timeInitialFadeStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 500;
             }
             else
             {
                 long currentTimeSpent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _timeInitialFadeStart;
+                if (currentTimeSpent < 0)
+                    currentTimeSpent = 0;
                 if (currentTimeSpent >= 750)
                 {
                     UI_ProgressScreen.instance._backgroundImage.color = UI_ProgressScreen.instance._opaque;
@@ -41,7 +43,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     UI_ProgressScreen.instance._backgroundImage.color = new Color(UI_ProgressScreen.instance._opaque.r,
                         UI_ProgressScreen.instance._opaque.g,
                         UI_ProgressScreen.instance._opaque.b,
-                        (1f / 750f) * (float)currentTimeSpent);
+                        (1f / 750) * (float)currentTimeSpent);
                 }
             }
         }

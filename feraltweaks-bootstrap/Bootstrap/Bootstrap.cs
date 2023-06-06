@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using AssetRipper.VersionUtilities;
@@ -105,7 +106,6 @@ namespace FeralTweaksBootstrap
 
             // Log
             LogInfo("Preparing...");
-            LogInfo("FeralTweaks Bootstrapper version " + VERSION + " loading...");
 
             // Handle arguments
             LogInfo("Processing arguments...");
@@ -120,6 +120,7 @@ namespace FeralTweaksBootstrap
             string packageVersion = null;
             string packageID = null;
             bool packageOutputOverwrite = false;
+            bool showConsole = false;
             Dictionary<string, string> packageIncludeSources = new Dictionary<string, string>();
             List<string> packageIncludeSourceZips = new List<string>();
             for (int i = 1; i < args.Length; i++)
@@ -160,6 +161,7 @@ namespace FeralTweaksBootstrap
                                 LogInfo("    --dry-run                              -  instructs FTL to not do anything apart from early-load actions");
                                 LogInfo("    --dryrun-load-mods                     -  same as dry-run however mod are also preloaded");
                                 LogInfo("    --regenerate-interop-assemblies        -  regenerates the interop assembly cache even if it exists");
+                                LogInfo("    --show-console                         -  attaches a system console to the game (windows only)");
                                 LogInfo("");
                                 LogInfo("  Modloader arguments:");
                                 LogInfo("    --load-mod-from \"<path>\"               -  instructs FTL to load a structured mod from the specified folder path");
@@ -190,6 +192,11 @@ namespace FeralTweaksBootstrap
                             {
                                 loadMods = true;
                                 dumpOnly = true;
+                                break;
+                            }
+                        case "show-console":
+                            {
+                                showConsole = true;
                                 break;
                             }
                         case "dry-run":
@@ -476,6 +483,13 @@ namespace FeralTweaksBootstrap
                     }
                 }
             }
+            
+            // Attach console
+            if (showConsole && File.Exists("GameAssembly.dll"))
+                WindowsConsoleTools.Attach();
+
+            // Log load
+            LogInfo("FeralTweaks Bootstrapper version " + VERSION + " loading...");
 
             // Build previous
             if (packageSource != null)
@@ -696,6 +710,26 @@ namespace FeralTweaksBootstrap
             string unityVer = buffer;
             LogInfo("Unity version: " + unityVer);
 
+            // Check if the game assemblies need to be updated
+            if (!regenerateAssemblies)
+            {
+                string oldHash = "";
+                if (File.Exists("FeralTweaks/cache/assemblies/current"))
+                    oldHash = File.ReadAllText("FeralTweaks/cache/assemblies/current");
+
+                // Compute hash
+                string currentHash = "";
+                LogInfo("Checking if the assembly cache is up-to-date...");
+                FileStream strm = File.OpenRead(dataPath + "/globalgamemanagers");
+                currentHash = string.Concat(SHA256.Create().ComputeHash(strm).Select(t => t.ToString("x2")));
+                strm.Close();
+                if (!oldHash.Equals(currentHash))
+                    {
+                    LogInfo("Cache is out of date, regenerating assemblies...");
+                    regenerateAssemblies = true;
+                }
+            }
+
             // Generate assemblies
             if (!File.Exists("FeralTweaks/cache/assemblies/complete") || regenerateAssemblies)
             {
@@ -892,6 +926,12 @@ namespace FeralTweaksBootstrap
 
                 // Done
                 File.Create("FeralTweaks/cache/assemblies/complete");
+
+                // Write hash
+                FileStream strmI = File.OpenRead(dataPath + "/globalgamemanagers");
+                string hash = string.Concat(SHA256.Create().ComputeHash(strmI).Select(t => t.ToString("x2")));
+                strm.Close();
+                File.WriteAllText("FeralTweaks/cache/assemblies/current", hash);
             }
 
             // Close if dump-only
