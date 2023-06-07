@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using AssetRipper.VersionUtilities;
 using FeralTweaks;
 using FeralTweaksBootstrap.Detour;
@@ -139,6 +140,12 @@ namespace FeralTweaksBootstrap
                     // Handle argument                    
                     switch (opt)
                     {
+                        case "wait-for-debugger":
+                            {
+                                while (!Debugger.IsAttached)
+                                    Thread.Sleep(100);
+                                break;
+                            }
                         case "help":
                             {
                                 // Show help
@@ -695,6 +702,7 @@ namespace FeralTweaksBootstrap
             LogInfo("Data path: " + dataPath);
             LogInfo("Assembly path: " + gameAssemblyPath);
             LogInfo("IL2CPP metadata path: " + il2cppMetadata);
+            gameAssemblyPath = Path.GetFullPath(gameAssemblyPath);
             GameAssemblyPath = gameAssemblyPath;
 
             // Log
@@ -999,10 +1007,10 @@ namespace FeralTweaksBootstrap
             switch (plat)
             {
                 case PlatformType.WINDOWS:
-                    NativeLibrary.Load("funchook.dll");
+                    NativeLibrary.Load(Path.GetFullPath("funchook.dll"));
                     break;
                 case PlatformType.OSX:
-                    NativeLibrary.Load("libfunchook.dylib");
+                    NativeLibrary.Load(Path.GetFullPath("libfunchook.dylib"));
                     break;
                 case PlatformType.ANDROID:
                     // TODO: idfk how to do this atm

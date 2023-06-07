@@ -197,7 +197,6 @@ namespace FeralTweaks
                     }
 
                     // Handle argument
-
                     switch (opt)
                     {
                         case "load-mod-from":
