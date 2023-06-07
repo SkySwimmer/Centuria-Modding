@@ -36,17 +36,17 @@ namespace FeralDiscordRpcMod
             client.Initialize();
 
             // Register classes
-            ClassInjector.RegisterTypeInIl2Cpp<QuitHandler>();
+            ClassInjector.RegisterTypeInIl2Cpp<RPC>();
 
             // Create object for the mod
             GameObject obj = new GameObject();
             obj.name = "~RPC";
-            obj.AddComponent<QuitHandler>();
+            obj.AddComponent<RPC>();
             GameObject.DontDestroyOnLoad(obj);
 
             // Set presence
             client.SetPresence(new RichPresence() {
-                State = "Loading the game...",
+                Details= "Loading the game...",
                 Assets = new DiscordRPC.Assets()
                 {
                     LargeImageKey = "logo"
@@ -54,10 +54,15 @@ namespace FeralDiscordRpcMod
             });
         }
 
-        public class QuitHandler : UnityEngine.MonoBehaviour 
+        public class RPC : UnityEngine.MonoBehaviour 
         {
-            public QuitHandler() { }
-            public QuitHandler(IntPtr ptr) : base(ptr) { }
+            public RPC() { }
+            public RPC(IntPtr ptr) : base(ptr) { }
+
+            public void Update()
+            {
+                //client.Invoke();
+            }
 
             public void OnApplicationQuit()
             {
