@@ -483,10 +483,13 @@ namespace FeralTweaksBootstrap
                     }
                 }
             }
-            
+
             // Attach console
             if (showConsole && File.Exists("GameAssembly.dll"))
+            {
                 WindowsConsoleTools.Attach();
+                Console.Title = "FTL " + VERSION + " loading...";
+            }
 
             // Log load
             LogInfo("FeralTweaks Bootstrapper version " + VERSION + " loading...");

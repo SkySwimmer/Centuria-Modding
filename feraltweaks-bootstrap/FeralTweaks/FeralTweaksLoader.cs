@@ -479,7 +479,7 @@ namespace FeralTweaks
                     throw new ArgumentException();
                 if (!Regex.Match(mod.id, "^[0-9A-Za-z_.]+$").Success)
                 {
-                    LogError("Failed to load mod " + dir.Name + ": invalid mod ID.");
+                    LogError("Failed to load mod " + mod.id + ": invalid mod ID.");
                     return;
                 }
                 LogDebug("Loading structured ftl mod manifest for: " + mod.id + "...");

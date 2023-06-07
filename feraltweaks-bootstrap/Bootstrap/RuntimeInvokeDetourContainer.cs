@@ -46,6 +46,13 @@ namespace FeralTweaksBootstrap
 
                     // Log finish
                     FeralTweaksLoader.LogInfo("FTL is ready! Launching game... Launching " + Application.productName + " " + Application.version + " (unity version: " + Application.unityVersion + ")");
+                    try
+                    {
+                        Console.Title = Application.productName + " " + Application.version + " (FTL " + FeralTweaksLoader.VERSION + ")";
+                    }
+                    catch
+                    {
+                    }
 
                     // Return result
                     return res;
@@ -58,7 +65,7 @@ namespace FeralTweaksBootstrap
         {
             public LogHandler() { }
             public LogHandler(IntPtr ptr) : base(ptr) { }
-            
+
             public void HandleLog(string logString, string stackTrace, LogType type)
             {
                 if (stackTrace != null)
@@ -72,7 +79,7 @@ namespace FeralTweaksBootstrap
                 {
                     case LogType.Error:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:": "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
                                 msg = "\n" + msg + "\n";
                             Console.Error.WriteLine(msg);
@@ -89,7 +96,7 @@ namespace FeralTweaksBootstrap
                         break;
                     case LogType.Warning:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:": "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
                                 msg = "\n" + msg + "\n";
                             Console.Error.WriteLine(msg);
@@ -105,7 +112,7 @@ namespace FeralTweaksBootstrap
                         }
                     case LogType.Exception:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:": "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
                                 msg = "\n" + msg + "\n";
                             Console.Error.WriteLine(msg);
