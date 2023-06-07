@@ -1,0 +1,57 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build FTL",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "feraltweaks-bootstrap",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build feraltweaks",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "feraltweaks",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build FTL test mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "test-ftl-mod",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        }
+    ]
+}

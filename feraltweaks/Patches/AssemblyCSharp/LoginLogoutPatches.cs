@@ -92,9 +92,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             if (ChartDataManager.instance == null || ChartDataManager.instance.levelChartData == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu") == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera") == null)
                 return true;
-            Logout("Reloading...");
             __instance.Hide();
-            // FIXME: some issues with resetting
+            __instance.groupButton.SetActive(true);
+            __instance.groupError.SetActive(true);
+            UI_Reset.resetPopup = false;
+            Logout("Reloading...");
+            // FIXME: test it all, might cause issues like this
             return false;
         }
 
@@ -139,8 +142,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera");
             UI_ProgressScreen.instance.UpdateLevel();
             CoreLoadingManager.ShowProgressScreen(null);
-            if (Application.wantsToQuit != null)
-                return;
             loadWaiter = new LoadingScreenAction()
             {
                 action = () =>

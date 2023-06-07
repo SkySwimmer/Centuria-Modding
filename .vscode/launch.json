@@ -1,0 +1,50 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug FTL",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build FTL",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/feraltweaks-bootstrap/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug FeralTweaks",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build feraltweaks",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/feraltweaks/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug FTL Test Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build FTL test mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/test-ftl-mod/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        }
+    ]
+}
