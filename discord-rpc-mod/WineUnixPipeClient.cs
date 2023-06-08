@@ -21,8 +21,8 @@ namespace FeralDiscordRpcMod
             [DllImport("winepipebridge", EntryPoint = "create_socket")]
             public static extern int CreateSocket();
 
-            [DllImport("winepipebridge", EntryPoint = "connect_socket")]
-            public static extern int ConnectSocketInt(int sock, IntPtr path);
+            [DllImport("winepipebridge", EntryPoint = "connect_socket", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+            public static extern int ConnectSocketInt(int sock, [MarshalAs(UnmanagedType.LPStr)] string path);
 
             [DllImport("winepipebridge", EntryPoint = "socket_shutdown")]
             public static extern void CloseSocket(int sock, int how);
@@ -40,7 +40,7 @@ namespace FeralDiscordRpcMod
 
             public static bool ConnectSocket(int sock, string path)
             {
-                int i = ConnectSocketInt(sock, Marshal.StringToHGlobalAnsi(path));
+                int i = ConnectSocketInt(sock, path);
                 return i >= 0;
             }
         }
@@ -106,7 +106,7 @@ namespace FeralDiscordRpcMod
                     {
                         Task.Run(() => ReadFrames());
                         return true;
-                    }    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+                    }
                 }
             }
             else if (AttemptConnection(pipe) || AttemptConnection(pipe, isSandbox: true))
