@@ -18,7 +18,7 @@ namespace FeralDiscordRpcMod
         private string appendTo(string message, object[] args)
         {
             for (int i = 0; i < args.Length; i++)
-                message = message.Replace("{" + i + "}", args[i].ToString());
+                message = message.Replace("{" + i + "}", args[i] == null ? "null" : args[i].ToString());
             return message;
         }
 

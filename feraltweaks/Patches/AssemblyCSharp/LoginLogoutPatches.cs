@@ -87,21 +87,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_Reset), "BtnClicked_Button", new Type[] { })]
-        public static bool BtnClicked_Button(UI_Reset __instance)
-        {
-            if (ChartDataManager.instance == null || ChartDataManager.instance.levelChartData == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu") == null || ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera") == null)
-                return true;
-            __instance.Hide();
-            __instance.groupButton.SetActive(true);
-            __instance.groupError.SetActive(true);
-            UI_Reset.resetPopup = false;
-            Logout("Reloading...");
-            // FIXME: test it all, might cause issues like this
-            return false;
-        }
-
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreSharedUtils), "CoreReset", new Type[] { })]
         public static bool CoreReset()
         {
@@ -155,8 +140,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         NetworkManager.instance._serverConnection = null;
                         NetworkManager.instance._chatServiceConnection = null;
                         NetworkManager.instance._jwt = null;
+                        NetworkManager.instance._uuid = null;
                     }
                     Avatar_Local.instance = null;
+                    XPManager.instance.PlayerLevel = null;
                     GlidingManager.instance.MStart();
                     reloadGlidingManager = true;
                     QuestManager.instance._linearQuestListData = null;
@@ -199,6 +186,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.AutoLogin = NetworkManager.AutoLoginState.DoAutoLogin;
                 NetworkManager.autoLoginEmailUsername = "sys://fromtoken";
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
+                FeralTweaks.AutoLoginToken = null;
             }
         }
 

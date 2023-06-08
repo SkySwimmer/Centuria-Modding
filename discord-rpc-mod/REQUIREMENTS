@@ -5,7 +5,7 @@ To do this, you will need to run the following command on linux:
 
 ```
 cd bridge
-winegcc -shared -o ../assets/winepipebridge.dll.so bridge_unix.c bridge_unix.spec
+winegcc -shared -o ../assets/winepipebridge.dll.so bridge_unix.c bridge_unix.spec -fshort-wchar
 ```
 
 If this program is not compiled, wine compatibilty will not work

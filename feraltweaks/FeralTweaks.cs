@@ -629,6 +629,11 @@ namespace feraltweaks
                                     // Handle packet
                                     uiActions.Add(() =>
                                     {
+                                        try
+                                        {
+                                            UI_Window_YesNoPopup.CloseWindow();
+                                        }
+                                        catch { }
                                         UI_Window_YesNoPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message),
                                             ChartDataManager.instance.localizationChartData.Get(yesBtn, yesBtn), ChartDataManager.instance.localizationChartData.Get(noBtn, noBtn));
                                         UI_Window_YesNoPopupPatch.SingleTimeNoButtonAction = () =>

@@ -576,11 +576,15 @@ namespace FeralTweaks
                         catch (Exception e)
                         {
                             LogError("Failed to load mod: " + inst.ID + ": " + e);
+                            Environment.Exit(1);
+                            return;
                         }
                     }
                     catch (Exception e)
                     {
                         LogError("Failed to load mod: " + t.FullName + ": " + e);
+                        Environment.Exit(1);
+                        return;
                     }
                 }
             }

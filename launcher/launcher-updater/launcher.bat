@@ -1,7 +1,8 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-:MAIN
+cd /D "%~dp0"
+set "CENTURIA_LAUNCHER_PATH=%~0"
 SET libs=
 for %%i in (*.jar) do SET libs=!libs!;%%i
 for /r "./libs" %%i in (*.jar) do SET libs=!libs!;%%i
