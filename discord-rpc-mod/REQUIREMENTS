@@ -1,0 +1,11 @@
+For the wine compatibilty layer to work, you MUST compile the wrapper library.
+You will need to have wine and wine-tools installed to compile the wrapper.
+
+To do this, you will need to run the following command on linux:
+
+```
+cd bridge
+winegcc -shared -o ../assets/winepipebridge.dll.so bridge_unix.c bridge_unix.spec
+```
+
+If this program is not compiled, wine compatibilty will not work

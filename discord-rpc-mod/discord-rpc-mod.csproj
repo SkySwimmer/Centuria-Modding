@@ -5,7 +5,8 @@
     <AssemblyName>discord-rpc-mod</AssemblyName>
     <LangVersion>latest</LangVersion>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

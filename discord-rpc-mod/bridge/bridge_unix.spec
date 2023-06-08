@@ -1,0 +1,5 @@
+@ stdcall create_socket ()
+@ stdcall connect_socket (long str)
+@ stdcall socket_shutdown (long long)
+@ stdcall socket_send (long ptr long long)
+@ stdcall socket_recv (long ptr long long)

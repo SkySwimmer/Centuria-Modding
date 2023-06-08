@@ -45,6 +45,20 @@
                 "quoteArgs": true
             },
             "request": "attach"
+        },
+        {
+            "name": "Debug Discord RPC Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build Discord RPC mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/discord-rpc-mod/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
         }
     ]
 }
