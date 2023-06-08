@@ -49,7 +49,7 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\feraltweaks\lib\feral\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\feraltweaks\lib\UnityEngine.CoreModule.dll</HintPath>
 	  <Private>false</Private>
     </Reference>
   </ItemGroup>
