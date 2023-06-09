@@ -25,7 +25,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     UI_Version.instance._text.gameObject.SetActive(true);
                 }
-                else 
+                else
                 {
                     UI_Version.instance._text.gameObject.SetActive(false);
                 }
@@ -44,113 +44,120 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Assign label
-            FeralTweaks.actions.Add(() =>
+            FeralTweaks.ScheduleDelayedActionForUnity(() =>
             {
-                if (CoreBase<Core>.Loaded)
+                try
                 {
-                    FeralTweaks.uiActions.Add(() =>
+                    if (CoreBase<Core>.Loaded)
                     {
-                        // Update UI
-
-                        // Create template
-                        string lbl = "${global:7358}\n${game:version} (${game:build})";
-
-                        // Load if present in config
-                        if (FeralTweaks.PatchConfig.ContainsKey("VersionLabel"))
-                            lbl = FeralTweaks.PatchConfig["VersionLabel"].Replace("\\n", "\n");
-
-                        // Replace variables
-                        bool inVar = false;
-                        string varKey = "";
-                        string varstart = "${";
-                        string buffer = "";
-                        string text = "";
-                        int bI = 0;
-                        foreach (char ch in lbl)
+                        FeralTweaks.ScheduleDelayedActionForUnity(() =>
                         {
+                            // Update UI
 
-                            if (!inVar)
+                            // Create template
+                            string lbl = "${global:7358}\n${game:version} (${game:build})";
+
+                            // Load if present in config
+                            if (FeralTweaks.PatchConfig.ContainsKey("VersionLabel"))
+                                lbl = FeralTweaks.PatchConfig["VersionLabel"].Replace("\\n", "\n");
+
+                            // Replace variables
+                            bool inVar = false;
+                            string varKey = "";
+                            string varstart = "${";
+                            string buffer = "";
+                            string text = "";
+                            int bI = 0;
+                            foreach (char ch in lbl)
                             {
-                                if (buffer.Length == varstart.Length)
+
+                                if (!inVar)
                                 {
-                                    // Variable
-                                    inVar = true;
-                                    varKey += ch;
-                                    buffer = "";
-                                    bI = 0;
-                                }
-                                else if (varstart[bI] == ch)
-                                {
-                                    buffer += ch;
-                                    bI++;
-                                }
-                                else
-                                {
-                                    if (buffer != "")
+                                    if (buffer.Length == varstart.Length)
                                     {
-                                        text += buffer;
+                                        // Variable
+                                        inVar = true;
+                                        varKey += ch;
                                         buffer = "";
+                                        bI = 0;
                                     }
-                                    text += ch;
-                                }
-                            }
-                            else
-                            {
-                                if (ch == '}')
-                                {
-                                    // Variable close
-                                    inVar = false;
-
-                                    // Handle variable
-                                    if (varKey.StartsWith("game:"))
+                                    else if (varstart[bI] == ch)
                                     {
-                                        // Game information
-                                        switch (varKey.Substring(5))
+                                        buffer += ch;
+                                        bI++;
+                                    }
+                                    else
+                                    {
+                                        if (buffer != "")
                                         {
-                                            case "version":
-                                                {
-                                                    text += CoreGlobalSettingsManager.coreInstance.version;
-                                                    break;
-                                                }
-                                            case "build":
-                                                {
-                                                    text += CoreGlobalSettingsManager.coreInstance.currentBuildNumber;
-                                                    break;
-                                                }
+                                            text += buffer;
+                                            buffer = "";
                                         }
+                                        text += ch;
                                     }
-                                    else if (varKey.StartsWith("global:"))
-                                    {
-                                        // String value from global chart
-                                        string def = varKey.Substring("global:".Length);
-                                        BaseDef defInfo = ChartDataManager.instance.globalChartData.GetDef(def);
-                                        if (defInfo != null)
-                                        {
-                                            GlobalDefComponent comp = defInfo.GetComponent<GlobalDefComponent>();
-                                            text += comp.stringValue;
-                                        }
-                                    }
-                                    else if (varKey.StartsWith("localization:"))
-                                    {
-                                        // String value from localization chart
-                                        string def = varKey.Substring("localization:".Length);
-                                        text += ChartDataManager.instance.localizationChartData.Get(def);
-                                    }
-
-                                    // Clear
-                                    varKey = "";
                                 }
                                 else
-                                    varKey += ch;
+                                {
+                                    if (ch == '}')
+                                    {
+                                        // Variable close
+                                        inVar = false;
+
+                                        // Handle variable
+                                        if (varKey.StartsWith("game:"))
+                                        {
+                                            // Game information
+                                            switch (varKey.Substring(5))
+                                            {
+                                                case "version":
+                                                    {
+                                                        text += CoreGlobalSettingsManager.coreInstance.version;
+                                                        break;
+                                                    }
+                                                case "build":
+                                                    {
+                                                        text += CoreGlobalSettingsManager.coreInstance.currentBuildNumber;
+                                                        break;
+                                                    }
+                                            }
+                                        }
+                                        else if (varKey.StartsWith("global:"))
+                                        {
+                                            // String value from global chart
+                                            string def = varKey.Substring("global:".Length);
+                                            BaseDef defInfo = ChartDataManager.instance.globalChartData.GetDef(def);
+                                            if (defInfo != null)
+                                            {
+                                                GlobalDefComponent comp = defInfo.GetComponent<GlobalDefComponent>();
+                                                text += comp.stringValue;
+                                            }
+                                        }
+                                        else if (varKey.StartsWith("localization:"))
+                                        {
+                                            // String value from localization chart
+                                            string def = varKey.Substring("localization:".Length);
+                                            text += ChartDataManager.instance.localizationChartData.Get(def);
+                                        }
+
+                                        // Clear
+                                        varKey = "";
+                                    }
+                                    else
+                                        varKey += ch;
+                                }
                             }
-                        }
-                        if (buffer != "")
-                            text += buffer;
-                        __instance._text.text = text;
-                    });
+                            if (buffer != "")
+                                text += buffer;
+                            __instance._text.text = text;
+                        });
+                        return true;
+                    }
+                    return false;
+                }
+                catch
+                {
                     return true;
                 }
-                return false;
             });
 
             return false;

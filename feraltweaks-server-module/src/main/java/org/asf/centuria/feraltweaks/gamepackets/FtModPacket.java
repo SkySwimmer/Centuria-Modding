@@ -75,7 +75,7 @@ public class FtModPacket implements IXtPacket<FtModPacket> {
 		if (mod instanceof IModNetworkHandler) {
 			// Retrieve messenger
 			ServerMessenger messenger = ((IModNetworkHandler) mod).getMessenger();
-			return messenger.handlePacket(modID, new XtReader(payload), (Player) client.container);
+			return messenger.handlePacket(pktID, new XtReader(payload), (Player) client.container);
 		}
 
 		// Not found

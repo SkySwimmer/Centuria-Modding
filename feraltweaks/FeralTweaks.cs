@@ -28,10 +28,31 @@ namespace feraltweaks
         {
         }
 
-        public static List<Func<bool>> actions = new List<Func<bool>>();
-        public static List<Action> uiActions = new List<Action>();
+        internal static List<Func<bool>> threadActions = new List<Func<bool>>();
+        internal static List<Func<bool>> uiRepeatingActions = new List<Func<bool>>();
+        internal static List<Action> uiActions = new List<Action>();
+
+        internal static void ScheduleDelayedAction(Func<bool> act)
+        {
+            lock (threadActions)
+                threadActions.Add(act);
+        }
+
+        public static void ScheduleDelayedActionForUnity(Func<bool> act)
+        {
+            lock (uiRepeatingActions)
+                uiRepeatingActions.Add(act);
+        }
+
+        public static void ScheduleDelayedActionForUnity(Action act)
+        {
+            lock (uiActions)
+                uiActions.Add(act);
+        }
+
         public static Dictionary<string, string> Patches = new Dictionary<string, string>();
         public static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
+
         public static string AutoLoginToken = null;
 
         public static bool ShowWorldJoinChatUnreadPopup;
@@ -58,24 +79,15 @@ namespace feraltweaks
                 while (true)
                 {
                     Func<bool>[] actions;
-                    
-                    // Its not pretty but i had a concurrent modification exception once while using ToArray()
-                    // Lists are not thread-safe so have to use toarray() until it doesnt fail
-                    while(true)
-                    {
-                        try
-                        {
-                            actions = FeralTweaks.actions.ToArray();
-                            break;
-                        }
-                        catch { }
-                    }
+                    lock (threadActions)
+                        actions = threadActions.ToArray();
 
                     // Handle actions
                     foreach (Func<bool> ac in actions)
                     {
                         if (ac == null || ac())
-                            FeralTweaks.actions.Remove(ac);
+                            lock (threadActions)
+                                threadActions.Remove(ac);
                     }
 
                     Thread.Sleep(10);
@@ -404,7 +416,7 @@ namespace feraltweaks
                         if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Remove manually
-                            FeralTweaks.uiActions.Add(() =>
+                            ScheduleDelayedActionForUnity(() =>
                             {
                                 global::FeralTweaks.FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Destroying object: " + msg.ObjectId);
                                 if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
@@ -440,7 +452,7 @@ namespace feraltweaks
                         if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Move manually
-                            FeralTweaks.uiActions.Add(() =>
+                            ScheduleDelayedActionForUnity(() =>
                             {
                                 if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
                                 {
@@ -492,10 +504,10 @@ namespace feraltweaks
                                     }
 
                                     // Show window and log out
-                                    actions.Add(() =>
+                                    ScheduleDelayedAction(() =>
                                     {
                                         // Show window
-                                        uiActions.Add(() =>
+                                        ScheduleDelayedActionForUnity(() =>
                                         {
                                             if (UI_ProgressScreen.instance.IsVisible)
                                                 UI_ProgressScreen.instance.Hide();
@@ -523,7 +535,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         NotificationManager.instance.AddNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -541,7 +553,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         NotificationManager.instance.AddSystemNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -559,7 +571,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         NotificationManager.instance.AddCriticalNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -577,7 +589,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         NotificationManager.instance.AddGameplayNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -593,7 +605,7 @@ namespace feraltweaks
                                     string message = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
                                     });
@@ -608,7 +620,7 @@ namespace feraltweaks
                                     string message = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         UI_Window_OkPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
                                     });
@@ -626,7 +638,7 @@ namespace feraltweaks
                                     string noBtn = reader.ReadString();
 
                                     // Handle packet
-                                    uiActions.Add(() =>
+                                    ScheduleDelayedActionForUnity(() =>
                                     {
                                         try
                                         {

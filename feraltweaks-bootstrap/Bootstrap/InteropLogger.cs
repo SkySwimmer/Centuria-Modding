@@ -1,36 +1,42 @@
 using System;
 using System.IO;
+using FeralTweaks.Logging;
 using Microsoft.Extensions.Logging;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace FeralTweaksBootstrap
 {
     internal class InteropLogger : ILogger
     {
-        private static StreamWriter LogWriter;
+        private static Logger logger;
+
+        public static Logger Logger
+        {
+            get
+            {
+                return logger;
+            }
+        }
 
         public static void LogInfo(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Interop] " + message);
+            logger.Info(message);
         }
 
         public static void LogWarn(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Interop] " + message);
+            logger.Warn(message);
         }
 
         public static void LogError(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Interop] " + message);
+            logger.Error(message);
         }
 
         static InteropLogger()
         {
             // Set up log
-            LogWriter = new StreamWriter("FeralTweaks/logs/interop.log");
-            LogWriter.AutoFlush = true;
+            logger = Logger.GetLogger("Interop");
         }
 
         public IDisposable BeginScope<TState>(TState state)

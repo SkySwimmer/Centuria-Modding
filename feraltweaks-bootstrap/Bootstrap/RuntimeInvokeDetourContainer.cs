@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
+using FeralTweaks.Logging.Impl;
+using Logger = FeralTweaks.Logging.Logger;
 
 namespace FeralTweaksBootstrap
 {
@@ -20,6 +22,8 @@ namespace FeralTweaksBootstrap
 
     internal class RuntimeInvokeDetourContainer : DetourContainer<RuntimeInvokeDetour>
     {
+        private static Logger unityLogger;
+  
         public override RuntimeInvokeDetour run()
         {
             return (method, obj, parameters, except) =>
@@ -32,15 +36,26 @@ namespace FeralTweaksBootstrap
                     IntPtr res = Original(method, obj, parameters, except);
                     Unhook();
 
-                    // Add logger
-                    ClassInjector.RegisterTypeInIl2Cpp<LogHandler>();
+                    // Init logging
+                    if (Bootstrap.logUnityToConsole || Bootstrap.logUnityToFile)
+                    {
+                        if (!Bootstrap.logUnityToConsole)
+                            unityLogger = new FileLoggerImpl("Unity");
+                        else if (!Bootstrap.logUnityToFile)
+                            unityLogger = new ConsoleLoggerImpl("Unity");
+                        else
+                            unityLogger = Logger.GetLogger("Unity");
 
-                    // Create FTL container
-                    GameObject objC = new GameObject();
-                    objC.name = "~FTL";
-                    objC.AddComponent<LogHandler>();
-                    GameObject.DontDestroyOnLoad(objC);
+                        // Add logger
+                        ClassInjector.RegisterTypeInIl2Cpp<LogHandler>();
 
+                        // Create FTL container
+                        GameObject objC = new GameObject();
+                        objC.name = "~FTL";
+                        objC.AddComponent<LogHandler>();
+                        GameObject.DontDestroyOnLoad(objC);
+                    }
+                    
                     // Finish loading
                     FeralTweaksLoader.LoadFinish();
 
@@ -79,43 +94,42 @@ namespace FeralTweaksBootstrap
                 {
                     case LogType.Error:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
-                                msg = "\n" + msg + "\n";
-                            Console.Error.WriteLine(msg);
+                                msg = msg + "\n";
+                            unityLogger.Error(msg);
                             break;
                         }
                     case LogType.Assert:
-                        if (Bootstrap.DebugLogging)
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBGG] [Unity] " + logString;
+                            string msg = logString;
                             if (msg.Contains("\n"))
-                                msg = "\n" + msg + "\n";
-                            Console.WriteLine(msg);
+                                msg = msg + "\n";
+                            unityLogger.Debug(msg);
                         }
                         break;
                     case LogType.Warning:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
-                                msg = "\n" + msg + "\n";
-                            Console.Error.WriteLine(msg);
+                                msg = msg + "\n";
+                            unityLogger.Warn(msg);
                             break;
                         }
                     case LogType.Log:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Unity] " + logString;
+                            string msg = logString;
                             if (msg.Contains("\n"))
-                                msg = "\n" + msg;
-                            Console.WriteLine(msg);
+                                msg = msg + "\n";
+                            unityLogger.Info(msg);
                             break;
                         }
                     case LogType.Exception:
                         {
-                            string msg = "[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Unity] " + logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
+                            string msg = logString + (stackTrace == null || stackTrace == "" ? "" : (logString.Contains("\n") ? "\nStacktrace:" : "") + "\n  at: " + stackTrace.Replace("\n", "\n  at: "));
                             if (msg.Contains("\n"))
-                                msg = "\n" + msg + "\n";
-                            Console.Error.WriteLine(msg);
+                                msg = msg + "\n";
+                            unityLogger.Error(msg);
                             break;
                         }
                 }

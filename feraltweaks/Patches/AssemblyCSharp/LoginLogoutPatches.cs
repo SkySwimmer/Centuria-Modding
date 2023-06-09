@@ -65,24 +65,25 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
             }
 
-            if (FeralTweaks.uiActions.Count != 0)
+            Func<bool>[] actionsUA;
+            lock (FeralTweaks.uiRepeatingActions)
+                actionsUA = FeralTweaks.uiRepeatingActions.ToArray();
+            foreach (Func<bool> ac in actionsUA)
             {
-                Action[] actions;
-                while (true)
-                {
-                    try
-                    {
-                        actions = FeralTweaks.uiActions.ToArray();
-                        break;
-                    }
-                    catch { }
-                }
-                foreach (Action ac in actions)
-                {
+                if (ac == null || ac())
+                    lock (FeralTweaks.uiActions)
+                        FeralTweaks.uiRepeatingActions.Remove(ac);
+            }
+
+            Action[] actionsU;
+            lock (FeralTweaks.uiActions)
+                actionsU = FeralTweaks.uiActions.ToArray();
+            foreach (Action ac in actionsU)
+            {
+                lock (FeralTweaks.uiActions)
                     FeralTweaks.uiActions.Remove(ac);
-                    if (ac != null)
-                        ac.Invoke();
-                }
+                if (ac != null)
+                    ac.Invoke();
             }
         }
 

@@ -51,7 +51,7 @@ namespace FeralTweaks.Networking
                     // Parse
                     IModNetworkPacket inst = pkt.CreateInstance();
                     inst.Parse(reader);
-                    return inst.Handle();
+                    return inst.Handle(this);
                 }
             }
 
@@ -84,7 +84,7 @@ namespace FeralTweaks.Networking
             try
             {
                 // Send packet
-                NetworkManager.instance._serverConnection.Send(wr);
+                feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() => NetworkManager.instance._serverConnection.Send(wr));
             }
             catch
             {

@@ -34,6 +34,6 @@ namespace FeralTweaks.Networking
         /// Handles the packet
         /// </summary>
         /// <returns>True if successful, false otherwise</returns>
-        public bool Handle();
+        public bool Handle(ClientMessenger messenger);
     }
 }

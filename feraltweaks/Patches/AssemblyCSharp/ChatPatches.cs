@@ -329,12 +329,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            FeralTweaks.actions.Add(() =>
+            FeralTweaks.ScheduleDelayedActionForUnity(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                FeralTweaks.uiActions.Add(() =>
+                FeralTweaks.ScheduleDelayedActionForUnity(() =>
                 {
                     if (FeralTweaks.ShowWorldJoinChatUnreadPopup)
                     {

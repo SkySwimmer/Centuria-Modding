@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using FeralTweaks.Logging;
 using FeralTweaks.Mods;
 using Newtonsoft.Json;
 
@@ -16,9 +17,18 @@ namespace FeralTweaks
     public static class FeralTweaksLoader
     {
         public const string VERSION = "v1.0.0-alpha-a3";
-        private static StreamWriter LogWriter;
         private static List<FeralTweaksMod> mods;
 
+        private static Logger logger;
+
+        public static Logger Logger
+        {
+            get
+            {
+                return logger;
+            }
+        }
+        
         private class ModInfo
         {
             public string id;
@@ -100,8 +110,7 @@ namespace FeralTweaks
         /// <param name="message">Message to log</param>
         public static void LogInfo(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Loader] " + message);
+            logger.Info(message);
         }
 
         /// <summary>
@@ -110,10 +119,16 @@ namespace FeralTweaks
         /// <param name="message">Message to log</param>
         public static void LogDebug(string message)
         {
-            if (!FeralTweaksLoader.DebugLoggingEnabled)
-                return;
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Loader] " + message);
+            logger.Debug(message);
+        }
+
+        /// <summary>
+        /// Logs a trace message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public static void LogTrace(string message)
+        {
+            logger.Trace(message);
         }
 
         /// <summary>
@@ -122,8 +137,7 @@ namespace FeralTweaks
         /// <param name="message">Message to log</param>
         public static void LogWarn(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Loader] " + message);
+            logger.Warn(message);
         }
 
         /// <summary>
@@ -132,8 +146,16 @@ namespace FeralTweaks
         /// <param name="message">Message to log</param>
         public static void LogError(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Loader] " + message);
+            logger.Error(message);
+        }
+
+        /// <summary>
+        /// Logs a fatal error message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public static void LogFatal(string message)
+        {
+            logger.Fatal(message);
         }
 
         private static void Logger_MessageReceived(object sender, HarmonyLib.Tools.Logger.LogEventArgs e)
@@ -171,8 +193,7 @@ namespace FeralTweaks
         internal static void Start()
         {
             // Set up log
-            LogWriter = new StreamWriter("FeralTweaks/logs/loader.log");
-            LogWriter.AutoFlush = true;
+            logger = Logger.GetLogger("Loader");
 
             // Log
             LogInfo("Preparing...");

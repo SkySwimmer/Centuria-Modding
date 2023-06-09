@@ -1,6 +1,7 @@
 package org.asf.centuria.modules.discordrpc;
 
 import org.asf.centuria.feraltweaks.api.FeralTweaksMod;
+import org.asf.centuria.modules.discordrpc.packets.*;
 
 public class RpcModule extends FeralTweaksMod {
 
@@ -22,7 +23,8 @@ public class RpcModule extends FeralTweaksMod {
 		addModHandshakeRequirementForSelf(version());
 
 		// Packets
-		registerPacket(null);
+		registerPacket(new RpcJoinPlayerRequestPacket());
+		registerPacket(new RpcJoinPlayerResultPacket());
 	}
 
 }

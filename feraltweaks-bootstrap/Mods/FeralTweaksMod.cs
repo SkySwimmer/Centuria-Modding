@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FeralTweaks.Logging;
 
 namespace FeralTweaks.Mods
 {
@@ -19,13 +20,22 @@ namespace FeralTweaks.Mods
         internal List<string> _conflicts = new List<string>();
         internal List<string> _loadBefore = new List<string>();
         internal Dictionary<string, string> _dependencyVersions = new Dictionary<string, string>();
-        private StreamWriter LogWriter;
         private bool locked;
         private string baseFolder;
 
         internal string _id;
         internal string _version;
 
+        private Logger logger;
+
+        public Logger Logger
+        {
+            get
+            {
+                return logger;
+            }
+        }
+        
         internal void Initialize(string baseFolder)
         {
             if (!Regex.Match(ID, "^[0-9A-Za-z._,]+$").Success)
@@ -33,20 +43,7 @@ namespace FeralTweaks.Mods
             Define();
             this.baseFolder = baseFolder;
             locked = true;
-            LogWriter = new StreamWriter("FeralTweaks/logs/" + ID + ".log");
-            LogWriter.AutoFlush = true;
-        }
-
-        /// <summary>
-        /// Logs a debug message
-        /// </summary>
-        /// <param name="message">Message to log</param>
-        public void LogDebug(string message)
-        {
-            if (!FeralTweaksLoader.DebugLoggingEnabled)
-                return;
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [" + ID + "] " + message);
+            logger = Logger.GetLogger(ID);
         }
 
         /// <summary>
@@ -55,8 +52,25 @@ namespace FeralTweaks.Mods
         /// <param name="message">Message to log</param>
         public void LogInfo(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [" + ID + "] " + message);
+            logger.Info(message);
+        }
+
+        /// <summary>
+        /// Logs a debug message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public void LogDebug(string message)
+        {
+            logger.Debug(message);
+        }
+
+        /// <summary>
+        /// Logs a trace message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public void LogTrace(string message)
+        {
+            logger.Trace(message);
         }
 
         /// <summary>
@@ -65,8 +79,7 @@ namespace FeralTweaks.Mods
         /// <param name="message">Message to log</param>
         public void LogWarn(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [" + ID + "] " + message);
+            logger.Warn(message);
         }
 
         /// <summary>
@@ -75,10 +88,18 @@ namespace FeralTweaks.Mods
         /// <param name="message">Message to log</param>
         public void LogError(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [" + ID + "] " + message);
+            logger.Error(message);
         }
 
+        /// <summary>
+        /// Logs a fatal error message
+        /// </summary>
+        /// <param name="message">Message to log</param>
+        public void LogFatal(string message)
+        {
+            logger.Fatal(message);
+        }
+        
         /// <summary>
         /// Mod ID
         /// </summary>

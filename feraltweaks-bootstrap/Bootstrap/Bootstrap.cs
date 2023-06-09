@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using AssetRipper.VersionUtilities;
 using FeralTweaks;
+using FeralTweaks.Logging;
 using FeralTweaksBootstrap.Detour;
 using HarmonyLib.Public.Patching;
 using Il2CppDumper;
@@ -31,9 +32,11 @@ namespace FeralTweaksBootstrap
         public const string VERSION = "v1.0.0-alpha-a3";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
-        private static StreamWriter LogWriter;
         private static string GameAssemblyPath;
-        private static bool logDebug;
+        private static Logger logger;
+        internal static bool loaderReady;
+        internal static bool logUnityToFile;
+        internal static bool logUnityToConsole = true;
 
         private class ModInfo
         {
@@ -52,7 +55,15 @@ namespace FeralTweaksBootstrap
         {
             get
             {
-                return logDebug;
+                return Logger.GlobalLogLevel >= LogLevel.DEBUG;
+            }
+        }
+
+        public static Logger Logger
+        {
+            get
+            {
+                return logger;
             }
         }
 
@@ -71,28 +82,50 @@ namespace FeralTweaksBootstrap
 
         public static void LogDebug(string message)
         {
-            if (!DebugLogging)
-                return;
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Preloader] " + message);
+            if (logger == null && DebugLogging)
+                Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + " DEBUG] [Preloader] " + message);
+            else if (logger != null)
+                logger.Debug(message);
+        }
+
+        public static void LogTrace(string message)
+        {
+            if (logger == null && DebugLogging)
+                Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + " TRACE] [Preloader] " + message);
+            else if (logger != null)
+                logger.Trace(message);
         }
 
         public static void LogInfo(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [INF] [Preloader] " + message);
+            if (logger == null)
+                Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + "  INFO] [Preloader] " + message);
+            else
+                logger.Info(message);
         }
 
         public static void LogWarn(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [WRN] [Preloader] " + message);
+            if (logger == null)
+                Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + "  WARN] [Preloader] " + message);
+            else
+                logger.Warn(message);
         }
 
         public static void LogError(string message)
         {
-            LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] " + message);
-            Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [ERR] [Preloader] " + message);
+            if (logger == null)
+                Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + " ERROR] [Preloader] " + message);
+            else
+                logger.Error(message);
+        }
+
+        public static void LogFatal(string message)
+        {
+            if (logger == null)
+                Console.Error.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + " FATAL] [Preloader] " + message);
+            else
+                logger.Fatal(message);
         }
 
         public static void Start()
@@ -101,9 +134,8 @@ namespace FeralTweaksBootstrap
             Directory.CreateDirectory("FeralTweaks/cache");
             Directory.CreateDirectory("FeralTweaks/logs");
 
-            // Set up log
-            LogWriter = new StreamWriter("FeralTweaks/logs/preloader.log");
-            LogWriter.AutoFlush = true;
+            // Set up logging
+            logger = Logger.GetLogger("Preloader");
 
             // Log
             LogInfo("Preparing...");
@@ -164,11 +196,14 @@ namespace FeralTweaksBootstrap
 
                                 // Help page
                                 LogInfo("  Preloader arguments:");
-                                LogInfo("    --debug-log                            -  enables debug logging in the loader, preloader and mods");
                                 LogInfo("    --dry-run                              -  instructs FTL to not do anything apart from early-load actions");
                                 LogInfo("    --dryrun-load-mods                     -  same as dry-run however mod are also preloaded");
                                 LogInfo("    --regenerate-interop-assemblies        -  regenerates the interop assembly cache even if it exists");
                                 LogInfo("    --show-console                         -  attaches a system console to the game (windows only)");
+                                LogInfo("    --debug-log                            -  enables debug logging in the loader, preloader and mods");
+                                LogInfo("    --log-level <level>                    -  assigns the log level (eg. debug, trace, info, warn, error, fatal, quiet)");
+                                LogInfo("    --console-log-level <level>            -  assigns the console log level (eg. debug, trace, info, warn, error, fatal, quiet)");
+                                LogInfo("    --log-unity                            -  enables unity logging");
                                 LogInfo("");
                                 LogInfo("  Modloader arguments:");
                                 LogInfo("    --load-mod-from \"<path>\"               -  instructs FTL to load a structured mod from the specified folder path");
@@ -190,9 +225,101 @@ namespace FeralTweaksBootstrap
                                 Environment.Exit(0);
                                 break;
                             }
+                        case "console-log-level":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Handle log level
+                                switch (val.ToLower())
+                                {
+                                    case "debug":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.DEBUG;
+                                        break;
+                                    case "trace":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.TRACE;
+                                        break;
+                                    case "info":
+                                    case "information":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.INFO;
+                                        break;
+                                    case "warnings":
+                                    case "warning":
+                                    case "warn":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.WARN;
+                                        break;
+                                    case "errors":
+                                    case "error":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.ERROR;
+                                        break;
+                                    case "fatal":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.FATAL;
+                                        break;
+                                    case "silent":
+                                    case "none":
+                                    case "nothing":
+                                    case "quiet":
+                                        Logger.GlobalConsoleLogLevel = LogLevel.QUIET;
+                                        break;
+                                }
+
+                                break;
+                            }
+                        case "log-level":
+                            {
+                                if (val == null)
+                                {
+                                    if (i + 1 < args.Length)
+                                        val = args[i + 1];
+                                    else
+                                        break;
+                                    i++;
+                                }
+
+                                // Handle log level
+                                switch (val.ToLower())
+                                {
+                                    case "debug":
+                                        Logger.GlobalLogLevel = LogLevel.DEBUG;
+                                        break;
+                                    case "trace":
+                                        Logger.GlobalLogLevel = LogLevel.TRACE;
+                                        break;
+                                    case "info":
+                                    case "information":
+                                        Logger.GlobalLogLevel = LogLevel.INFO;
+                                        break;
+                                    case "warnings":
+                                    case "warning":
+                                    case "warn":
+                                        Logger.GlobalLogLevel = LogLevel.WARN;
+                                        break;
+                                    case "errors":
+                                    case "error":
+                                        Logger.GlobalLogLevel = LogLevel.ERROR;
+                                        break;
+                                    case "fatal":
+                                        Logger.GlobalLogLevel = LogLevel.FATAL;
+                                        break;
+                                    case "silent":
+                                    case "none":
+                                    case "nothing":
+                                    case "quiet":
+                                        Logger.GlobalLogLevel = LogLevel.QUIET;
+                                        break;
+                                }
+
+                                break;
+                            }
                         case "debug-log":
                             {
-                                logDebug = true;
+                                Logger.GlobalLogLevel = LogLevel.DEBUG;
                                 break;
                             }
                         case "dryrun-load-mods":
@@ -510,7 +637,7 @@ namespace FeralTweaksBootstrap
             void BuildPackage()
             {
                 // Check output
-                if (File.Exists(packageOutput) &&!packageOutputOverwrite)
+                if (File.Exists(packageOutput) && !packageOutputOverwrite)
                 {
                     LogWarn("Aborting package build for " + packageOutput + ": file already exists!");
                     LogWarn("To continue anyways, add '--force-overwrite' to the command arguments.");
@@ -735,7 +862,7 @@ namespace FeralTweaksBootstrap
                 currentHash = string.Concat(SHA256.Create().ComputeHash(strm).Select(t => t.ToString("x2")));
                 strm.Close();
                 if (!oldHash.Equals(currentHash))
-                    {
+                {
                     LogInfo("Cache is out of date, regenerating assemblies...");
                     regenerateAssemblies = true;
                 }
@@ -1059,6 +1186,7 @@ namespace FeralTweaksBootstrap
 
         private static void StartLoader()
         {
+            loaderReady = true;
             FeralTweaksLoader.Start();
         }
     }

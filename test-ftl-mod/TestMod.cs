@@ -80,7 +80,7 @@ namespace TestFtlMod
             writer.WriteString(payload);
         }
 
-        public bool Handle()
+        public bool Handle(ClientMessenger messenger)
         {
             return true;
         }

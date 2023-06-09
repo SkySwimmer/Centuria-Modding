@@ -14,6 +14,7 @@ using UnityEngine;
 using HarmonyLib;
 using feraltweaks.Patches.AssemblyCSharp;
 using TMPro;
+using System.Threading;
 
 namespace FeralDiscordRpcMod
 {
@@ -26,9 +27,11 @@ namespace FeralDiscordRpcMod
         }
 
         private static JoinReq pendingJoinRequest;
+        private static string prevSecret;
         private static string currentSecret;
         private static long secretGenTime;
         private static System.Random rnd = new System.Random();
+        private static Dictionary<string, RpcJoinPlayerResultPacket> pendingResults = new Dictionary<string, RpcJoinPlayerResultPacket>();
 
         private static string joinExe;
         private static string partyID;
@@ -39,7 +42,12 @@ namespace FeralDiscordRpcMod
 
         public override void Init()
         {
+            // Register handshake rules
             AddModHandshakeRequirementForSelf(Version);
+
+            // Register packets
+            RegisterPacket(new RpcJoinPlayerRequestPacket());
+            RegisterPacket(new RpcJoinPlayerResultPacket());
         }
 
         private class BtnConf
@@ -50,6 +58,7 @@ namespace FeralDiscordRpcMod
 
         private class Conf
         {
+            public int pipe = -1;
             public bool joiningEnabled;
             public string joinExecutableLinux;
             public string joinExecutableWindows;
@@ -68,7 +77,8 @@ namespace FeralDiscordRpcMod
             {
                 Directory.CreateDirectory(ConfigDir);
                 File.WriteAllText(ConfigDir + "/config.json", "{\n"
-                    + "    \"joiningEnabled\": false,\n"
+                    + "    \"pipe\": -1,\n"
+                    + "    \"joiningEnabled\": " + (Environment.GetEnvironmentVariable("CENTURIA_LAUNCHER_PATH") != null ? "true" : "false") + ",\n"
                     + "    \"joinExecutableWindows\": \"\",\n"
                     + "    \"joinExecutableLinux\": \"\",\n"
                     + "    \"joinExecutableOSX\": \"\",\n"
@@ -102,7 +112,7 @@ namespace FeralDiscordRpcMod
                 catch
                 {
                     // Real windows
-                    client = new DiscordRpcClient(clientid);
+                    client = new DiscordRpcClient(clientid, config.pipe);
                 }
                 if (wine)
                 {
@@ -110,13 +120,13 @@ namespace FeralDiscordRpcMod
                     if (!File.Exists(ModBaseDirectory + "/winepipebridge.dll.so"))
                     {
                         LogError("Unable to load wine compatibility layer for Rich Presence!");
-                        client = new DiscordRpcClient(clientid);
+                        client = new DiscordRpcClient(clientid, config.pipe);
                     }
                     else
                     {
                         // Wine
                         NativeLibrary.Load(Path.GetFullPath(ModBaseDirectory + "/winepipebridge.dll.so"));
-                        client = new DiscordRpcClient(clientid, client: new WineUnixPipeClient());
+                        client = new DiscordRpcClient(clientid, config.pipe, client: new WineUnixPipeClient());
                     }
                     joinExe = config.joinExecutableLinux;
                 }
@@ -163,13 +173,13 @@ namespace FeralDiscordRpcMod
             };
             client.OnPresenceUpdate += (sender, e) =>
             {
-                LogInfo("Received Update! " + e.Presence);
+                LogDebug("Received Update! " + JsonConvert.SerializeObject(e.Presence));
             };
             client.OnJoinRequested += (sender, e) =>
             {
                 if (!config.disableAskToJoin)
                 {
-                    feraltweaks.FeralTweaks.uiActions.Add(() =>
+                    feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
                     {
                         // Show popup
                         try
@@ -201,56 +211,87 @@ namespace FeralDiscordRpcMod
                         string playerID = sec["pid"];
                         string secret = sec["sc"];
 
-                        // Verify secret, send packet to server
-                        // TODO
-
-                        // Set party
-                        RpcMod.partyID = partyID;
-                        RichPresence pr = client.CurrentPresence;
-                        client.SetPresence(pr.Clone().WithParty(new Party()
+                        // Run async
+                        Task.Run(() =>
                         {
-                            ID = partyID,
-                            Max = pr.Party.Max,
-                            Size = 1
-                        }));
-
-                        // Check if the teleport can be performed
-                        bool valid = false;
-                        bool wait = false;
-                        if (NetworkManager.instance != null && NetworkManager.instance._uuid != null && NetworkManager.instance._serverConnection != null)
-                        {
-                            // Already ingame
-                            valid = true;
-                            if (UI_ProgressScreen.instance.IsVisible)
-                                wait = true; // Switching
-                        }
-                        else if (feraltweaks.FeralTweaks.AutoLoginToken != null)
-                        {
-                            // Autologin
-                            valid = true;
-                            wait = true;
-                        }
-
-                        // Perform teleport
-                        if (valid)
-                        {
-                            if (!wait)
+                            // Check if the teleport can be performed
+                            bool valid = false;
+                            bool wait = false;
+                            if (NetworkManager.instance != null && NetworkManager.instance._uuid != null && NetworkManager.instance._serverConnection != null)
                             {
-                                // Run tp now
-                                // FIXME: use tp secret instead, a secret passed by the server
-                                feraltweaks.FeralTweaks.uiActions.Add(() => TeleportToPlayer(playerID, secret));
+                                // Already ingame
+                                valid = true;
+                                if (UI_ProgressScreen.instance.IsVisible)
+                                    wait = true; // Switching
                             }
-                            else
+                            else if (feraltweaks.FeralTweaks.AutoLoginToken != null)
                             {
-                                // Wait for world switch
-                                // FIXME: use tp secret instead, a secret passed by the server
-                                pendingJoinRequest = new JoinReq()
+                                // Autologin
+                                valid = true;
+                                wait = true;
+                            }
+
+                            // Perform teleport
+                            if (valid)
+                            {
+                                // Prepare to send packet
+                                while (pendingResults.ContainsKey(playerID)) 
+                                    Thread.Sleep(100);
+                                lock (pendingResults)
+                                    pendingResults[playerID] = null;
+
+                                // Verify secret, send packet to server
+                                RpcJoinPlayerRequestPacket pkt = new RpcJoinPlayerRequestPacket();
+                                pkt.playerID = playerID;
+                                pkt.partyID = partyID;
+                                pkt.secret = secret;
+                                GetMessenger().SendPacket(pkt);
+
+                                // Wait for response
+                                RpcJoinPlayerResultPacket res = null;
+                                for (int i = 0; i < 100; i++)
                                 {
-                                    tpSecret = secret,
-                                    playerID = playerID
-                                };
+                                    lock (pendingResults)
+                                    {
+                                        res = pendingResults[playerID];
+                                        if (res != null)
+                                            break;
+                                    }
+                                    Thread.Sleep(100);
+                                }
+                                lock (pendingResults)
+                                    pendingResults.Remove(playerID);
+                                string tpSecret = null;
+                                if (res != null && res.success)
+                                    tpSecret = res.secret;
+                  
+                                // Set party
+                                RpcMod.partyID = partyID;
+                                RichPresence pr = client.CurrentPresence;
+                                client.SetPresence(pr.Clone().WithParty(new Party()
+                                {
+                                    ID = partyID,
+                                    Max = (pr.Party == null ? config.partySize : pr.Party.Max),
+                                    Size = 1
+                                }));
+
+                                // Teleport
+                                if (!wait)
+                                {
+                                    // Run tp now
+                                    feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
+                                }
+                                else
+                                {
+                                    // Wait for world switch
+                                    pendingJoinRequest = new JoinReq()
+                                    {
+                                        tpSecret = tpSecret,
+                                        playerID = playerID
+                                    };
+                                }
                             }
-                        }
+                        });
                     }
                 }
                 catch
@@ -261,7 +302,7 @@ namespace FeralDiscordRpcMod
 
             // Setup
             client.Subscribe(EventType.Join | EventType.JoinRequest);
-            if (config.joiningEnabled && joinExe != null)
+            if (config.joiningEnabled && joinExe != null && File.Exists(joinExe))
                 client.RegisterUriScheme(executable: joinExe);
 
             // Init
@@ -289,7 +330,8 @@ namespace FeralDiscordRpcMod
                 },
 
                 Buttons = btns.ToArray(),
-                Timestamps = new Timestamps() {
+                Timestamps = new Timestamps()
+                {
                     Start = DateTime.UtcNow
                 }
             };
@@ -315,7 +357,16 @@ namespace FeralDiscordRpcMod
             catch { }
             connectPopup = true;
             UI_Window_LoadingRegistrationWebApp.OpenWindow();
-            RelationshipManager.instance.GoToPlayer(playerID);
+
+            // Wait
+            feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
+            {
+                if (WindowManager.ExistsOrIsLoading("UI_Window_LoadingRegistrationWebApp"))
+                    return false;
+
+                RelationshipManager.instance.GoToPlayer(playerID);
+                return true;
+            });
         }
 
         private static bool taskRunning = false;
@@ -325,12 +376,12 @@ namespace FeralDiscordRpcMod
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            feraltweaks.FeralTweaks.actions.Add(() =>
+            feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                feraltweaks.FeralTweaks.uiActions.Add(() =>
+                feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
                 {
                     // Run action
                     if (pendingJoinRequest != null)
@@ -386,6 +437,8 @@ namespace FeralDiscordRpcMod
                         pr.Party = null;
                         pr.Secrets = null;
                         partyID = null;
+                        currentSecret = null;
+                        prevSecret = null;
                     }
                     else if (config.joiningEnabled && joinExe != null && File.Exists(joinExe))
                     {
@@ -403,9 +456,10 @@ namespace FeralDiscordRpcMod
                         };
 
                         // Regenerate secret if needed
-                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - secretGenTime > (10 * 60 * 1000))
+                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - secretGenTime > (30 * 60 * 1000))
                         {
                             // Regenerate
+                            prevSecret = currentSecret;
                             currentSecret = "";
                             for (int i = 0; i < 28; i++)
                                 currentSecret += (char)rnd.Next('0', 'Z');
@@ -418,8 +472,6 @@ namespace FeralDiscordRpcMod
                         secretPayload["pid"] = NetworkManager.instance._uuid;
                         secretPayload["sc"] = currentSecret;
                         string secret = JsonConvert.SerializeObject(secretPayload);
-
-                        // TODO: encrypt secret
 
                         // Set secrets
                         pr.Secrets = new Secrets()
@@ -609,7 +661,7 @@ namespace FeralDiscordRpcMod
                 client.Dispose();
             }
         }
-        
+
         private static GameObject GetChild(GameObject parent, string name)
         {
             if (name.Contains("/"))
@@ -650,6 +702,39 @@ namespace FeralDiscordRpcMod
                     children.Add(trCh.gameObject);
             }
             return children.ToArray();
+        }
+
+        internal void HandleJoinRequest(RpcJoinPlayerRequestPacket packet)
+        {
+            // Check party id
+            if (partyID == packet.partyID && currentSecret != null)
+            {
+                // Check secret
+                if (packet.secret == currentSecret || (prevSecret != null && packet.secret == prevSecret))
+                {
+                    // Send response
+                    RpcJoinPlayerResultPacket pkt2 = new RpcJoinPlayerResultPacket();
+                    pkt2.playerID = packet.playerID;
+                    pkt2.success = true;
+                    GetMessenger().SendPacket(pkt2);
+                    return;
+                }
+            }
+
+            // Send response
+            RpcJoinPlayerResultPacket pkt = new RpcJoinPlayerResultPacket();
+            pkt.playerID = packet.playerID;
+            pkt.success = false;
+            GetMessenger().SendPacket(pkt);
+        }
+
+        internal void HandleJoinResult(RpcJoinPlayerResultPacket packet)
+        {
+            lock (pendingResults)
+            {
+                if (pendingResults.ContainsKey(packet.playerID))
+                    pendingResults[packet.playerID] = packet;
+            }
         }
     }
 }
