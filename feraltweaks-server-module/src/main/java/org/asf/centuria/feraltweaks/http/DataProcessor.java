@@ -130,6 +130,12 @@ public class DataProcessor extends HttpGetProcessor {
 
 			// Check file
 			File reqFile = new File(module.ftDataPath, path);
+			if (reqFile.isDirectory()) {
+				this.setResponseCode(404);
+				this.setResponseMessage("Not found");
+				this.setBody("text/json", "{\"error\":\"file_not_found\"}");
+				return;
+			}
 			if ((!reqFile.exists() || (!reqFile.getParentFile().getCanonicalPath()
 					.equalsIgnoreCase(new File(module.ftDataPath).getCanonicalPath())
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()

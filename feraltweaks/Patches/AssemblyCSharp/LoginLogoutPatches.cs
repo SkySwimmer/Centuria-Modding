@@ -143,7 +143,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         NetworkManager.instance._uuid = null;
                     }
                     Avatar_Local.instance = null;
-                    XPManager.instance.PlayerLevel = null;
+                    XPManager.instance.PlayerLevel = null;                    
+                    NotificationManager.instance.loggedNotifications.Clear();
                     GlidingManager.instance.MStart();
                     reloadGlidingManager = true;
                     QuestManager.instance._linearQuestListData = null;
@@ -154,14 +155,22 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                         if (chat != null)
+                        {
+                            chat.SaveWindowSize();
                             GameObject.Destroy(chat.gameObject);
+                        }
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
                         CoreWindowManager.CloseAllWindows();
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
-                        FeralTweaks.uiActions.Add(() =>
+                        actionsToRun.Add(() =>
                         {
-                            CoreLoadingManager.HideProgressScreen();
+                            if (WindowManager.GetWindow<UI_Window_Login>() != null && WindowManager.GetWindow<UI_Window_Login>().IsOpen && !WindowManager.GetWindow<UI_Window_Login>().IsOpening)
+                            {
+                                CoreLoadingManager.HideProgressScreen();
+                                return true;
+                            }
+                            return false;
                         });
                         return true;
                     });

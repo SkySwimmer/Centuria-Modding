@@ -18,6 +18,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static Action SingleTimeNoButtonAction;
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_Window_OkPopup), "OnClose")]
+        private static void Close()
+        {
+            SingleTimeYesButtonAction = null;
+            SingleTimeNoButtonAction = null;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_Window_YesNoPopup), "BtnClicked_Response")]
         private static void BtnClicked_Response(ref UI_Window_YesNoPopup __instance, bool inResponse)
         {

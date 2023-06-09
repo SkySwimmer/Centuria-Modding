@@ -1,7 +1,5 @@
 package org.asf.centuria.modules.discordrpc;
 
-import org.asf.centuria.modules.eventbus.EventListener;
-import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
 import org.asf.centuria.feraltweaks.api.FeralTweaksMod;
 
 public class RpcModule extends FeralTweaksMod {

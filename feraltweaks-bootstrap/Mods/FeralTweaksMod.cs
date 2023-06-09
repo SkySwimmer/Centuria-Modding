@@ -46,7 +46,7 @@ namespace FeralTweaks.Mods
             if (!FeralTweaksLoader.DebugLoggingEnabled)
                 return;
             LogWriter.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] " + message);
-            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [Loader] " + message);
+            Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss:fff") + "] [DBG] [" + ID + "] " + message);
         }
 
         /// <summary>

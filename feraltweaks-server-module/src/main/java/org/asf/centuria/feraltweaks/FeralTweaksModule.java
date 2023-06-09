@@ -27,6 +27,7 @@ import org.asf.centuria.modules.ICenturiaModule;
 import org.asf.centuria.modules.ModuleManager;
 import org.asf.centuria.modules.eventbus.EventBus;
 import org.asf.centuria.modules.eventbus.EventListener;
+import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
 import org.asf.centuria.modules.events.accounts.AccountPreloginEvent;
 import org.asf.centuria.modules.events.accounts.MiscModerationEvent;
@@ -137,6 +138,77 @@ public class FeralTweaksModule implements ICenturiaModule {
 			new File(ftDataPath + "/clientmods/assemblies").mkdirs();
 		if (!new File(ftDataPath + "/clientmods/assets").exists())
 			new File(ftDataPath + "/clientmods/assets").mkdirs();
+
+		// Bind late events
+		EventBus.getInstance().addEventReceiver(new LateEventContainer());
+	}
+
+	private class LateEventContainer implements IEventReceiver {
+		@EventListener
+		public void handleChatPrelogin(ChatLoginEvent event) {
+			// Handshake feraltweaks
+			if (event.getLoginRequest().has("feraltweaks")
+					&& event.getLoginRequest().get("feraltweaks").getAsString().equals("enabled")) {
+				// Handle FeralTweaks hanshake
+				if (event.getLoginRequest().get("feraltweaks_protocol").getAsInt() != FT_VERSION) {
+					// Handshake failure
+					event.cancel();
+					return;
+				}
+
+				// Check if FT is enabled
+				if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+						&& !event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks")) {
+					// Handshake failure
+					event.cancel();
+					return;
+				}
+
+				// Handshake success
+				event.getClient().addObject(new FeralTweaksClientObject(true,
+						event.getLoginRequest().get("feraltweaks_version").getAsString()));
+
+				// Prepare to send unreads
+				JsonObject pkt = new JsonObject();
+				pkt.addProperty("eventId", "feraltweaks.unreadconversations");
+				JsonArray arr = new JsonArray();
+
+				// Load unreads
+				if (event.getAccount().getSaveSharedInventory().containsItem("unreadconversations")) {
+					arr = event.getAccount().getSaveSharedInventory().getItem("unreadconversations").getAsJsonArray();
+
+					// Remove nonexistent items and rooms the player is no longer in
+					// Dms are joined by now, so would gcs as this event is bound later than any
+					// module normally binds, meaning the other modules are fired before this one
+					ArrayList<JsonElement> toRemove = new ArrayList<JsonElement>();
+					for (JsonElement ele : arr) {
+						if (!DMManager.getInstance().dmExists(ele.getAsString())
+								|| !event.getClient().isInRoom(ele.getAsString()))
+							toRemove.add(ele);
+					}
+					for (JsonElement id : toRemove)
+						arr.remove(id);
+
+					// Save if needed
+					if (toRemove.size() != 0)
+						event.getAccount().getSaveSharedInventory().setItem("unreadconversations", arr);
+				} else
+					event.getAccount().getSaveSharedInventory().setItem("unreadconversations", arr);
+
+				// Send packet
+				pkt.add("conversations", arr);
+				event.getClient().sendPacket(pkt);
+			} else {
+				if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
+						|| event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks"))
+						&& preventNonFTClients) {
+					// Unsupported
+					event.cancel();
+					return;
+				}
+				event.getClient().addObject(new FeralTweaksClientObject(false, null));
+			}
+		}
 	}
 
 	@EventListener
@@ -516,69 +588,6 @@ public class FeralTweaksModule implements ICenturiaModule {
 		} catch (Exception e) {
 			// Uhh what
 			event.setStatus(-1);
-		}
-	}
-
-	@EventListener
-	public void handleChatPrelogin(ChatLoginEvent event) {
-		// Handshake feraltweaks
-		if (event.getLoginRequest().has("feraltweaks")
-				&& event.getLoginRequest().get("feraltweaks").getAsString().equals("enabled")) {
-			// Handle FeralTweaks hanshake
-			if (event.getLoginRequest().get("feraltweaks_protocol").getAsInt() != FT_VERSION) {
-				// Handshake failure
-				event.cancel();
-				return;
-			}
-
-			// Check if FT is enabled
-			if (!enableByDefault && !event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
-					&& !event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks")) {
-				// Handshake failure
-				event.cancel();
-				return;
-			}
-
-			// Handshake success
-			event.getClient().addObject(new FeralTweaksClientObject(true,
-					event.getLoginRequest().get("feraltweaks_version").getAsString()));
-
-			// Prepare to send unreads
-			JsonObject pkt = new JsonObject();
-			pkt.addProperty("eventId", "feraltweaks.unreadconversations");
-			JsonArray arr = new JsonArray();
-
-			// Load unreads
-			if (event.getAccount().getSaveSharedInventory().containsItem("unreadconversations")) {
-				arr = event.getAccount().getSaveSharedInventory().getItem("unreadconversations").getAsJsonArray();
-
-				// Remove nonexistent items
-				ArrayList<JsonElement> toRemove = new ArrayList<JsonElement>();
-				for (JsonElement ele : arr) {
-					if (!DMManager.getInstance().dmExists(ele.getAsString()))
-						toRemove.add(ele);
-				}
-				for (JsonElement id : toRemove)
-					arr.remove(id);
-
-				// Save if needed
-				if (toRemove.size() != 0)
-					event.getAccount().getSaveSharedInventory().setItem("unreadconversations", arr);
-			} else
-				event.getAccount().getSaveSharedInventory().setItem("unreadconversations", arr);
-
-			// Send packet
-			pkt.add("conversations", arr);
-			event.getClient().sendPacket(pkt);
-		} else {
-			if ((enableByDefault || event.getAccount().getSaveSharedInventory().containsItem("feraltweaks")
-					|| event.getAccount().getSaveSpecificInventory().containsItem("feraltweaks"))
-					&& preventNonFTClients) {
-				// Unsupported
-				event.cancel();
-				return;
-			}
-			event.getClient().addObject(new FeralTweaksClientObject(false, null));
 		}
 	}
 

@@ -129,7 +129,6 @@ namespace feraltweaks
             ApplyPatch(typeof(UI_Window_TradeItemQuantityPatch));
             ApplyPatch(typeof(UI_Window_OkPopupPatch));
             ApplyPatch(typeof(UI_Window_YesNoPopupPatch));
-            ApplyPatch(typeof(WWTcpClientPatch));
             ApplyPatch(typeof(WindUpdraftPatch));
             ApplyPatch(typeof(LoginLogoutPatches));
             ApplyPatch(typeof(CoreBundleManager2Patch));

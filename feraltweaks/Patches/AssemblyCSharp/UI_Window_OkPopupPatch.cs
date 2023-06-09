@@ -16,7 +16,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
     {
         public static Action SingleTimeOkButtonAction;
 
-        [HarmonyPostfix]
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_Window_OkPopup), "OnClose")]
+        private static void Close()
+        {
+            SingleTimeOkButtonAction = null;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_Window_OkPopup), "BtnClicked_Ok")]
         private static void BtnClicked_Ok(ref UI_Window_OkPopup __instance)
         {
