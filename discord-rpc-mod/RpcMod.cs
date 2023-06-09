@@ -15,6 +15,7 @@ using HarmonyLib;
 using feraltweaks.Patches.AssemblyCSharp;
 using TMPro;
 using System.Threading;
+using Server;
 
 namespace FeralDiscordRpcMod
 {
@@ -33,6 +34,7 @@ namespace FeralDiscordRpcMod
         private static System.Random rnd = new System.Random();
         private static Dictionary<string, RpcJoinPlayerResultPacket> pendingResults = new Dictionary<string, RpcJoinPlayerResultPacket>();
 
+        private static string tpSecret;
         private static string joinExe;
         private static string partyID;
         private static DiscordRpcClient client;
@@ -235,7 +237,7 @@ namespace FeralDiscordRpcMod
                             if (valid)
                             {
                                 // Prepare to send packet
-                                while (pendingResults.ContainsKey(playerID)) 
+                                while (pendingResults.ContainsKey(playerID))
                                     Thread.Sleep(100);
                                 lock (pendingResults)
                                     pendingResults[playerID] = null;
@@ -264,7 +266,7 @@ namespace FeralDiscordRpcMod
                                 string tpSecret = null;
                                 if (res != null && res.success)
                                     tpSecret = res.secret;
-                  
+
                                 // Set party
                                 RpcMod.partyID = partyID;
                                 RichPresence pr = client.CurrentPresence;
@@ -347,8 +349,6 @@ namespace FeralDiscordRpcMod
 
         private static void TeleportToPlayer(string playerID, string tpSecret)
         {
-            // FIXME: use server code instead using the tp secret to override the tp locks
-
             // Show loading window
             try
             {
@@ -364,6 +364,7 @@ namespace FeralDiscordRpcMod
                 if (WindowManager.ExistsOrIsLoading("UI_Window_LoadingRegistrationWebApp"))
                     return false;
 
+                RpcMod.tpSecret = tpSecret;
                 RelationshipManager.instance.GoToPlayer(playerID);
                 return true;
             });
@@ -371,6 +372,24 @@ namespace FeralDiscordRpcMod
 
         private static bool taskRunning = false;
         private static bool connectPopup = false;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(NetworkManager), "SendServerMessage", new Type[] { typeof(INetMessageWriter) })]
+        public static void SendPacket(INetMessageWriter message)
+        {
+            // Check
+            if (message.Cmd == XtCmd.RelationshipFollowerJumpToRoom.Cmd())
+            {
+                // Check tp secret
+                if (tpSecret != null)
+                {
+                    // Write secret
+                    message.WriteBool(true);
+                    message.WriteString(tpSecret);
+                    tpSecret = null;
+                }
+            }
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]

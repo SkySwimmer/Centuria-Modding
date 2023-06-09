@@ -1,15 +1,19 @@
 package org.asf.centuria.modules.discordrpc.packets;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 
 import org.asf.centuria.data.XtReader;
 import org.asf.centuria.data.XtWriter;
 import org.asf.centuria.entities.players.Player;
 import org.asf.centuria.feraltweaks.api.networking.IFeralTweaksPacket;
 import org.asf.centuria.feraltweaks.api.networking.ServerMessenger;
+import org.asf.centuria.modules.discordrpc.SecretContainer;
 import org.asf.centuria.networking.gameserver.GameServer;
 
 public class RpcJoinPlayerResultPacket implements IFeralTweaksPacket<RpcJoinPlayerResultPacket> {
+
+	private static SecureRandom rnd = new SecureRandom();
 
 	public boolean success;
 	public String playerID;
@@ -51,8 +55,24 @@ public class RpcJoinPlayerResultPacket implements IFeralTweaksPacket<RpcJoinPlay
 
 			// Generate tp secret
 			if (success) {
-				// TODO: generate teleport secret
-				secret = "12345";
+				// Build container
+				SecretContainer cont = target.getObject(SecretContainer.class);
+				if (cont == null) {
+					cont = new SecretContainer();
+					target.addObject(cont);
+				}
+				cont.expiry = System.currentTimeMillis() + (60 * 60 * 1000);
+				cont.userLoginTimestamp = plr.account.getLastLoginTime();
+				cont.userID = plr.account.getAccountID();
+
+				// Generate secret
+				String ch = "";
+				for (int i = 0; i < 2048; i++)
+					ch += (char) rnd.nextInt((int) '0', (int) 'Z');
+				cont.secret = ch;
+
+				// Set secret
+				secret = cont.secret;
 			}
 
 			// Send packet

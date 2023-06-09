@@ -1,6 +1,8 @@
 package org.asf.centuria.modules.discordrpc;
 
 import org.asf.centuria.feraltweaks.api.FeralTweaksMod;
+import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
+import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.discordrpc.packets.*;
 
 public class RpcModule extends FeralTweaksMod {
@@ -25,6 +27,11 @@ public class RpcModule extends FeralTweaksMod {
 		// Packets
 		registerPacket(new RpcJoinPlayerRequestPacket());
 		registerPacket(new RpcJoinPlayerResultPacket());
+	}
+
+	@EventListener
+	public void gameStart(GameServerStartupEvent ev) {
+		ev.registerPacket(new RelationshipJumpToPlayerOverridePacket());
 	}
 
 }

@@ -383,17 +383,19 @@ namespace FeralTweaks
                     continue; // Skip loading this
                 LogDebug("Loading semi-structured ftl mod from: " + dir.FullName);
 
-                // Load dlls
-                foreach (FileInfo mod in dir.GetFiles("*.dll", SearchOption.AllDirectories))
-                {
-                    LoadModFile(mod, null, dir.FullName, modDirs);
-                }
-
                 // Load dlls from folder
                 if (Directory.Exists(dir.FullName + "/assemblies"))
                 {
                     // Load dlls
                     foreach (FileInfo mod in new DirectoryInfo(dir.FullName + "/assemblies").GetFiles("*.dll", SearchOption.AllDirectories))
+                    {
+                        LoadModFile(mod, null, dir.FullName, modDirs);
+                    }
+                }
+                else
+                {                    
+                    // Load dlls
+                    foreach (FileInfo mod in dir.GetFiles("*.dll", SearchOption.AllDirectories))
                     {
                         LoadModFile(mod, null, dir.FullName, modDirs);
                     }
@@ -426,17 +428,19 @@ namespace FeralTweaks
                 // Find directory
                 DirectoryInfo dir = new DirectoryInfo(modInfo.path);
 
-                // Load dlls
-                foreach (FileInfo mod in dir.GetFiles("*.dll"))
-                {
-                    LoadModFile(mod, modInfo, dir.FullName, modDirs);
-                }
-
                 // Load dlls from folder
                 if (Directory.Exists(dir.FullName + "/assemblies"))
                 {
                     // Load dlls
                     foreach (FileInfo mod in new DirectoryInfo(dir.FullName + "/assemblies").GetFiles("*.dll", SearchOption.AllDirectories))
+                    {
+                        LoadModFile(mod, modInfo, dir.FullName, modDirs);
+                    }
+                }
+                else
+                {
+                    // Load dlls
+                    foreach (FileInfo mod in dir.GetFiles("*.dll"))
                     {
                         LoadModFile(mod, modInfo, dir.FullName, modDirs);
                     }
