@@ -410,6 +410,8 @@ namespace FeralDiscordRpcMod
                             pendingJoinRequest = null;
                             return;
                         }
+                        if (RoomManager.instance.CurrentLevelDef.levelType == ELevelType.TUTORIAL)
+                            return;
                         TeleportToPlayer(pendingJoinRequest.playerID, pendingJoinRequest.tpSecret);
                         pendingJoinRequest = null;
                     }
