@@ -37,6 +37,7 @@ namespace FeralTweaksBootstrap
         internal static bool loaderReady;
         internal static bool logUnityToFile;
         internal static bool logUnityToConsole = true;
+        internal static bool showConsole = false;
 
         private class ModInfo
         {
@@ -153,7 +154,6 @@ namespace FeralTweaksBootstrap
             string packageVersion = null;
             string packageID = null;
             bool packageOutputOverwrite = false;
-            bool showConsole = false;
             Dictionary<string, string> packageIncludeSources = new Dictionary<string, string>();
             List<string> packageIncludeSourceZips = new List<string>();
             for (int i = 1; i < args.Length; i++)

@@ -31,6 +31,14 @@ namespace FeralTweaks.Logging.Impl
                     Thread.Sleep(1);
                 writing = true;
                 string pref = "[" + DateTime.Now.ToString("HH:mm:ss") + " " + (level.ToString().Length < 5 ? " " + level.ToString() : level.ToString()) + "] [" + Source + "]: ";
+                if (!FeralTweaksBootstrap.Bootstrap.showConsole)
+                {
+                    if (level <= LogLevel.WARN)
+                        Console.Error.WriteLine(pref + GlobalMessagePrefix + message);
+                    else
+                        Console.WriteLine(pref + GlobalMessagePrefix + message);
+                    return;
+                }
                 if (level > LogLevel.WARN)
                     Console.Write(pref);
                 else
@@ -66,6 +74,36 @@ namespace FeralTweaks.Logging.Impl
                     Thread.Sleep(1);
                 writing = true;
                 string pref = "[" + DateTime.Now.ToString("HH:mm:ss") + " " + (level.ToString().Length < 5 ? " " + level.ToString() : level.ToString()) + "] [" + Source + "]: ";
+                if (!FeralTweaksBootstrap.Bootstrap.showConsole)
+                {
+                    if (level <= LogLevel.WARN)
+                    {
+                        Console.Error.WriteLine(pref + GlobalMessagePrefix + message);
+                        Console.Error.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
+                        Console.Error.WriteLine(exception.StackTrace);
+                        Exception e = exception.InnerException;
+                        while (e != null)
+                        {
+                            Console.Error.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                            Console.Error.WriteLine(e.StackTrace);
+                            e = e.InnerException;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine(pref + GlobalMessagePrefix + message);
+                        Console.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
+                        Console.WriteLine(exception.StackTrace);
+                        Exception e = exception.InnerException;
+                        while (e != null)
+                        {
+                            Console.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                            Console.WriteLine(e.StackTrace);
+                            e = e.InnerException;
+                        }
+                    }
+                    return;
+                }
                 if (level > LogLevel.WARN)
                     Console.Write(pref);
                 else
@@ -84,19 +122,27 @@ namespace FeralTweaks.Logging.Impl
                     Console.Error.WriteLine(GlobalMessagePrefix + message);
                     Console.Error.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
                     Console.Error.WriteLine(exception.StackTrace);
+                    Exception e = exception.InnerException;
+                    while (e != null)
+                    {
+                        Console.Error.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                        Console.Error.WriteLine(e.StackTrace);
+                        e = e.InnerException;
+                    }
                 }
                 else
                 {
                     // Normal log messages
                     Console.WriteLine(GlobalMessagePrefix + message);
                     Console.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
+                    Console.WriteLine(exception.StackTrace);
                     Exception e = exception.InnerException;
                     while (e != null)
                     {
                         Console.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                        Console.WriteLine(e.StackTrace);
                         e = e.InnerException;
                     }
-                    Console.WriteLine(exception.StackTrace);
                 }
                 Console.ResetColor();
                 writing = false;

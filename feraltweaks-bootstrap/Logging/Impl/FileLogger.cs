@@ -63,13 +63,14 @@ namespace FeralTweaks.Logging.Impl
                 string msg = "[" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToString("HH:mm:ss") + "] [" + level.ToString() + "] " + GlobalMessagePrefix + message;
                 FileWriter.WriteLine(msg);
                 FileWriter.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
+                FileWriter.WriteLine(exception.StackTrace);
                 Exception e = exception.InnerException;
                 while (e != null)
                 {
                     FileWriter.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                    FileWriter.WriteLine(exception.StackTrace);
                     e = e.InnerException;
                 }
-                FileWriter.WriteLine(exception.StackTrace);
                 FileWriter.Flush();
             }
         }
