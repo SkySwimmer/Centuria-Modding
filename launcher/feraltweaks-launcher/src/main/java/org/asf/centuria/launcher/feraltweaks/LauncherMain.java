@@ -1027,6 +1027,7 @@ public class LauncherMain {
 						builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 					} else
 						throw new Exception("Invalid platform: " + os);
+					builder.inheritIO();
 					builder.directory(new File("client/build"));
 
 					// Log

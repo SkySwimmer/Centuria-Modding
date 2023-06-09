@@ -276,6 +276,7 @@ public class LauncherUpdaterMain {
 							.replace("$<data-url>", dataUrl));
 				ProcessBuilder builder = new ProcessBuilder(cmd.toArray(t -> new String[t]));
 				builder.directory(new File(dir, "launcher"));
+				builder.inheritIO();
 				Process proc = builder.start();
 
 				// Mark done
