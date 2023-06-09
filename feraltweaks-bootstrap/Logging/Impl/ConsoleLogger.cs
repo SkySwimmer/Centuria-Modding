@@ -37,6 +37,7 @@ namespace FeralTweaks.Logging.Impl
                         Console.Error.WriteLine(pref + GlobalMessagePrefix + message);
                     else
                         Console.WriteLine(pref + GlobalMessagePrefix + message);
+                    writing = false;
                     return;
                 }
                 if (level > LogLevel.WARN)
@@ -102,6 +103,7 @@ namespace FeralTweaks.Logging.Impl
                             e = e.InnerException;
                         }
                     }
+                    writing = false;
                     return;
                 }
                 if (level > LogLevel.WARN)
