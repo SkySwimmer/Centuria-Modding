@@ -204,7 +204,7 @@ namespace FeralDiscordRpcMod
                 try
                 {
                     // Parse secret
-                    Dictionary<string, string>? sec = JsonConvert.DeserializeObject<Dictionary<string, string>>(e.Secret);
+                    Dictionary<string, string> sec = JsonConvert.DeserializeObject<Dictionary<string, string>>(e.Secret);
                     if (sec != null && sec.ContainsKey("id") && sec.ContainsKey("pid") && sec.ContainsKey("sc"))
                     {
                         string partyID = sec["id"];
