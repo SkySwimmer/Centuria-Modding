@@ -1186,7 +1186,6 @@ public class LauncherUpdaterMain {
 			throws MalformedURLException, IOException {
 		URLConnection urlConnection = new URL(url).openConnection();
 		try {
-			log("Updating launcher...");
 			SwingUtilities.invokeAndWait(() -> {
 				progressBar.setMaximum(urlConnection.getContentLength() / 1000);
 				progressBar.setValue(0);
