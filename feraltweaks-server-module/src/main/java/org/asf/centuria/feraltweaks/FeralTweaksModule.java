@@ -3,9 +3,14 @@ package org.asf.centuria.feraltweaks;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import org.asf.centuria.Centuria;
 import org.asf.centuria.accounts.AccountManager;
@@ -32,13 +37,16 @@ import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
 import org.asf.centuria.modules.events.accounts.AccountPreloginEvent;
 import org.asf.centuria.modules.events.accounts.MiscModerationEvent;
+import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent.DisconnectType;
 import org.asf.centuria.modules.events.chat.ChatLoginEvent;
 import org.asf.centuria.modules.events.chat.ChatMessageBroadcastEvent;
 import org.asf.centuria.modules.events.chatcommands.ChatCommandEvent;
 import org.asf.centuria.modules.events.chatcommands.ModuleCommandSyntaxListEvent;
+import org.asf.centuria.modules.events.maintenance.MaintenanceStartEvent;
 import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
 import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
+import org.asf.centuria.networking.chatserver.ChatClient;
 import org.asf.centuria.networking.gameserver.GameServer;
 
 import com.google.gson.JsonArray;
@@ -72,6 +80,10 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public HashMap<String, Boolean> replicatingObjects = new HashMap<String, Boolean>();
 
 	private HashMap<String, String> playerNames = new HashMap<String, String>();
+
+	private long maintenanceStartTime;
+	private boolean maintenanceTimerStarted;
+	private boolean cancelMaintenance;
 
 	@Override
 	public String id() {
@@ -177,6 +189,212 @@ public class FeralTweaksModule implements ICenturiaModule {
 				}
 			}
 		}, "User update handler (FeralTweaks)");
+		th.setDaemon(true);
+		th.start();
+
+		// Start maintenance handler
+		th = new Thread(() -> {
+			long timeLastMessage = 0;
+			while (true) {
+				// Check
+				if (maintenanceTimerStarted) {
+					// Check cancel
+					if (cancelMaintenance) {
+						maintenanceStartTime = -1;
+						maintenanceTimerStarted = false;
+						cancelMaintenance = false;
+						timeLastMessage = 0;
+						continue;
+					}
+
+					// Check time remaining
+					long remaining = maintenanceStartTime - System.currentTimeMillis();
+					if (remaining <= 0) {
+						// Start maintenance
+
+						// Enable maintenance mode
+						Centuria.gameServer.maintenance = true;
+
+						// Dispatch maintenance event
+						EventBus.getInstance().dispatchEvent(new MaintenanceStartEvent());
+
+						// Cancel if maintenance is disabled
+						if (!Centuria.gameServer.maintenance) {
+							// Reset schedule
+							maintenanceStartTime = -1;
+							maintenanceTimerStarted = false;
+							cancelMaintenance = false;
+							timeLastMessage = 0;
+							continue;
+						}
+
+						// Disconnect everyone but the staff
+						for (Player plr : Centuria.gameServer.getPlayers()) {
+							if (!plr.account.getSaveSharedInventory().containsItem("permissions")
+									|| !GameServer.hasPerm(plr.account.getSaveSharedInventory().getItem("permissions")
+											.getAsJsonObject().get("permissionLevel").getAsString(), "admin")) {
+								// Dispatch event
+								EventBus.getInstance().dispatchEvent(
+										new AccountDisconnectEvent(plr.account, null, DisconnectType.MAINTENANCE));
+
+								plr.client.sendPacket("%xt%ua%-1%__FORCE_RELOGIN__%");
+							}
+						}
+
+						// Wait a bit
+						int i = 0;
+						while (Stream.of(Centuria.gameServer.getPlayers())
+								.filter(plr -> !plr.account.getSaveSharedInventory().containsItem("permissions")
+										|| !GameServer.hasPerm(
+												plr.account.getSaveSharedInventory().getItem("permissions")
+														.getAsJsonObject().get("permissionLevel").getAsString(),
+												"admin"))
+								.findFirst().isPresent()) {
+							i++;
+							if (i == 30)
+								break;
+
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+							}
+						}
+						for (Player plr : Centuria.gameServer.getPlayers()) {
+							if (!plr.account.getSaveSharedInventory().containsItem("permissions")
+									|| !GameServer.hasPerm(plr.account.getSaveSharedInventory().getItem("permissions")
+											.getAsJsonObject().get("permissionLevel").getAsString(), "admin")) {
+								// Disconnect from the game server
+								plr.client.disconnect();
+
+								// Disconnect it from the chat server
+								for (ChatClient cl : Centuria.chatServer.getClients()) {
+									if (cl.getPlayer().getAccountID().equals(plr.account.getAccountID())) {
+										cl.disconnect();
+									}
+								}
+							}
+						}
+
+						// Reset schedule
+						maintenanceStartTime = -1;
+						maintenanceTimerStarted = false;
+						cancelMaintenance = false;
+						timeLastMessage = 0;
+
+						// Send message
+						for (Player plr : Centuria.gameServer.getPlayers()) {
+							if (plr != null) {
+								if (plr.getObject(FeralTweaksClientObject.class) == null
+										|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+									// Send as DM
+									Centuria.systemMessage(plr,
+											"Server maintenance has started!\n\nOnly admins can remain ingame.", true);
+								} else {
+									// Show popup
+									OkPopupPacket pkt = new OkPopupPacket();
+									pkt.title = "Server Maintenance";
+									pkt.message = "Server maintenance has started!\n\nOnly admins can remain ingame.";
+									plr.client.sendPacket(pkt);
+								}
+							}
+						}
+						continue;
+					}
+
+					// Countdown messages
+					String message = null;
+					remaining = (remaining / 1000 / 60);
+
+					// Find message
+					switch ((int) remaining) {
+
+					case 15:
+					case 30:
+					case 60:
+					case 120:
+					case 180:
+					case 240: {
+						// Few hours or minutes
+						if (remaining < 60)
+							message = "Servers are scheduled to go down for maintenance soon!\n" //
+									+ "\n"//
+									+ "Servers will go down in " + remaining
+									+ "minute(s) for maintenance, during this time the servers will be unavailable.\n" //
+									+ "\n" //
+									+ "We will be back soon!";
+						else
+							message = "Servers are scheduled to go down for maintenance soon!\n" //
+									+ "\n"//
+									+ "Servers will go down in " + (remaining / 60)
+									+ "hour(s) for maintenance, during this time the servers will be unavailable.\n" //
+									+ "\n" //
+									+ "We will be back soon!";
+						break;
+					}
+
+					case 10:
+					case 5:
+					case 3:
+					case 1: {
+						// Very little time
+						message = "WARNING! Servers maintenance is gonna start very soon!\n" //
+								+ "\n" //
+								+ "Only " + remaining
+								+ "minute(s) remaining before the servers go down for maintenance!";
+						break;
+					}
+
+					default: {
+						if (remaining > 240) {
+							SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.US);
+							fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+							// More than 4 hours remaining
+							// Check amount of time since last message
+							long timeSinceLast = System.currentTimeMillis() - timeLastMessage;
+							if (timeSinceLast >= (12 * 60 * 60 * 1000)) {
+								timeLastMessage = System.currentTimeMillis();
+
+								// Create message
+								message = "There is upcoming server maintenance scheduled.\n" //
+										+ "\n" //
+										+ "Servers are scheduled to go down for maintenance at "
+										+ fmt.format(new Date(maintenanceStartTime))
+										+ " UTC, during this time the servers will be unavailable." //
+										+ "\n" //
+										+ "We will be back soon!";
+							}
+						}
+					}
+
+					}
+
+					// Check
+					if (message != null) {
+						// Send message
+						for (Player plr : Centuria.gameServer.getPlayers()) {
+							if (plr != null) {
+								if (plr.getObject(FeralTweaksClientObject.class) == null
+										|| !plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+									// Send as DM
+									Centuria.systemMessage(plr, message, true);
+								} else {
+									// Show popup
+									OkPopupPacket pkt = new OkPopupPacket();
+									pkt.title = "Upcoming Server Maintenance";
+									pkt.message = message;
+									plr.client.sendPacket(pkt);
+								}
+							}
+						}
+					}
+				}
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}, "Server maintenance scheduler");
 		th.setDaemon(true);
 		th.start();
 	}
@@ -667,11 +885,19 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void registerCommands(ModuleCommandSyntaxListEvent event) {
 		if (event.hasPermission("moderator")) {
+			// Warnings, announcements, etc
 			event.addCommandSyntaxMessage("announce \"<message>\" [\"<title>\"]");
 			event.addCommandSyntaxMessage("warn \"<player>\" \"<message>\" [\"<title>\"]");
 			event.addCommandSyntaxMessage(
 					"request \"<player>\" \"<message>\" [\"<title>\"] [\"<yes-button>\"] [\"<no-button>\"]");
 			event.addCommandSyntaxMessage("notify \"<player>\" \"<message>\"");
+
+			// Maintenance
+			if (event.hasPermission("admin")) {
+				event.addCommandSyntaxMessage("startmaintenancetimer <timer length in minutes>");
+				event.addCommandSyntaxMessage("schedulemaintenance \"<MM/dd/yyyy HH:mm>\" (expects date/time in UTC)");
+				event.addCommandSyntaxMessage("cancelmaintenance");
+			}
 		}
 	}
 
@@ -679,6 +905,105 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public void runCommand(ChatCommandEvent event) {
 		if (event.hasPermission("moderator")) {
 			switch (event.getCommandID().toLowerCase()) {
+
+			case "startmaintenancetimer": {
+				if (event.hasPermission("admin")) {
+					// Maintenance with timer
+
+					// Set handled
+					event.setHandled();
+
+					// Check arguments
+					if (event.getCommandArguments().length == 0) {
+						event.respond("Error: missing argument: timer length");
+						return;
+					} else if (!event.getCommandArguments()[0].matches("^[0-9]+$")) {
+						event.respond("Error: invalid argument: timer length: not a valid number");
+						return;
+					}
+
+					// Check
+					if (!maintenanceTimerStarted || cancelMaintenance) {
+						// Schedule
+						scheduleMaintenance(event.getAccount(), System.currentTimeMillis()
+								+ (Integer.parseInt(event.getCommandArguments()[0]) * 60 * 1000));
+						event.respond("Maintenance scheduled");
+					} else {
+						// Error
+						event.respond("Error: there is a maintenance scheduled already");
+						return;
+					}
+
+					return;
+				}
+			}
+
+			case "schedulemaintenance": {
+				if (event.hasPermission("admin")) {
+					// Maintenance with timer
+
+					// Set handled
+					event.setHandled();
+
+					// Check arguments
+					if (event.getCommandArguments().length == 0) {
+						event.respond("Error: missing argument: maintenance start date and time (UTC)");
+						return;
+					}
+
+					// Parse
+					SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+					fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+					Date start;
+					try {
+						start = fmt.parse(event.getCommandArguments()[0]);
+					} catch (Exception e) {
+						event.respond(
+								"Error: invalid argument: date/time: not a valid date/time value (expected a value formatted 'MM/dd/yyyy HH:mm')");
+						return;
+					}
+
+					// Check
+					if (!maintenanceTimerStarted || cancelMaintenance) {
+						// Schedule
+						scheduleMaintenance(event.getAccount(), start.getTime());
+						event.respond("Maintenance scheduled");
+					} else {
+						// Error
+						event.respond("Error: there is a maintenance scheduled already");
+						return;
+					}
+
+					return;
+				}
+			}
+
+			case "cancelmaintenance": {
+				if (event.hasPermission("admin")) {
+					// Canceling maintenance
+
+					// Set handled
+					event.setHandled();
+
+					// Check
+					if (maintenanceTimerStarted && !cancelMaintenance) {
+						event.respond("Maintenance cancelled");
+						cancelMaintenance = true;
+					} else {
+						event.respond("Error: no maintenance scheduled");
+						return;
+					}
+
+					// Log
+					HashMap<String, String> details = new HashMap<String, String>();
+					EventBus.getInstance()
+							.dispatchEvent(new MiscModerationEvent("cancelmaintenance", "Server maintenance cancelled",
+									details, event.getClient().getPlayer().getAccountID(), null));
+
+					return;
+				}
+			}
+
 			case "announce": {
 				// Handle announcement commands
 
@@ -897,6 +1222,21 @@ public class FeralTweaksModule implements ICenturiaModule {
 			}
 			}
 		}
+	}
+
+	private void scheduleMaintenance(CenturiaAccount account, long startTime) {
+		maintenanceStartTime = startTime;
+		cancelMaintenance = false;
+		maintenanceTimerStarted = true;
+
+		// Log
+		SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.US);
+		fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+		HashMap<String, String> details = new HashMap<String, String>();
+		details.put("Maintenance start date and time", fmt.format(new Date(startTime)) + " UTC");
+		EventBus.getInstance().dispatchEvent(new MiscModerationEvent("maintenancescheduled",
+				"Server maintenance was scheduled", details, account.getAccountID(), null));
+
 	}
 
 	private boolean verifyVersionRequirement(String version, String versionCheck) {
