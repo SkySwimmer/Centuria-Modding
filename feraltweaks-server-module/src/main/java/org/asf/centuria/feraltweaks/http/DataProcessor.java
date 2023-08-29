@@ -4,28 +4,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Base64;
-
 import org.asf.centuria.Centuria;
-import org.asf.centuria.accounts.AccountManager;
-import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.feraltweaks.FeralTweaksModule;
 import org.asf.centuria.modules.ModuleManager;
-import org.asf.connective.https.ConnectiveHTTPSServer;
-import org.asf.rats.processors.HttpGetProcessor;
+import org.asf.connective.NetworkedConnectiveHttpServer;
+import org.asf.connective.RemoteClient;
+import org.asf.connective.TlsSecuredHttpServer;
+import org.asf.connective.processors.HttpRequestProcessor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class DataProcessor extends HttpGetProcessor {
+public class DataProcessor extends HttpRequestProcessor {
 
 	@Override
-	public HttpGetProcessor createNewInstance() {
+	public HttpRequestProcessor createNewInstance() {
 		return new DataProcessor();
 	}
 
@@ -35,105 +32,25 @@ public class DataProcessor extends HttpGetProcessor {
 	}
 
 	@Override
-	public void process(Socket client) {
+	public void process(String pth, String method, RemoteClient client) {
 		try {
 			// Retrieve path
-			String path = getRequest().path.substring(path().length());
+			String path = getRequest().getRequestPath().substring(path().length());
 
 			// Sanitize path
 			if (path.contains("..")) {
-				setResponseCode(403);
-				setResponseMessage("Access to parent directories denied");
+				setResponseStatus(403, "Access to parent directories denied");
 				return;
 			}
 
+			// Retrieve module
 			FeralTweaksModule module = (FeralTweaksModule) ModuleManager.getInstance().getModule("feraltweaks");
-			if (path.startsWith("/feraltweaks/") || path.equals("/feraltweaks") || path.startsWith("/clientmods/")
-					|| path.equals("/clientmods")) {
-				// Parse JWT payload
-				if (!getRequest().headers.containsKey("Authorization")) {
-					this.setResponseCode(401);
-					this.setResponseMessage("Authorization Required");
-					return;
-				}
-				String token = this.getHeader("Authorization").substring("Bearer ".length());
-				if (token.isBlank()) {
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					return;
-				}
-
-				// Parse token
-				if (token.isBlank()) {
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					return;
-				}
-
-				// Verify signature
-				String verifyD = token.split("\\.")[0] + "." + token.split("\\.")[1];
-				String sig = token.split("\\.")[2];
-				if (!Centuria.verify(verifyD.getBytes("UTF-8"), Base64.getUrlDecoder().decode(sig))) {
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					return;
-				}
-
-				// Verify expiry
-				JsonObject jwtPl = JsonParser
-						.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
-						.getAsJsonObject();
-				if (!jwtPl.has("exp") || jwtPl.get("exp").getAsLong() < System.currentTimeMillis() / 1000) {
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					return;
-				}
-
-				JsonObject payload = JsonParser
-						.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
-						.getAsJsonObject();
-
-				// Find account
-				String id = payload.get("uuid").getAsString();
-
-				// Check existence
-				if (id == null) {
-					// Invalid details
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					this.setResponseCode(422);
-					return;
-				}
-
-				// Find account
-				CenturiaAccount acc = AccountManager.getInstance().getAccount(id);
-				if (acc == null) {
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"invalid_credential\"}");
-					return;
-				}
-
-				// Check if FT is enabled
-				if (!module.enableByDefault && !acc.getSaveSharedInventory().containsItem("feraltweaks")
-						&& !acc.getSaveSpecificInventory().containsItem("feraltweaks")) {
-					// No access
-					this.setResponseCode(403);
-					this.setResponseMessage("Access denied");
-					this.setBody("text/json", "{\"error\":\"feraltweaks_not_enabled\"}");
-					return;
-				}
-			}
 
 			// Check file
 			File reqFile = new File(module.ftDataPath, path);
 			if (reqFile.isDirectory()) {
-				this.setResponseCode(404);
-				this.setResponseMessage("Not found");
-				this.setBody("text/json", "{\"error\":\"file_not_found\"}");
+				this.setResponseStatus(404, "Not found");
+				this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
 				return;
 			}
 			if ((!reqFile.exists() || (!reqFile.getParentFile().getCanonicalPath()
@@ -158,9 +75,8 @@ public class DataProcessor extends HttpGetProcessor {
 					}
 				}
 
-				this.setResponseCode(404);
-				this.setResponseMessage("Not found");
-				this.setBody("text/json", "{\"error\":\"file_not_found\"}");
+				this.setResponseStatus(404, "Not found");
+				this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
 				return;
 			}
 
@@ -243,10 +159,13 @@ public class DataProcessor extends HttpGetProcessor {
 				JsonObject serverBlock = createOrGetJsonObject(serverInfo, "server");
 				JsonObject hosts = createOrGetJsonObject(serverBlock, "hosts");
 				hosts.addProperty("director",
-						((Centuria.directorServer instanceof ConnectiveHTTPSServer) ? "https" : "http") + "://"
-								+ Centuria.discoveryAddress + ":" + Centuria.directorServer.getPort() + "/");
-				hosts.addProperty("api", ((this.getServer() instanceof ConnectiveHTTPSServer) ? "https" : "http")
-						+ "://" + Centuria.discoveryAddress + ":" + this.getServer().getPort() + "/");
+						((Centuria.directorServer instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
+								+ Centuria.discoveryAddress + ":"
+								+ ((NetworkedConnectiveHttpServer) Centuria.directorServer).getListenPort() + "/");
+				hosts.addProperty("api",
+						((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
+								+ Centuria.discoveryAddress + ":"
+								+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/");
 				hosts.addProperty("chat", Centuria.discoveryAddress);
 				hosts.addProperty("voiceChat", Centuria.discoveryAddress);
 				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
@@ -283,9 +202,8 @@ public class DataProcessor extends HttpGetProcessor {
 			getResponse().setContent(MainFileMap.getInstance().getContentType(reqFile.getName()),
 					new FileInputStream(reqFile), reqFile.length());
 		} catch (Exception e) {
-			setResponseCode(500);
-			setResponseMessage("Internal Server Error");
-			Centuria.logger.error(getRequest().path + " failed: 500: Internal Server Error", e);
+			setResponseStatus(500, "Internal Server Error");
+			Centuria.logger.error(getRequest().getRequestPath() + " failed: 500: Internal Server Error", e);
 		}
 	}
 
