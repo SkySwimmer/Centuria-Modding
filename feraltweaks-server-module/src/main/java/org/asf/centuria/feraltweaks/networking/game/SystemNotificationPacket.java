@@ -1,4 +1,4 @@
-package org.asf.centuria.feraltweaks.gamepackets;
+package org.asf.centuria.feraltweaks.networking.game;
 
 import java.io.IOException;
 
@@ -7,27 +7,29 @@ import org.asf.centuria.data.XtWriter;
 import org.asf.centuria.networking.smartfox.SmartfoxClient;
 import org.asf.centuria.packets.xt.IXtPacket;
 
-public class ErrorPopupPacket implements IXtPacket<ErrorPopupPacket> {
+public class SystemNotificationPacket implements IXtPacket<SystemNotificationPacket> {
 
-	public String title;
-	public String message;
-	
+	public String message = "";
+	public String icon = null;
+
 	@Override
 	public String id() {
 		return "mod:ft";
 	}
 
 	@Override
-	public ErrorPopupPacket instantiate() {
-		return new ErrorPopupPacket();
+	public SystemNotificationPacket instantiate() {
+		return new SystemNotificationPacket();
 	}
 
 	@Override
 	public void build(XtWriter writer) throws IOException {
 		writer.writeInt(DATA_PREFIX);
-		writer.writeString("errorpopup");
-		writer.writeString(title);
+		writer.writeString("sysnotification");
 		writer.writeString(message);
+		writer.writeInt(icon != null ? 1 : 0);
+		if (icon != null)
+			writer.writeString(icon);
 		writer.writeString(DATA_SUFFIX);
 	}
 

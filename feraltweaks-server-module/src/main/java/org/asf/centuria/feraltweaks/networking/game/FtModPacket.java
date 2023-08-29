@@ -1,4 +1,4 @@
-package org.asf.centuria.feraltweaks.gamepackets;
+package org.asf.centuria.feraltweaks.networking.game;
 
 import java.io.IOException;
 

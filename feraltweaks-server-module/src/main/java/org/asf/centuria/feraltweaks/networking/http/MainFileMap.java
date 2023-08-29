@@ -1,4 +1,4 @@
-package org.asf.centuria.feraltweaks.http;
+package org.asf.centuria.feraltweaks.networking.http;
 
 import java.io.File;
 import java.io.IOException;

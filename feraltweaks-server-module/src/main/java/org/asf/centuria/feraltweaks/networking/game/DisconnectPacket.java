@@ -1,4 +1,4 @@
-package org.asf.centuria.feraltweaks.gamepackets;
+package org.asf.centuria.feraltweaks.networking.game;
 
 import java.io.IOException;
 
@@ -7,10 +7,11 @@ import org.asf.centuria.data.XtWriter;
 import org.asf.centuria.networking.smartfox.SmartfoxClient;
 import org.asf.centuria.packets.xt.IXtPacket;
 
-public class OkPopupPacket implements IXtPacket<OkPopupPacket> {
+public class DisconnectPacket implements IXtPacket<DisconnectPacket> {
 
 	public String title;
 	public String message;
+	public String button;
 	
 	@Override
 	public String id() {
@@ -18,16 +19,17 @@ public class OkPopupPacket implements IXtPacket<OkPopupPacket> {
 	}
 
 	@Override
-	public OkPopupPacket instantiate() {
-		return new OkPopupPacket();
+	public DisconnectPacket instantiate() {
+		return new DisconnectPacket();
 	}
 
 	@Override
 	public void build(XtWriter writer) throws IOException {
 		writer.writeInt(DATA_PREFIX);
-		writer.writeString("okpopup");
+		writer.writeString("disconnect");
 		writer.writeString(title);
 		writer.writeString(message);
+		writer.writeString(button);
 		writer.writeString(DATA_SUFFIX);
 	}
 
