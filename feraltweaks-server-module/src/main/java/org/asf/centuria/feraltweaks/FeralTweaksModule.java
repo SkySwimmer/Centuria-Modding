@@ -39,6 +39,7 @@ import org.asf.centuria.modules.events.chatcommands.ModuleCommandSyntaxListEvent
 import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
 import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
+import org.asf.centuria.networking.gameserver.GameServer;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -57,6 +58,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	 * FeralTweaks Protocol Version
 	 */
 	public static int FT_VERSION = 2;
+
 	public String ftUnsupportedErrorMessage;
 	public String ftOutdatedErrorMessage;
 	public String modDataVersion;
@@ -68,6 +70,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public String upstreamServerJsonURL;
 
 	public HashMap<String, Boolean> replicatingObjects = new HashMap<String, Boolean>();
+
+	private HashMap<String, String> playerNames = new HashMap<String, String>();
 
 	@Override
 	public String id() {
@@ -142,6 +146,55 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 		// Bind late events
 		EventBus.getInstance().addEventReceiver(new LateEventContainer());
+
+		// Start username refresher
+		Thread th = new Thread(() -> {
+			while (true) {
+				// Go through users
+				ArrayList<String> users = new ArrayList<String>();
+				if (Centuria.gameServer != null)
+					for (Player plr : Centuria.gameServer.getPlayers()) {
+						users.add(plr.account.getAccountID());
+						synchronized (playerNames) {
+							String nm = GameServer.getPlayerNameWithPrefix(plr.account);
+							if (!playerNames.containsKey(plr.account.getAccountID())
+									|| !playerNames.get(plr.account.getAccountID()).equals(nm)) {
+								updateUser(plr);
+								playerNames.put(plr.account.getAccountID(), nm);
+							}
+						}
+					}
+				synchronized (playerNames) {
+					String[] names = playerNames.keySet().toArray(t -> new String[t]);
+					for (String id : names) {
+						if (!users.contains(id))
+							playerNames.remove(id);
+					}
+				}
+				try {
+					Thread.sleep(30000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}, "User update handler (FeralTweaks)");
+		th.setDaemon(true);
+		th.start();
+	}
+
+	private void updateUser(Player plr) {
+		// Send username update packet to all players
+		PlayerDisplayNameUpdatePacket pkt = new PlayerDisplayNameUpdatePacket();
+		pkt.id = plr.account.getAccountID();
+		pkt.name = GameServer.getPlayerNameWithPrefix(plr.account);
+		for (Player plr2 : Centuria.gameServer.getPlayers()) {
+			if (plr2 != null) {
+				if (plr2.getObject(FeralTweaksClientObject.class) != null
+						&& plr2.getObject(FeralTweaksClientObject.class).isEnabled()) {
+					// Send
+					plr2.client.sendPacket(pkt);
+				}
+			}
+		}
 	}
 
 	private class LateEventContainer implements IEventReceiver {
@@ -402,8 +455,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 						break; // Invalid
 
 					// Check handshake
-					if (protVer != FT_VERSION
-							|| !dataVer.equals(modDataVersion + "/" + Centuria.SERVER_UPDATE_VERSION)) {
+					if (protVer != FT_VERSION || (!dataVer.equals("undefined")
+							&& !dataVer.equals(modDataVersion + "/" + Centuria.SERVER_UPDATE_VERSION))) {
 						// Handshake failure
 						event.getLoginResponseParameters().addProperty("errorMessage", ftOutdatedErrorMessage);
 						event.setStatus(-26);
@@ -574,7 +627,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 					// Send username update packet to all players
 					PlayerDisplayNameUpdatePacket pkt = new PlayerDisplayNameUpdatePacket();
 					pkt.id = event.getAccount().getAccountID();
-					pkt.name = event.getAccount().getDisplayName();
+					pkt.name = GameServer.getPlayerNameWithPrefix(event.getAccount());
 					for (Player plr : Centuria.gameServer.getPlayers()) {
 						if (plr != null) {
 							if (plr.getObject(FeralTweaksClientObject.class) != null
@@ -583,6 +636,11 @@ public class FeralTweaksModule implements ICenturiaModule {
 								plr.client.sendPacket(pkt);
 							}
 						}
+					}
+
+					// Set
+					synchronized (playerNames) {
+						playerNames.put(pkt.id, pkt.name);
 					}
 					break;
 				}

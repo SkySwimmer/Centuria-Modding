@@ -674,11 +674,35 @@ namespace feraltweaks
 
                                     string userID = reader.ReadString();
                                     string displayName = reader.ReadString();
-                                    if ( UserManager.instance != null)
+                                    if (UserManager.instance != null)
                                     {
-                                        UserInfo i = UserManager.instance._users.GetByUUID(userID);;
+                                        UserInfo i = UserManager.instance._users.GetByUUID(userID);
                                         if (i != null)
+                                        {
                                             i.Name = displayName;
+
+                                            // Update avatar
+                                            updateAvi(i);
+                                        }
+
+                                        // Update self if needed
+                                        if (UserManager.instance._me != null && UserManager.instance._me.UUID == userID)
+                                        {
+                                            UserManager.instance._me.Name = displayName;
+
+                                            // Update avatar
+                                            updateAvi(UserManager.instance._me);
+
+                                            // Update HUD
+                                            UI_Window_HUD hud = CoreWindowManager.GetWindow<UI_Window_HUD>();
+                                            if (hud != null)
+                                            {
+                                                foreach (UI_PlayerStats bar in hud.gameObject.GetComponentsInChildren<UI_PlayerStats>())
+                                                {
+                                                    bar.RefreshName();
+                                                }
+                                            }
+                                        }
                                     }
                                     break;
                                 }
@@ -709,6 +733,15 @@ namespace feraltweaks
             }
 
             return false;
+        }
+
+        private static void updateAvi(UserInfo info)
+        {
+            AvatarBase av = info.Avatar;
+            if (av != null && av._bubble != null)
+            {
+                av._bubble._namebarText.text = info.Name;
+            }
         }
 
         /// <summary>
