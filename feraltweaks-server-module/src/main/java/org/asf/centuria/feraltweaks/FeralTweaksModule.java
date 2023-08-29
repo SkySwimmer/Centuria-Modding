@@ -319,14 +319,14 @@ public class FeralTweaksModule implements ICenturiaModule {
 							message = "Servers are scheduled to go down for maintenance soon!\n" //
 									+ "\n"//
 									+ "Servers will go down in " + remaining
-									+ "minute(s) for maintenance, during this time the servers will be unavailable.\n" //
+									+ " minute(s) for maintenance, during this time the servers will be unavailable.\n" //
 									+ "\n" //
 									+ "We will be back soon!";
 						else
 							message = "Servers are scheduled to go down for maintenance soon!\n" //
 									+ "\n"//
 									+ "Servers will go down in " + (remaining / 60)
-									+ "hour(s) for maintenance, during this time the servers will be unavailable.\n" //
+									+ " hour(s) for maintenance, during this time the servers will be unavailable.\n" //
 									+ "\n" //
 									+ "We will be back soon!";
 						break;
@@ -340,7 +340,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 						message = "WARNING! Servers maintenance is gonna start very soon!\n" //
 								+ "\n" //
 								+ "Only " + remaining
-								+ "minute(s) remaining before the servers go down for maintenance!";
+								+ " minute(s) remaining before the servers go down for maintenance!";
 						break;
 					}
 
@@ -353,8 +353,6 @@ public class FeralTweaksModule implements ICenturiaModule {
 							// Check amount of time since last message
 							long timeSinceLast = System.currentTimeMillis() - timeLastMessage;
 							if (timeSinceLast >= (12 * 60 * 60 * 1000)) {
-								timeLastMessage = System.currentTimeMillis();
-
 								// Create message
 								message = "There is upcoming server maintenance scheduled.\n" //
 										+ "\n" //
@@ -363,6 +361,31 @@ public class FeralTweaksModule implements ICenturiaModule {
 										+ " UTC, during this time the servers will be unavailable.\n" //
 										+ "\n" //
 										+ "We will be back soon!";
+							}
+						}
+
+						if (message == null) {
+							if (timeLastMessage == 0) {
+								// Generate message
+								if (remaining <= 10) {
+									message = "WARNING! Servers maintenance is gonna start very soon!\n" //
+											+ "\n" //
+											+ "Only " + remaining
+											+ " minute(s) remaining before the servers go down for maintenance!";
+								} else if (remaining < 60)
+									message = "Servers are scheduled to go down for maintenance soon!\n" //
+											+ "\n"//
+											+ "Servers will go down in " + remaining
+											+ " minute(s) for maintenance, during this time the servers will be unavailable.\n" //
+											+ "\n" //
+											+ "We will be back soon!";
+								else
+									message = "Servers are scheduled to go down for maintenance soon!\n" //
+											+ "\n"//
+											+ "Servers will go down in " + (remaining / 60)
+											+ " hour(s) for maintenance, during this time the servers will be unavailable.\n" //
+											+ "\n" //
+											+ "We will be back soon!";
 							}
 						}
 					}
@@ -388,6 +411,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 							}
 						}
 					}
+					timeLastMessage = System.currentTimeMillis();
 				}
 				try {
 					Thread.sleep(1000);
