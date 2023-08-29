@@ -360,7 +360,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 										+ "\n" //
 										+ "Servers are scheduled to go down for maintenance at "
 										+ fmt.format(new Date(maintenanceStartTime))
-										+ " UTC, during this time the servers will be unavailable." //
+										+ " UTC, during this time the servers will be unavailable.\n" //
 										+ "\n" //
 										+ "We will be back soon!";
 							}
