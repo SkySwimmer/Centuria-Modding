@@ -668,6 +668,20 @@ namespace feraltweaks
                                     });
                                     break;
                                 }
+                            case "displaynameupdate":
+                                {
+                                    // Display name update
+
+                                    string userID = reader.ReadString();
+                                    string displayName = reader.ReadString();
+                                    if ( UserManager.instance != null)
+                                    {
+                                        UserInfo i = UserManager.instance._users.GetByUUID(userID);;
+                                        if (i != null)
+                                            i.Name = displayName;
+                                    }
+                                    break;
+                                }
                             default:
                                 {
                                     FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Unhandled FeralTweaks packet: " + id + ": " + reader);

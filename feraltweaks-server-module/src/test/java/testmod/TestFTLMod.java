@@ -19,7 +19,6 @@ public class TestFTLMod extends FeralTweaksMod {
 	@Override
 	public void init() {
 		this.registerPacket(new TestPacket());
-		this.addModHandshakeRequirementForSelf(version());
 	}
 
 }

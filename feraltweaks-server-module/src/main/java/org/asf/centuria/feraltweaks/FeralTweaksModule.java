@@ -21,6 +21,7 @@ import org.asf.centuria.feraltweaks.gamepackets.ErrorPopupPacket;
 import org.asf.centuria.feraltweaks.gamepackets.FtModPacket;
 import org.asf.centuria.feraltweaks.gamepackets.NotificationPacket;
 import org.asf.centuria.feraltweaks.gamepackets.OkPopupPacket;
+import org.asf.centuria.feraltweaks.gamepackets.PlayerDisplayNameUpdatePacket;
 import org.asf.centuria.feraltweaks.gamepackets.YesNoPopupPacket;
 import org.asf.centuria.feraltweaks.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
@@ -569,6 +570,20 @@ public class FeralTweaksModule implements ICenturiaModule {
 					// Handshake success
 					event.getClient().addObject(new FeralTweaksClientObject(true, ver));
 					feralTweaks = true;
+
+					// Send username update packet to all players
+					PlayerDisplayNameUpdatePacket pkt = new PlayerDisplayNameUpdatePacket();
+					pkt.id = event.getAccount().getAccountID();
+					pkt.name = event.getAccount().getDisplayName();
+					for (Player plr : Centuria.gameServer.getPlayers()) {
+						if (plr != null) {
+							if (plr.getObject(FeralTweaksClientObject.class) != null
+									&& plr.getObject(FeralTweaksClientObject.class).isEnabled()) {
+								// Send
+								plr.client.sendPacket(pkt);
+							}
+						}
+					}
 					break;
 				}
 			}

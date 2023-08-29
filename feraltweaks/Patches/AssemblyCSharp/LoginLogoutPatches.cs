@@ -144,7 +144,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         NetworkManager.instance._uuid = null;
                     }
                     Avatar_Local.instance = null;
-                    XPManager.instance.PlayerLevel = null;                    
+                    XPManager.instance.PlayerLevel = null;
                     NotificationManager.instance.loggedNotifications.Clear();
                     GlidingManager.instance.MStart();
                     reloadGlidingManager = true;
@@ -152,6 +152,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     CoreBundleManager2.UnloadAllLevelAssetBundles();
                     CoreLevelManager.LoadLevelSingle("Loading");
                     UserManager.Me = null;
+                    UserManager.instance._users.ClearUsersByUUID();
                     actionsToRun.Add(() =>
                     {
                         UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
