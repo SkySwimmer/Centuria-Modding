@@ -5,8 +5,16 @@ import org.asf.centuria.feraltweaks.networking.game.DisconnectPacket;
 import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
+import org.asf.centuria.modules.events.updates.ServerUpdateEvent;
 
 public class DisconnectHandler implements IEventReceiver {
+	private boolean updateShutdown;
+
+	@EventListener
+	public void updateServer(ServerUpdateEvent event) {
+		if (!event.hasTimer())
+			updateShutdown = true;
+	}
 
 	@EventListener
 	public void disconnect(AccountDisconnectEvent event) {
@@ -40,7 +48,10 @@ public class DisconnectHandler implements IEventReceiver {
 
 			case SERVER_SHUTDOWN:
 				pkt.title = "Server Closed";
-				pkt.message = "The server has been temporarily shut down, hope to be back soon!";
+				if (updateShutdown)
+					pkt.message = "The server has been shut down for a update, will be back soon!";
+				else
+					pkt.message = "The server has been temporarily shut down, hope to be back soon!";
 				break;
 
 			case UNKNOWN:
