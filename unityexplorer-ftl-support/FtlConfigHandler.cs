@@ -19,6 +19,7 @@ namespace FtlSupportWrappers.UnityExplorer
         public FtlConfigHandler(string configDir)
         {
             this.configDir = configDir;
+            LoadConfig();
         }
 
         public override void Init()

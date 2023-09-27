@@ -33,11 +33,11 @@ namespace FtlSupportWrappers.UnityExplorer
             ExplorerCore.Init(this);
         }
 
-        public string ExplorerFolderDestination => "FeralTweaks/mods";
+        public string ExplorerFolderDestination => ConfigDir;
 
-        public string ExplorerFolderName => ModBaseDirectory == null ? "unityexplorer" : Path.GetFileName(ModBaseDirectory);
+        public string ExplorerFolderName => "data";
 
-        public string UnhollowedModulesFolder => ModBaseDirectory == null ? "FeralTweaks/cache/assemblies" : Path.GetDirectoryName(ModBaseDirectory);
+        public string UnhollowedModulesFolder => "FeralTweaks/cache/assemblies";
 
         public ConfigHandler ConfigHandler => confHandler;
 
