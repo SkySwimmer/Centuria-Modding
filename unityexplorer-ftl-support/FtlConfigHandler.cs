@@ -44,6 +44,8 @@ namespace FtlSupportWrappers.UnityExplorer
             // Set entry
             if (!config.ContainsKey(element.Name))
                 config[element.Name] = JsonConvert.SerializeObject(element.Value);
+            else
+                element.Value = JsonConvert.DeserializeObject<T>(config[element.Name]);
         }
 
         public override T GetConfigValue<T>(ConfigElement<T> element)
@@ -51,7 +53,9 @@ namespace FtlSupportWrappers.UnityExplorer
             // Find entry
             if (config.ContainsKey(element.Name))
             {
-                return JsonConvert.DeserializeObject<T>(config[element.Name]);
+                T val = JsonConvert.DeserializeObject<T>(config[element.Name]);
+                element.Value = val;
+                return val;
             }
 			throw new IOException("Could not find entry: " + element.Name);
         }
