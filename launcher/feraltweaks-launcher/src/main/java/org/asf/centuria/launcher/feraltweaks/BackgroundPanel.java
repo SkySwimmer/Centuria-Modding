@@ -1,6 +1,8 @@
 package org.asf.centuria.launcher.feraltweaks;
 
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
@@ -22,6 +24,12 @@ public class BackgroundPanel extends JPanel {
 		super.paintComponent(g);
 		if (img == null)
 			return;
+
+		// Enable antialiasing
+		Graphics2D gr = (Graphics2D) g;
+		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		gr.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
 		// Calculate sizes
 		double wrh = (double) img.getWidth() / (double) img.getHeight();
 		int newWidth = getWidth();

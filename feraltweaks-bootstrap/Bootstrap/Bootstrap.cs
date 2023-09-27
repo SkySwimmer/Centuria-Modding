@@ -868,6 +868,44 @@ namespace FeralTweaksBootstrap
                 }
             }
 
+            // Check unstrip folder
+            bool unstrip = false;
+            if (Directory.Exists("FeralTweaks/cache/unity"))
+            {
+                if (!File.Exists("FeralTweaks/cache/assemblies/unstripped"))
+                {
+                    LogInfo("Unity assemblies found, regenerating interop assemblies with unstripping enabled...");
+                    regenerateAssemblies = true;
+                }
+                unstrip = true;
+            }
+
+            // Add to Cecil
+            string trusted = (string)AppDomain.CurrentDomain.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
+            if (trusted == null)
+                trusted = "";
+
+            // Find assemblies
+            foreach (FileInfo asm in new DirectoryInfo("CoreCLR").GetFiles("*.dll"))
+                if (trusted == "")
+                    trusted = asm.FullName;
+                else
+                    trusted += Path.PathSeparator + asm.FullName;
+
+            // Add unity if needed
+            if (unstrip)
+            {
+                // Find assemblies
+                foreach (FileInfo asm in new DirectoryInfo("FeralTweaks/cache/unity").GetFiles("*.dll"))
+                    if (trusted == "")
+                        trusted = asm.FullName;
+                    else
+                        trusted += Path.PathSeparator + asm.FullName;
+            }
+
+            // Set data
+            AppDomain.CurrentDomain.SetData("TRUSTED_PLATFORM_ASSEMBLIES", trusted);
+
             // Generate assemblies
             if (!File.Exists("FeralTweaks/cache/assemblies/complete") || regenerateAssemblies)
             {
@@ -1060,10 +1098,14 @@ namespace FeralTweaksBootstrap
                 opts.GameAssemblyPath = gameAssemblyPath;
                 opts.Source = new AltDirCecilAssemblyResolver("FeralTweaks/cache/dummy").ToList();
                 opts.OutputDir = "FeralTweaks/cache/assemblies";
+                if (unstrip)
+                    opts.UnityBaseLibsDir = "FeralTweaks/cache/unity";
                 Il2CppInteropGenerator.Create(opts).AddLogger(new PreloaderLogger()).AddInteropAssemblyGenerator().Run();
 
                 // Done
                 File.Create("FeralTweaks/cache/assemblies/complete");
+                if (unstrip && !File.Exists("FeralTweaks/cache/assemblies/unstripped"))
+                    File.Create("FeralTweaks/cache/assemblies/unstripped");
 
                 // Write hash
                 FileStream strmI = File.OpenRead(dataPath + "/globalgamemanagers");
@@ -1099,23 +1141,12 @@ namespace FeralTweaksBootstrap
                 {
                     return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"));
                 }
+                else if (File.Exists("FeralTweaks/cache/unity/" + nm.Name + ".dll"))
+                {
+                    return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/unity/" + nm.Name + ".dll"));
+                }
                 return null;
             };
-
-            // Add to Cecil
-            string trusted = (string)AppDomain.CurrentDomain.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
-            if (trusted == null)
-                trusted = "";
-
-            // Find assemblies
-            foreach (FileInfo asm in new DirectoryInfo("CoreCLR").GetFiles("*.dll"))
-                if (trusted == "")
-                    trusted = asm.FullName;
-                else
-                    trusted += Path.PathSeparator + asm.FullName;
-
-            // Set data
-            AppDomain.CurrentDomain.SetData("TRUSTED_PLATFORM_ASSEMBLIES", trusted);
 
             // Set resolver
             LogInfo("Adding assembly resolver...");

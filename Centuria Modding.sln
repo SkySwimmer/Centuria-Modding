@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ftl-cli", "ftl-cli\ftl-cli.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "discord-rpc-mod", "discord-rpc-mod\discord-rpc-mod.csproj", "{D2B84D4A-3845-45E8-89E7-59673EB248F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unityexplorer-ftl-support", "unityexplorer-ftl-support\unityexplorer-ftl-support.csproj", "{118F3B27-6D01-4307-90F1-7982E4B04016}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D2B84D4A-3845-45E8-89E7-59673EB248F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2B84D4A-3845-45E8-89E7-59673EB248F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2B84D4A-3845-45E8-89E7-59673EB248F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{118F3B27-6D01-4307-90F1-7982E4B04016}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{118F3B27-6D01-4307-90F1-7982E4B04016}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{118F3B27-6D01-4307-90F1-7982E4B04016}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{118F3B27-6D01-4307-90F1-7982E4B04016}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

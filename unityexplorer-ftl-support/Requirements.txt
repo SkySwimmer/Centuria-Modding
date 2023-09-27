@@ -1,0 +1,7 @@
+To build this support mod you will need to obtain 'UniverseLib.IL2CPP.Interop.dll' and 'UnityExplorer.BIE.IL2CPP.CoreCLR.dll' from Unity Explorer.
+
+1. Create a folder named 'libs'
+2. Go to https://github.com/sinai-dev/UnityExplorer/releases and download 'UnityExplorer.BepInEx.IL2CPP.CoreCLR.zip' from 4.9.0.
+3. Extract the files named 'UniverseLib.IL2CPP.Interop.dll' and 'UnityExplorer.BIE.IL2CPP.CoreCLR.dll' into libs
+
+Note that to be able to run the mod you will need to have a unity-unstripped FeralTweaks environment!

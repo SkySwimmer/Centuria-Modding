@@ -31,7 +31,10 @@
             "presentation": {
                 "reveal": "silent"
             },
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build FTL"
+            ]
         },
         {
             "label": "Build FTL test mod",
@@ -40,6 +43,26 @@
             "args": [
                 "build",
                 "test-ftl-mod",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build UnityExplorer support mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "unityexplorer-ftl-support",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

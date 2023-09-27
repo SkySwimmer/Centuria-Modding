@@ -24,7 +24,7 @@
             "processName": "Fer.al.exe",
             "preLaunchTask": "Build feraltweaks",
             "pipeTransport": {
-                "pipeCwd": "${workspaceFolder}/feraltweaks/run",
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
                 "pipeProgram": "bash",
                 "pipeArgs": [ "${workspaceFolder}/feraltweaks/run/debug.sh" ],
                 "debuggerPath": "vsdbg/vsdbg.exe",
@@ -55,6 +55,20 @@
                 "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
                 "pipeProgram": "bash",
                 "pipeArgs": [ "${workspaceFolder}/discord-rpc-mod/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug UnityExplorer support mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build UnityExplorer support mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/unityexplorer-ftl-support/run/debug.sh" ],
                 "debuggerPath": "vsdbg/vsdbg.exe",
                 "quoteArgs": true
             },

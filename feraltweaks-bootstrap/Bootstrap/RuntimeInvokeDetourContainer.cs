@@ -7,6 +7,8 @@ using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using FeralTweaks.Logging.Impl;
 using Logger = FeralTweaks.Logging.Logger;
+using System.IO;
+using System.Reflection;
 
 namespace FeralTweaksBootstrap
 {
@@ -55,9 +57,17 @@ namespace FeralTweaksBootstrap
                         objC.AddComponent<LogHandler>();
                         GameObject.DontDestroyOnLoad(objC);
                     }
-                    
+
                     // Finish loading
                     FeralTweaksLoader.LoadFinish();
+     
+                    // Load all assemblies
+                    FeralTweaksLoader.LogInfo("Loading assemblies...");
+                    foreach (FileInfo file in new DirectoryInfo("FeralTweaks/cache/assemblies").GetFiles("*.dll"))
+                    {
+                        FeralTweaksLoader.LogDebug("Loading assembly: " + file.Name);
+                        Assembly.Load(file.Name.Replace(".dll", ""));
+                    }
 
                     // Log finish
                     FeralTweaksLoader.LogInfo("FTL is ready! Launching game... Launching " + Application.productName + " " + Application.version + " (unity version: " + Application.unityVersion + ")");
