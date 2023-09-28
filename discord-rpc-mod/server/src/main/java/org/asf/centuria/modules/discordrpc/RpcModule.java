@@ -21,9 +21,6 @@ public class RpcModule extends FeralTweaksMod {
 	public void init() {
 		// Main init method
 
-		// Handshake rules
-		addModHandshakeRequirementForSelf(version());
-
 		// Packets
 		registerPacket(new RpcJoinPlayerRequestPacket());
 		registerPacket(new RpcJoinPlayerResultPacket());
