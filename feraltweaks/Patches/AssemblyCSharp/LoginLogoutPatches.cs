@@ -315,52 +315,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(IssServerConnection), "ProcessLoginData")]
-        public static void ProcessLoginData(JsonData json)
-        {
-            // Clean first
-            FeralTweaks.LoginErrorMessage = null;
-
-            // If present, set error message
-            if (json["params"].Contains("errorMessage"))
-                FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();
-
-            // If present, log mods
-            if (json["params"].Contains("serverMods"))
-            {
-                // Log
-                string logMsg = "";
-                var arr = json["params"]["serverMods"];
-                var enumerator = json["params"]["serverMods"].System_Collections_IDictionary_GetEnumerator().Cast<Il2CppSystem.Collections.IEnumerator>();
-                while (enumerator.MoveNext())
-                {
-                    Il2CppSystem.Collections.DictionaryEntry v = enumerator.Current.Cast<Il2CppSystem.Collections.DictionaryEntry>();
-                    string id = v.Key.ToString();
-                    string version = v.Value.ToString();
-                    if (logMsg != "")
-                        logMsg += ", ";
-                    logMsg += id + " (" + version + ")";
-                }
-                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Server has " + arr.Count + " server mod" + (arr.Count == 1 ? "" : "s") + " installed. [" + logMsg + "]");
-            }
-
-            // Log error for mods if present
-            if (json["params"].Contains("incompatibleServerMods"))
-            {
-                // Error
-                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleServerModCount"].ToString() + " incompatible SERVER mod" + (json["params"]["incompatibleServerModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleServerMods"].ToString() + "]");
-            }
-            if (json["params"].Contains("incompatibleClientMods"))
-            {
-                // Error
-                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleClientModCount"].ToString() + " incompatible CLIENT mod" + (json["params"]["incompatibleClientModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleClientMods"].ToString() + "]");
-            }
-
-            // Prevent loading screen from showing
-            errorDisplayed = true;
-        }
-
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(IssClient), "Login")]
         public static void Login(ref string name)
         {
@@ -404,5 +358,52 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(IssServerConnection), "ProcessLoginData")]
+        public static void ProcessLoginData(JsonData json)
+        {
+            // Clean first
+            FeralTweaks.LoginErrorMessage = null;
+
+            // If present, set error message
+            if (json["params"].Contains("errorMessage"))
+                FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();
+
+            // If present, log mods
+            if (json["params"].Contains("serverMods"))
+            {
+                // Log
+                string logMsg = "";
+                var arr = json["params"]["serverMods"];
+                var enumerator = json["params"]["serverMods"].System_Collections_IDictionary_GetEnumerator().Cast<Il2CppSystem.Collections.IEnumerator>();
+                while (enumerator.MoveNext())
+                {
+                    Il2CppSystem.Collections.DictionaryEntry v = enumerator.Current.Cast<Il2CppSystem.Collections.DictionaryEntry>();
+                    string id = v.Key.ToString();
+                    string version = v.Value.ToString();
+                    if (logMsg != "")
+                        logMsg += ", ";
+                    logMsg += id + " (" + version + ")";
+
+                    // TODO: some way to access this information for mods, it can help to know what mods are loaded
+                }
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Server has " + arr.Count + " server mod" + (arr.Count == 1 ? "" : "s") + " installed. [" + logMsg + "]");
+            }
+
+            // Log error for mods if present
+            if (json["params"].Contains("incompatibleServerMods"))
+            {
+                // Error
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleServerModCount"].ToString() + " incompatible SERVER mod" + (json["params"]["incompatibleServerModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleServerMods"].ToString() + "]");
+            }
+            if (json["params"].Contains("incompatibleClientMods"))
+            {
+                // Error
+                FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleClientModCount"].ToString() + " incompatible CLIENT mod" + (json["params"]["incompatibleClientModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleClientMods"].ToString() + "]");
+            }
+
+            // Prevent loading screen from showing
+            errorDisplayed = true;
+        }
     }
 }

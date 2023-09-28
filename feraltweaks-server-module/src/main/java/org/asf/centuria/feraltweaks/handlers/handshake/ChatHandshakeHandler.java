@@ -1,5 +1,8 @@
 package org.asf.centuria.feraltweaks.handlers.handshake;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.asf.centuria.feraltweaks.FeralTweaksClientObject;
 import org.asf.centuria.feraltweaks.FeralTweaksModule;
 import org.asf.centuria.feraltweaks.managers.UnreadMessageManager;
@@ -34,9 +37,15 @@ public class ChatHandshakeHandler implements IEventReceiver {
 				return;
 			}
 
+			// Get mods list
+			HashMap<String, String> mods = new HashMap<String, String>();
+			JsonObject modsJson = event.getLoginRequest().get("feraltweaks_mods").getAsJsonObject();
+			for (String id : modsJson.keySet())
+				mods.put(id, modsJson.get(id).getAsString());
+
 			// Handshake success
 			event.getClient().addObject(new FeralTweaksClientObject(true,
-					event.getLoginRequest().get("feraltweaks_version").getAsString()));
+					event.getLoginRequest().get("feraltweaks_version").getAsString(), mods));
 
 			// Send unreads
 			JsonObject pkt = new JsonObject();
@@ -55,7 +64,7 @@ public class ChatHandshakeHandler implements IEventReceiver {
 			}
 
 			// Add object
-			event.getClient().addObject(new FeralTweaksClientObject(false, null));
+			event.getClient().addObject(new FeralTweaksClientObject(false, null, Map.of()));
 		}
 	}
 

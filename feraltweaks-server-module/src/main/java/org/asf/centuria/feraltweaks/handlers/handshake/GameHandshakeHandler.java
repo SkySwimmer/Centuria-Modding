@@ -273,7 +273,7 @@ public class GameHandshakeHandler implements IEventReceiver {
 					}
 
 					// Handshake success
-					event.getClient().addObject(new FeralTweaksClientObject(true, ver));
+					event.getClient().addObject(new FeralTweaksClientObject(true, ver, mods));
 					feralTweaks = true;
 
 					// Set
@@ -292,7 +292,7 @@ public class GameHandshakeHandler implements IEventReceiver {
 					event.setStatus(-24);
 					return;
 				}
-				event.getClient().addObject(new FeralTweaksClientObject(false, null));
+				event.getClient().addObject(new FeralTweaksClientObject(false, null, Map.of()));
 			}
 		} catch (Exception e) {
 			// Uhh what

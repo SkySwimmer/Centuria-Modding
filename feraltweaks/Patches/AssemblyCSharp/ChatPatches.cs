@@ -1,7 +1,9 @@
 ﻿using FeralTweaks;
+using FeralTweaks.Mods;
 using HarmonyLib;
 using Il2CppInterop.Runtime;
 using LitJson;
+using Newtonsoft.Json;
 using Server;
 using Services.Chat;
 using System;
@@ -367,14 +369,24 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (success)
             {
                 // Mention FeralTweaks support
-                Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
+                Dictionary<string, object> pkt = new Dictionary<string, object>();
                 pkt["cmd"] = "sessions.start";
                 pkt["uuid"] = UserManager.Me.UUID;
                 pkt["auth_token"] = NetworkManager.autoLoginAuthToken;
                 pkt["feraltweaks"] = "enabled";
                 pkt["feraltweaks_protocol"] = FeralTweaks.ProtocolVersion.ToString();
                 pkt["feraltweaks_version"] = FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version;
-                string msg = JsonMapper.ToJson(pkt);
+
+                // Add mods
+                Dictionary<string, string> ftMods = new Dictionary<string, string>();
+                foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+                {
+                    ftMods[mod.ID] = mod.Version;
+                }
+                pkt["feraltweaks_mods"] = ftMods;
+
+                // Create json
+                string msg = JsonConvert.SerializeObject(pkt);
                 NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
                 return false;
             }
