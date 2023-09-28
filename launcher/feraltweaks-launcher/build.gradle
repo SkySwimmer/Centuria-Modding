@@ -4,7 +4,7 @@ plugins {
 	id "com.github.johnrengelman.shadow" version "7.0.0"
 }
 
-version = "1.0.0.A12"
+version = "1.0.0.A13"
 group = "org.asf.centuria.launcher"
 
 sourceCompatibility = '1.17'
