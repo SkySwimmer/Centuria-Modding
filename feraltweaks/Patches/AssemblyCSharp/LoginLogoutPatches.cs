@@ -16,10 +16,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class LoginLogoutPatches
     {
+        public static string serverSoftwareName = "fer.al";
+        public static string serverSoftwareVersion = "unknown";
+        public static Dictionary<string, string> serverMods = new Dictionary<string, string>();
+
         public static bool doLogout = false;
         public static bool errorDisplayed = false;
         public static bool ignoreUpdateLevel = false;
         public static bool loggingOut = false;
+
         private static List<Func<bool>> actionsToRun = new List<Func<bool>>();
         private static LoadingScreenAction loadWaiter;
         private class LoadingScreenAction
@@ -153,6 +158,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     CoreLevelManager.LoadLevelSingle("Loading");
                     UserManager.Me = null;
                     UserManager.instance._users.ClearUsersByUUID();
+                    serverSoftwareName = "fer.al";
+                    serverSoftwareVersion = "unknown";
+                    serverMods.Clear();
                     actionsToRun.Add(() =>
                     {
                         UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
@@ -196,6 +204,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
                 FeralTweaks.AutoLoginToken = null;
             }
+
+            // Reset
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
         }
 
         [HarmonyPostfix]
@@ -265,6 +278,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void BtnClicked_Login(UI_Window_Login __instance)
         {
             UI_Window_OkPopupPatch.SingleTimeOkButtonAction = null;
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
             errorDisplayed = false;
             loggingOut = false;
             doLogout = false;
@@ -298,6 +314,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Clean first
             FeralTweaks.LoginErrorMessage = null;
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
         }
 
         [HarmonyPrefix]
@@ -321,7 +340,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // Mention feraltweaks support
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
 
-            if (!FeralTweaks.PatchConfig.ContainsKey("DebugOldServer") || FeralTweaks.PatchConfig["DebugOldServer"].ToLower() != "true") 
+            if (!FeralTweaks.PatchConfig.ContainsKey("DebugOldServer") || FeralTweaks.PatchConfig["DebugOldServer"].ToLower() != "true")
             {
                 // Length
                 name = name + "%" + FeralTweaksLoader.GetLoadedMods().Length.ToString();
@@ -369,6 +388,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (json["params"].Contains("errorMessage"))
                 FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();
 
+            // If present, assign server details
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
+            if (json["params"].Contains("serverSoftwareName"))
+                serverSoftwareName = json["params"]["serverSoftwareName"].ToString();
+            if (json["params"].Contains("serverSoftwareVersion"))
+                serverSoftwareVersion = json["params"]["serverSoftwareVersion"].ToString();
+
+            // Log
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Connected to a '" + serverSoftwareName + "' server, server version: " + serverSoftwareVersion);
+
             // If present, log mods
             if (json["params"].Contains("serverMods"))
             {
@@ -376,6 +407,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 string logMsg = "";
                 var arr = json["params"]["serverMods"];
                 var enumerator = json["params"]["serverMods"].System_Collections_IDictionary_GetEnumerator().Cast<Il2CppSystem.Collections.IEnumerator>();
+                Dictionary<string, string> mods = new Dictionary<string, string>();
                 while (enumerator.MoveNext())
                 {
                     Il2CppSystem.Collections.DictionaryEntry v = enumerator.Current.Cast<Il2CppSystem.Collections.DictionaryEntry>();
@@ -384,9 +416,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (logMsg != "")
                         logMsg += ", ";
                     logMsg += id + " (" + version + ")";
-
-                    // TODO: some way to access this information for mods, it can help to know what mods are loaded
+                    mods[id] = version;
                 }
+                serverMods = mods;
                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Server has " + arr.Count + " server mod" + (arr.Count == 1 ? "" : "s") + " installed. [" + logMsg + "]");
             }
 
@@ -404,6 +436,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Prevent loading screen from showing
             errorDisplayed = true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(NetworkManager), "OnServerConnectionLost")]
+        public static void OnServerConnectionLost()
+        {
+            // Clear mod info
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
         }
     }
 }
