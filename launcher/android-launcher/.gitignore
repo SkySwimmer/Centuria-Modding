@@ -1,0 +1,15 @@
+# Gradle
+build/
+.gradle
+
+# Eclipse
+bin/
+.settings/
+.classpath
+.project
+
+# Fer.al or some other game
+libs/game-classes.jar
+
+# Script work folders
+work-temp/

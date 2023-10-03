@@ -310,7 +310,7 @@ public class LauncherMain {
 				manifest = client.get("win64").getAsString();
 			} else {
 				JOptionPane.showMessageDialog(null,
-						"Unsupported platform!\nThe launcher cannot load on your device, please contact support for more info.\n\nOS Name: "
+						"Unsupported platform!\n\nThe launcher cannot load on your device, please contact support for more info.\n\nOS Name: "
 								+ System.getProperty("os.name"),
 						"Launcher Error", JOptionPane.ERROR_MESSAGE);
 				System.exit(1);
@@ -1091,7 +1091,7 @@ public class LauncherMain {
 							} catch (InvocationTargetException | InterruptedException e1) {
 							}
 						}
-					}, "Client Communication Trhead");
+					}, "Client Communication Thread");
 					clT.setDaemon(true);
 					clT.start();
 				} catch (Exception e) {
