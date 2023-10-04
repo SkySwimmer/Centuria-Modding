@@ -21,8 +21,8 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: Install mingw crosscompiler
-        run: sudo apt install -y g++-mingw-w64-x86-64
+      - name: Install arm64 crosscompiler
+        run: sudo apt install -y gcc-aarch64-linux-gnu
 
       - name: Setup project
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/setup.sh
