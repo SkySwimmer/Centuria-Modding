@@ -12,7 +12,7 @@ cd build/work
 
 # Properties
 coreclrrepo="https://github.com/dotnet/runtime"
-coreclrbranch="release/7.0"
+coreclrbranch="release/6.0"
 
 # Download CoreCLR
 echo Cloning CoreCLR...
