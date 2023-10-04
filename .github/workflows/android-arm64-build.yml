@@ -1,0 +1,49 @@
+name: FTL Loader Build (Android ARM64) [EXPERIMENTAL]
+
+on:
+  push:
+    branches: [ "main", "stable" ]
+  pull_request:
+    branches: [ "main", "stable" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '6.0.x' ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install mingw crosscompiler
+        run: sudo apt install -y g++-mingw-w64-x86-64
+
+      - name: Setup project
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/setup.sh
+
+      - name: Compile FTL
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/ftl.sh
+
+      - name: 'Download and compile external lib: Funchook'
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/funchook.sh
+
+      - name: 'Download external lib: Windowsill'
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/windowsill.sh
+
+      - name: 'Download external lib: CoreCLR'
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/coreclr.sh
+
+      - name: Create package
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/package.sh
+
+      - name: Publish build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'FeralTweaksLoader Latest (Android ARM64)'
+          path: feraltweaks-bootstrap/build/package
