@@ -33,7 +33,7 @@ make install
 # Copy result
 echo Copying results...
 mkdir ../../libfunchook
-cp -rfv install/lib/* ../../libfunchook
+cp -rfv "$(realpath "install/lib/libfunchook.so")" ../../libfunchook
 cp -rfv install/include/* ../../libfunchook
 cd ../..
 rm -rf funchook
