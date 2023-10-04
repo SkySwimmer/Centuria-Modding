@@ -22,7 +22,7 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Install arm64 crosscompiler
-        run: sudo apt install -y gcc-aarch64-linux-gnu
+        run: sudo apt install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Setup project
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/setup.sh
