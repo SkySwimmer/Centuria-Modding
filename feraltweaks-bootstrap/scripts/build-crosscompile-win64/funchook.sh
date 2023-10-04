@@ -24,7 +24,7 @@ mkdir build
 cd build
 
 # Prepare
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .. -DCMAKE_TOOLCHAIN_FILE=../cmake/x86_64-w64-mingw32.cmake -DFUNCHOOK_DISASM=capstone
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install .. -DCMAKE_TOOLCHAIN_FILE=../cmake/x86_64-w64-mingw32.cmake -DFUNCHOOK_DISASM=zydis
 
 # Build
 make
