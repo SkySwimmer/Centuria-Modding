@@ -7,11 +7,13 @@ public class WMNI {
 	 * 
 	 * @param monoPtr      Mono library pointer
 	 * @param domainName   Name of the app domain
+	 * @param root         Root folder
 	 * @param monoLibsPath Mono library folder
 	 * @param monoEtcPath  Mono 'etc' folder
 	 * @return Mono domain pointer
 	 */
-	public static native long initRuntime(long monoPtr, String domainName, String monoLibsPath, String monoEtcPath);
+	public static native long initRuntime(long monoPtr, String domainName, String root, String monoLibsPath,
+			String monoEtcPath);
 
 	/**
 	 * Loads the Mono library

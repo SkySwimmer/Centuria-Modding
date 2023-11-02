@@ -646,6 +646,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					File monoDir = new File(clientDir, windowsillConfig.get("monoDir").getAsString());
 					File monoLibsDir = new File(clientDir, windowsillConfig.get("monoLibsDir").getAsString());
 					File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
+					File monoEtcDir = new File(monoDir, "etc");
+					monoEtcDir.mkdirs();
 					String mainClass = windowsillConfig.get("mainClass").getAsString();
 					String mainMethod = windowsillConfig.get("mainMethod").getAsString();
 					Log.i("FT-LAUNCHER", "");
@@ -691,7 +693,9 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					}
 
 					// Init runtime
-					long domain = WMNI.initRuntime(monoLib, "WINDOWSILL");
+					log("Initializing Mono runtime...");
+					long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getCanonicalPath(),
+							monoLibsDir.getCanonicalPath(), monoEtcDir.getCanonicalPath());
 					log("Application domain: " + domain);
 					Thread.sleep(10000);
 

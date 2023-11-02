@@ -12,9 +12,11 @@
 #include "mono/jit/mono-private-unstable.h"
 #include <string.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 // Type defs
 typedef MonoDomain* mono_jit_init_ptr(const char *file);
+typedef void mono_set_dirs_ptr (const char *assembly_dir, const char *config_dir);
 
 // Methods
 JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadMonoLib (JNIEnv* env, jclass, jstring path) {
@@ -27,12 +29,20 @@ JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadMonoLib (JNIEnv* env, j
 	return (long) monoLib;
 }
 
-JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_initRuntime (JNIEnv* env, jclass, jlong mono, jstring name) {
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_initRuntime (JNIEnv* env, jclass, jlong mono, jstring name, jstring root, jstring libsDirJ, jstring etcDirJ) {
 	const char* domainName = env->GetStringUTFChars(name, NULL);
+	const char* libsDir = env->GetStringUTFChars(libsDirJ, NULL);
+	const char* etcDir = env->GetStringUTFChars(etcDirJ, NULL);
+	const char* rootDir = env->GetStringUTFChars(root, NULL);
 	void *monoLib = (void *)mono;
 
 	// Setup calls
 	mono_jit_init_ptr* mono_jit_init = (mono_jit_init_ptr*)(dlsym(monoLib, "mono_jit_init"));
+	mono_set_dirs_ptr* mono_set_dirs = (mono_set_dirs_ptr*)(dlsym(monoLib, "mono_set_dirs"));
+
+	// Set directories
+	chdir(rootDir);
+	mono_set_dirs(libsDir, etcDir);
 
 	// Create domain
 	MonoDomain *domain = mono_jit_init(domainName);

@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_asf_windowsill_WMNI
  * Method:    initRuntime
- * Signature: (JLjava/lang/String;)J
+ * Signature: (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_initRuntime
-  (JNIEnv *, jclass, jlong, jstring);
+  (JNIEnv *, jclass, jlong, jstring, jstring, jstring, jstring);
 
 /*
  * Class:     org_asf_windowsill_WMNI
