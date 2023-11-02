@@ -1,16 +1,44 @@
 #include "org_asf_windowsill_WMNI.h"
-#include "coreclrhost.h"
+#include "mono/utils/mono-publib.h"
+#include "mono/utils/mono-logger.h"
+#include "mono/metadata/appdomain.h"
+#include "mono/metadata/assembly.h"
+#include "mono/metadata/class.h"
+#include "mono/metadata/mono-debug.h"
+#include "mono/metadata/mono-gc.h"
+#include "mono/metadata/exception.h"
+#include "mono/metadata/object.h"
+#include "mono/jit/jit.h"
+#include "mono/jit/mono-private-unstable.h"
 #include <string.h>
 #include <dlfcn.h>
 
-JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadCoreCLR (JNIEnv* env, jclass, jstring path) {
+// Type defs
+typedef MonoDomain* mono_jit_init_ptr(const char *file);
+
+// Methods
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadMonoLib (JNIEnv* env, jclass, jstring path) {
 	const char* pth = env->GetStringUTFChars(path, NULL);
 
 	// Load
-	void *coreclr = dlopen(pth, RTLD_NOW | RTLD_LOCAL);
+	void *monoLib = dlopen(pth, RTLD_NOW | RTLD_LOCAL);
 
-	// Return CoreCLR pointer
-	return (long) coreclr;
+	// Return mono pointer
+	return (long) monoLib;
+}
+
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_initRuntime (JNIEnv* env, jclass, jlong mono, jstring name) {
+	const char* domainName = env->GetStringUTFChars(name, NULL);
+	void *monoLib = (void *)mono;
+
+	// Setup calls
+	mono_jit_init_ptr* mono_jit_init = (mono_jit_init_ptr*)(dlsym(monoLib, "mono_jit_init"));
+
+	// Create domain
+	MonoDomain *domain = mono_jit_init(domainName);
+
+	// Return
+	return (long) domain;
 }
 
 JNIEXPORT jstring JNICALL Java_org_asf_windowsill_WMNI_dlLoadError (JNIEnv* env, jclass) {

@@ -683,14 +683,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 					// Load mono
 					log("Loading Mono...");
-					long monoLib = WMNI.loadLibrary(monoAssembly.getCanonicalPath());
+					long monoLib = WMNI.loadMonoLib(monoAssembly.getCanonicalPath());
 					if (monoLib == 0) {
 						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly failed to load: "
 								+ WMNI.dlLoadError(), "Launcher error");
 						return;
 					}
-					log("Mono: " + monoLib);
+
+					// Init runtime
+					long domain = WMNI.initRuntime(monoLib, "WINDOWSILL");
+					log("Application domain: " + domain);
 					Thread.sleep(10000);
+
 					// TODO: windowsill setup etc
 
 					// Start client

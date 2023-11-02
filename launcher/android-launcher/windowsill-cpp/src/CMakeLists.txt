@@ -10,4 +10,8 @@ add_library (
 
 include_directories (
     includes
+    includes/mono
+    includes/mono/jit
+    includes/mono/metadata
+    includes/mono/utils
 )

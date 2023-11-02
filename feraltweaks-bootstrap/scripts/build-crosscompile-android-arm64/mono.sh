@@ -39,4 +39,4 @@ echo Copying files...
 mkdir ../../monolib
 cp -rfv artifacts/obj/mono/*nux.arm64.*/out/include/. ../../monolib/include
 cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/native/. ../../monolib/native
-cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/lib/*/. ../../monolib/lib
+cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/lib/. ../../monolib/lib

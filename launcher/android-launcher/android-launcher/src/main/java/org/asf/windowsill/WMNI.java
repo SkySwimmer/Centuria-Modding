@@ -3,12 +3,23 @@ package org.asf.windowsill;
 public class WMNI {
 
 	/**
-	 * Loads CoreCLR
+	 * Initializes the mono runtime
 	 * 
-	 * @param path Path to library of coreclr
-	 * @return CoreCLR pointer
+	 * @param monoPtr      Mono library pointer
+	 * @param domainName   Name of the app domain
+	 * @param monoLibsPath Mono library folder
+	 * @param monoEtcPath  Mono 'etc' folder
+	 * @return Mono domain pointer
 	 */
-	public static native long loadCoreCLR(String path);
+	public static native long initRuntime(long monoPtr, String domainName, String monoLibsPath, String monoEtcPath);
+
+	/**
+	 * Loads the Mono library
+	 * 
+	 * @param path Path to the Mono library
+	 * @return Mono library pointer
+	 */
+	public static native long loadMonoLib(String path);
 
 	/**
 	 * Loads libraries

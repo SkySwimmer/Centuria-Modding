@@ -9,10 +9,18 @@ extern "C" {
 #endif
 /*
  * Class:     org_asf_windowsill_WMNI
- * Method:    loadCoreCLR
+ * Method:    initRuntime
+ * Signature: (JLjava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_initRuntime
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     org_asf_windowsill_WMNI
+ * Method:    loadMonoLib
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadCoreCLR
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadMonoLib
   (JNIEnv *, jclass, jstring);
 
 /*
