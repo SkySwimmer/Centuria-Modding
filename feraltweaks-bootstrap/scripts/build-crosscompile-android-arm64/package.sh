@@ -24,8 +24,8 @@ cp -rfv work/ftl/. package/FeralTweaks/
 
 # Copy funchook
 echo Copying Funchook...
-mkdir -vp package/FeralTweaks/lib/win
-cp -rfv work/libfunchook/*.dll package/
+mkdir -vp package/FeralTweaks/lib/android
+cp -rfv work/libfunchook/*.so package/
 echo Zipping...
 
 # Copy Mono
@@ -35,5 +35,5 @@ cp -rfv work/monolib/. package/Mono/
 
 # Zip
 cd package
-zip ftl-win64-latest.zip *
-mv ftl-win64-latest.zip ..
+zip -r ftl-android-arm64-latest.zip *
+mv ftl-android-arm64-latest.zip ..

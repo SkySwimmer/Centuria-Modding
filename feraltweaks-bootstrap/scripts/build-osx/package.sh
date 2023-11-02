@@ -34,5 +34,5 @@ cp -rfv work/coreclr/shared/Microsoft.NETCore.App/*/. package/CoreCLR/
 
 # Zip
 cd package
-zip ftl-osx-latest.zip *
+zip -r ftl-osx-latest.zip *
 mv ftl-osx-latest.zip ..

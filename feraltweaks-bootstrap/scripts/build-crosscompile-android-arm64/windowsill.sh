@@ -20,7 +20,8 @@ echo '{
     "mainMethod": "Start",
 
     "mainAssembly": "FeralTweaks/FeralTweaksBootstrap.dll",
-    "monoAssembly": "Mono/coreclr.dll",
+    "monoAssembly": "Mono/native/libcoreclr.so",
+    "monoLibsDir": "Mono/lib",
     "monoDir": "Mono"
 }
 ' > windowsil.config.json

@@ -21,10 +21,10 @@ JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadLibrary (JNIEnv* env, j
 	const char* pth = env->GetStringUTFChars(path, NULL);
 
 	// Load
-	void *coreclr = dlopen(pth, RTLD_NOW | RTLD_LOCAL);
+	void *lib = dlopen(pth, RTLD_NOW | RTLD_LOCAL);
 
 	// Return pointer
-	return (long) coreclr;
+	return (long) lib;
 }
 
 JNIEXPORT void JNICALL Java_org_asf_windowsill_WMNI_closeLibrary (JNIEnv* env, jclass, jlong ptr) {

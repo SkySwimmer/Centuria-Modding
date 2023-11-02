@@ -642,30 +642,37 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					File clientDir = new File(activity.getApplicationInfo().dataDir);
 					JsonObject windowsillConfig = new JsonParser()
 							.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
-					File coreClrAssembly = new File(clientDir, windowsillConfig.get("coreClrAssembly").getAsString());
-					File coreClrDir = new File(clientDir, windowsillConfig.get("coreClrDir").getAsString());
+					File monoAssembly = new File(clientDir, windowsillConfig.get("monoAssembly").getAsString());
+					File monoDir = new File(clientDir, windowsillConfig.get("monoDir").getAsString());
+					File monoLibsDir = new File(clientDir, windowsillConfig.get("monoLibsDir").getAsString());
 					File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
 					String mainClass = windowsillConfig.get("mainClass").getAsString();
 					String mainMethod = windowsillConfig.get("mainMethod").getAsString();
 					Log.i("FT-LAUNCHER", "");
 					Log.i("FT-LAUNCHER", "WINDOWSIL LOADER (WINDOWSILL) IS LOADING!");
 					Log.i("FT-LAUNCHER", "");
-					Log.i("FT-LAUNCHER", "CoreCLR assembly: " + coreClrAssembly);
-					Log.i("FT-LAUNCHER", "CoreCLR directory: " + coreClrDir);
+					Log.i("FT-LAUNCHER", "Mono assembly: " + monoAssembly);
+					Log.i("FT-LAUNCHER", "Mono libraries: " + monoLibsDir);
+					Log.i("FT-LAUNCHER", "Mono directory: " + monoDir);
 					Log.i("FT-LAUNCHER", "Main assembly: " + mainAssembly);
 					Log.i("FT-LAUNCHER", "Entrypoint class: " + mainClass);
 					Log.i("FT-LAUNCHER", "Entrypoint method: " + mainMethod);
 					Log.i("FT-LAUNCHER", "");
 
 					// Check files
-					if (!coreClrDir.exists() || !coreClrDir.isDirectory()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR folder does not exist: "
-								+ windowsillConfig.get("coreClrDir").getAsString(), "Launcher error");
+					if (!monoDir.exists() || !monoDir.isDirectory()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono folder does not exist: "
+								+ windowsillConfig.get("monoDir").getAsString(), "Launcher error");
 						return;
 					}
-					if (!coreClrAssembly.exists() || !coreClrAssembly.isFile()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR assembly file does not exist: "
-								+ windowsillConfig.get("coreClrAssembly").getAsString(), "Launcher error");
+					if (!monoLibsDir.exists() || !monoLibsDir.isDirectory()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono libraries folder does not exist: "
+								+ windowsillConfig.get("monoLibsDir").getAsString(), "Launcher error");
+						return;
+					}
+					if (!monoAssembly.exists() || !monoAssembly.isFile()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly file does not exist: "
+								+ windowsillConfig.get("monoAssembly").getAsString(), "Launcher error");
 						return;
 					}
 					if (!mainAssembly.exists() || !mainAssembly.isFile()) {
@@ -674,15 +681,15 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						return;
 					}
 
-					// Load CoreCLR
-					log("Loading CoreCLR...");
-					long coreCLR = WMNI.loadCoreCLR(coreClrAssembly.getCanonicalPath());
-					if (coreCLR == 0) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR assembly failed to load: "
+					// Load mono
+					log("Loading Mono...");
+					long monoLib = WMNI.loadLibrary(monoAssembly.getCanonicalPath());
+					if (monoLib == 0) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly failed to load: "
 								+ WMNI.dlLoadError(), "Launcher error");
 						return;
 					}
-					log("CoreCLR: " + coreCLR);
+					log("Mono: " + monoLib);
 					Thread.sleep(10000);
 					// TODO: windowsill setup etc
 
