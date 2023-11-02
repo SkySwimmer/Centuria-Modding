@@ -23,6 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.windowsill.WMNI;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -68,6 +69,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private int progressValue;
 	private int progressMax;
 
+	private boolean logDone = false;
+
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
 			String srvName) {
@@ -86,10 +89,22 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		view.setScaleType(ScaleType.FIT_CENTER);
 		main.addView(view, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
+		// Create status message
+		TextView txt = new TextView(activity);
+		txt.setTextColor(Color.WHITE);
+		txt.setText("FeralTweaks Launcher Loading...");
+		txt.setTextSize(24);
+		txt.setGravity(Gravity.CENTER);
+		txt.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+		main.addView(txt, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
 		// Run launcher
 		Thread th = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				// Load natives
+				loadNativeLibraries(activity);
+
 				// Contact server
 				try {
 					// Read server info
@@ -131,22 +146,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						return;
 					}
 					modloader = loader.get(feralPlat).getAsJsonObject();
-
-					// Create status message
-					TextView txt = new TextView(activity);
-					txt.setTextColor(Color.WHITE);
-					txt.setText("FeralTweaks Launcher Loading...");
-					txt.setTextSize(24);
-					txt.setGravity(Gravity.CENTER);
-					txt.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-					activity.runOnUiThread(new Runnable() {
-
-						@Override
-						public void run() {
-							main.addView(txt, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-						}
-
-					});
 
 					// Download banner
 					strm = new URL(banner).openStream();
@@ -506,6 +505,13 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				}
 			}
 
+			private void loadNativeLibraries(Activity activity) {
+				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
+
+				// Load windowsill
+				System.load(nativesDir + "/libwindowsill.so");
+			}
+
 			private void postAuth(String accountID, String authToken) throws Exception {
 				// Success
 				log("Login success!");
@@ -630,6 +636,54 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				try {
 					// Prepare to start
 					log("Preparing game client...");
+
+					// Load windowsill
+					log("Loading Windowsill configuration...");
+					File clientDir = new File(activity.getApplicationInfo().dataDir);
+					JsonObject windowsillConfig = new JsonParser()
+							.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
+					File coreClrAssembly = new File(clientDir, windowsillConfig.get("coreClrAssembly").getAsString());
+					File coreClrDir = new File(clientDir, windowsillConfig.get("coreClrDir").getAsString());
+					File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
+					String mainClass = windowsillConfig.get("mainClass").getAsString();
+					String mainMethod = windowsillConfig.get("mainMethod").getAsString();
+					Log.i("FT-LAUNCHER", "");
+					Log.i("FT-LAUNCHER", "WINDOWSIL LOADER (WINDOWSILL) IS LOADING!");
+					Log.i("FT-LAUNCHER", "");
+					Log.i("FT-LAUNCHER", "CoreCLR assembly: " + coreClrAssembly);
+					Log.i("FT-LAUNCHER", "CoreCLR directory: " + coreClrDir);
+					Log.i("FT-LAUNCHER", "Main assembly: " + mainAssembly);
+					Log.i("FT-LAUNCHER", "Entrypoint class: " + mainClass);
+					Log.i("FT-LAUNCHER", "Entrypoint method: " + mainMethod);
+					Log.i("FT-LAUNCHER", "");
+
+					// Check files
+					if (!coreClrDir.exists() || !coreClrDir.isDirectory()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR folder does not exist: "
+								+ windowsillConfig.get("coreClrDir").getAsString(), "Launcher error");
+						return;
+					}
+					if (!coreClrAssembly.exists() || !coreClrAssembly.isFile()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR assembly file does not exist: "
+								+ windowsillConfig.get("coreClrAssembly").getAsString(), "Launcher error");
+						return;
+					}
+					if (!mainAssembly.exists() || !mainAssembly.isFile()) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMod assembly file does not exist: "
+								+ windowsillConfig.get("mainAssembly").getAsString(), "Launcher error");
+						return;
+					}
+
+					// Load CoreCLR
+					log("Loading CoreCLR...");
+					long coreCLR = WMNI.loadCoreCLR(coreClrAssembly.getCanonicalPath());
+					if (coreCLR == 0) {
+						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nCoreCLR assembly failed to load: "
+								+ WMNI.dlLoadError(), "Launcher error");
+						return;
+					}
+					log("CoreCLR: " + coreCLR);
+					Thread.sleep(10000);
 					// TODO: windowsill setup etc
 
 					// Start client
@@ -883,8 +937,9 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 	private String lastMsg;
 
-	private void log(String message) {
+	private synchronized void log(String message) {
 		if (label != null) {
+			logDone = false;
 			activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
@@ -894,8 +949,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						lbl.setText(message + suff);
 						lastMsg = message;
 					}
+					logDone = true;
 				}
 			});
+			while (!logDone)
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
 		}
 		Log.i("FT-LAUNCHER", message);
 	}

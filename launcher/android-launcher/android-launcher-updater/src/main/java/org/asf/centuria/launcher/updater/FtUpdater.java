@@ -43,6 +43,7 @@ public class FtUpdater {
 	private Runnable startGameCallback;
 
 	private boolean progressEnabled = false;
+	private boolean logDone = false;
 
 	private int progressValue;
 	private int progressMax;
@@ -270,16 +271,23 @@ public class FtUpdater {
 
 	private String lastMsg;
 
-	private void log(String message) {
+	private synchronized void log(String message) {
 		if (label != null) {
+			logDone = false;
 			activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					String suff = progressMessageSuffix();
 					label.setText(" " + message + suff);
 					lastMsg = message;
+					logDone = true;
 				}
 			});
+			while (!logDone)
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
 		}
 		Log.i("FT-UPDATER", message);
 	}

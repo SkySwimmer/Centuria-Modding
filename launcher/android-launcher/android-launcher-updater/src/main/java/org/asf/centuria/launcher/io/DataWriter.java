@@ -24,6 +24,16 @@ public class DataWriter {
 	}
 
 	/**
+	 * Writes a single boolean
+	 * 
+	 * @param value Value to write
+	 * @throws IOException If writing fails
+	 */
+	public void writeBoolean(boolean value) throws IOException {
+		output.write(value ? 1 : 0);
+	}
+
+	/**
 	 * Writes a single byte
 	 * 
 	 * @param value Value to write

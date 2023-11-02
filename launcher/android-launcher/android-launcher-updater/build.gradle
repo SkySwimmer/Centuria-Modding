@@ -32,6 +32,10 @@ task lightray () {
 		copy {
 			into "build/lightray"
 		}
+		copy {
+			into "build/lightray/patches"
+			from "../windowsill-cpp/build/windowsill.zip"
+		}
 		for (ResolvedArtifact arti : project.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
 			if (arti.getClassifier() != null)
 				continue;

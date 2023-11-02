@@ -10,7 +10,6 @@ import com.google.gson.JsonParser;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Application;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -37,6 +36,8 @@ public class LauncherUpdaterMain {
 	private static boolean inited = false;
 	private static Activity activity;
 	private static Class<? extends Activity> activityCls;
+
+	private static boolean logDone = false;
 
 	/**
 	 * Starts the game
@@ -85,10 +86,30 @@ public class LauncherUpdaterMain {
 		ImageView view = new ImageView(activity);
 		main.addView(view, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
+		// Create status message
+		TextView txt = new TextView(activity);
+		txt.setTextColor(Color.WHITE);
+		txt.setText("Loading FeralTweaks launcher... Please wait...");
+		txt.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+		main.addView(txt, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
 		// Run launcher
+		txt.setText(txt.getText() + "\nJumping to launcher thread...");
 		Thread th = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				// Log
+				logDone = false;
+				activity.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						txt.setText(txt.getText() + "\nPreparing launcher...");
+						logDone = true;
+					}
+				});
+				while (!logDone)
+					;
+
 				// Prepare
 				AssetManager am = activity.getAssets();
 				String launcherVersion;
@@ -96,6 +117,18 @@ public class LauncherUpdaterMain {
 				String dataUrl;
 				String srvName;
 				try {
+					// Log
+					logDone = false;
+					activity.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							txt.setText(txt.getText() + "\nParsing server information...");
+							logDone = true;
+						}
+					});
+					while (!logDone)
+						;
+
 					// Read server info
 					String url;
 					try {
@@ -126,6 +159,18 @@ public class LauncherUpdaterMain {
 						return;
 					}
 
+					// Log
+					logDone = false;
+					activity.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							txt.setText(txt.getText() + "\nDownloading server manifest...");
+							logDone = true;
+						}
+					});
+					while (!logDone)
+						;
+
 					// Download data
 					InputStream strm = new URL(url).openStream();
 					String data = new String(IoUtil.readAllBytes(strm), "UTF-8");
@@ -134,7 +179,8 @@ public class LauncherUpdaterMain {
 					if (!info.has("androidLauncher"))
 						throw new IOException("Missing JSON element in server response: androidLauncher");
 					JsonObject launcher = info.get("androidLauncher").getAsJsonObject();
-					String splash = launcher.get("splash").getAsString();
+					JsonObject launcherBase = info.get("launcher").getAsJsonObject();
+					String splash = launcherBase.get("splash").getAsString();
 					url = launcher.get("url").getAsString();
 					String version = launcher.get("version").getAsString();
 
@@ -162,19 +208,17 @@ public class LauncherUpdaterMain {
 						splash = api + splash;
 					}
 
-					// Create status message
-					TextView txt = new TextView(activity);
-					txt.setTextColor(Color.WHITE);
-					txt.setText("Loading FeralTweaks... Please wait...");
-					txt.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+					// Log
+					logDone = false;
 					activity.runOnUiThread(new Runnable() {
-
 						@Override
 						public void run() {
-							main.addView(txt, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+							txt.setText(txt.getText() + "\nDownloading splash...");
+							logDone = true;
 						}
-
 					});
+					while (!logDone)
+						;
 
 					// Download splash
 					strm = new URL(splash).openStream();
@@ -184,6 +228,18 @@ public class LauncherUpdaterMain {
 					// Assign fields
 					launcherVersion = version;
 					launcherURL = url;
+
+					// Log
+					logDone = false;
+					activity.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							txt.setText(txt.getText() + "\nJumping to launcher...");
+							logDone = true;
+						}
+					});
+					while (!logDone)
+						;
 
 					// Run UI logic, update image
 					activity.runOnUiThread(new Runnable() {

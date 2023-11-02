@@ -28,10 +28,10 @@ mkdir -vp package/FeralTweaks/lib/win
 cp -rfv work/libfunchook/*.dll package/
 echo Zipping...
 
-# Copy CoreCLR
-echo Copying CoreCLR...
-mkdir package/CoreCLR
-cp -rfv work/coreclr/shared/Microsoft.NETCore.App/*/. package/CoreCLR/
+# Copy Mono
+echo Copying Mono...
+mkdir package/Mono
+cp -rfv work/monolib/. package/Mono/
 
 # Zip
 cd package
