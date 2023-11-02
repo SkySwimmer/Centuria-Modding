@@ -37,4 +37,4 @@ ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh 
 # Copy
 echo Copying files...
 mkdir ../../monolib
-cp -rfv artifacts/bin/mono/*nux.arm64.*/. ../../monolib
+cp -rfv artifacts/obj/mono/. ../../monolib
