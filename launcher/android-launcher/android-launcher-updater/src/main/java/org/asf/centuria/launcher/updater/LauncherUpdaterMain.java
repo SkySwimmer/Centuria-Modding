@@ -131,12 +131,15 @@ public class LauncherUpdaterMain {
 
 					// Read server info
 					String url;
+					String launcherName = "androidLauncher";
 					try {
 						InputStream strm = am.open("server.json");
 						JsonObject conf = new JsonParser().parse(new String(IoUtil.readAllBytes(strm), "UTF-8"))
 								.getAsJsonObject();
 						srvName = conf.get("serverName").getAsString();
 						url = conf.get("serverConfig").getAsString();
+						if (conf.has("launcherChannelName"))
+							launcherName = conf.get("launcherChannelName").getAsString();
 						dataUrl = url;
 						strm.close();
 					} catch (Exception e) {
@@ -176,9 +179,9 @@ public class LauncherUpdaterMain {
 					String data = new String(IoUtil.readAllBytes(strm), "UTF-8");
 					strm.close();
 					JsonObject info = new JsonParser().parse(data).getAsJsonObject();
-					if (!info.has("androidLauncher"))
-						throw new IOException("Missing JSON element in server response: androidLauncher");
-					JsonObject launcher = info.get("androidLauncher").getAsJsonObject();
+					if (!info.has(launcherName))
+						throw new IOException("Missing JSON element in server response: " + launcherName);
+					JsonObject launcher = info.get(launcherName).getAsJsonObject();
 					JsonObject launcherBase = info.get("launcher").getAsJsonObject();
 					String splash = launcherBase.get("splash").getAsString();
 					url = launcher.get("url").getAsString();

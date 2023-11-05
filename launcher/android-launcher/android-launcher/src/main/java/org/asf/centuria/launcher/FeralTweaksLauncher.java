@@ -16,6 +16,7 @@ import java.net.URLConnection;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -23,6 +24,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.centuria.launcher.processors.ProxyProcessor;
+import org.asf.connective.ConnectiveHttpServer;
 import org.asf.windowsill.WMNI;
 
 import com.google.gson.JsonArray;
@@ -33,6 +36,7 @@ import com.google.gson.JsonParser;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -52,7 +56,6 @@ import android.widget.TextView;
 public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 	private boolean tappedStatus;
-	private File launcherDir;
 
 	private TextView label;
 	private Activity activity;
@@ -70,13 +73,16 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private int progressMax;
 
 	private boolean logDone = false;
+	private boolean disableLogin;
+	private boolean disableFtl;
+	private boolean useProxyMethod;
+	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
 
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
 			String srvName) {
 		// Assign
 		this.activity = activity;
-		this.launcherDir = launcherDir;
 
 		// Setup UI
 
@@ -110,18 +116,41 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					// Read server info
 					String url = dataUrl;
 
+					// Load launcher channel
+					String launcherName = "androidLauncher";
+					AssetManager am = activity.getAssets();
+					InputStream strm = am.open("server.json");
+					JsonObject conf = new JsonParser().parse(new String(IoUtil.readAllBytes(strm), "UTF-8"))
+							.getAsJsonObject();
+					if (conf.has("launcherChannelName"))
+						launcherName = conf.get("launcherChannelName").getAsString();
+					strm.close();
+
 					// Download data
-					InputStream strm = new URL(url).openStream();
+					strm = new URL(url).openStream();
 					String data = new String(IoUtil.readAllBytes(strm), "UTF-8");
 					strm.close();
 					JsonObject info = new JsonParser().parse(data).getAsJsonObject();
 					JsonObject launcher = info.get("launcher").getAsJsonObject();
+					JsonObject androidLauncher = info.get(launcherName).getAsJsonObject();
 					String banner = launcher.get("banner").getAsString();
 					url = launcher.get("url").getAsString();
 					serverInfo = info.get("server").getAsJsonObject();
 					hosts = serverInfo.get("hosts").getAsJsonObject();
 					ports = serverInfo.get("ports").getAsJsonObject();
 					JsonObject loader = launcher.get("modloader").getAsJsonObject();
+
+					// Check settings
+					if (androidLauncher.has("disableFeraltweaks"))
+						disableFtl = androidLauncher.get("disableFeraltweaks").getAsBoolean();
+					if (androidLauncher.has("disableLogin"))
+						disableLogin = androidLauncher.get("disableLogin").getAsBoolean();
+					if (androidLauncher.has("useProxyMethod"))
+						useProxyMethod = androidLauncher.get("useProxyMethod").getAsBoolean();
+					if (androidLauncher.has("proxyAssetUrl"))
+						proxyAssetUrl = androidLauncher.get("proxyAssetUrl").getAsString();
+					if (!proxyAssetUrl.endsWith("/"))
+						proxyAssetUrl += "/";
 
 					// Handle relative paths for banner
 					if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
@@ -213,162 +242,256 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					log("Preparing...");
 
 					// Check credentials
-					log("Verifying login... (tap this label to switch accounts)");
-					String lastAccountName = "";
-					String lastToken = "";
-					String authToken = "";
-					String accountID = "";
-					tappedStatus = false;
-					boolean isManuallySelected = false;
-					if (new File(launcherDir, "login.json").exists()) {
-						try {
-							JsonObject login = new JsonParser().parse(readString(new File(launcherDir, "login.json")))
-									.getAsJsonObject();
-							lastToken = login.get("token").getAsString();
-							lastAccountName = login.get("loginName").getAsString();
+					if (!disableLogin) {
+						log("Verifying login... (tap this label to switch accounts)");
+						String lastAccountName = "";
+						String lastToken = "";
+						String authToken = "";
+						String accountID = "";
+						tappedStatus = false;
+						boolean isManuallySelected = false;
+						if (new File(launcherDir, "login.json").exists()) {
+							try {
+								JsonObject login = new JsonParser()
+										.parse(readString(new File(launcherDir, "login.json"))).getAsJsonObject();
+								lastToken = login.get("token").getAsString();
+								lastAccountName = login.get("loginName").getAsString();
 
-							// Check if shift is down
-							for (int i = 0; i < 50; i++) {
-								if (tappedStatus) {
-									isManuallySelected = true;
-									break;
+								// Check if shift is down
+								for (int i = 0; i < 50; i++) {
+									if (tappedStatus) {
+										isManuallySelected = true;
+										break;
+									}
+									Thread.sleep(100);
 								}
-								Thread.sleep(100);
+							} catch (Exception e) {
+								// Corrupted login data file likely
 							}
-						} catch (Exception e) {
-							// Corrupted login data file likely
 						}
-					}
-					tappedStatus = false;
-					boolean requireRelogin = true;
-					if (!lastToken.isEmpty()) {
-						// Contact API
-						try {
-							String api = hosts.get("api").getAsString();
-							if (!api.endsWith("/"))
-								api += "/";
-							HashMap<String, String> headers = new HashMap<String, String>();
-							headers.put("Authorization", "Bearer " + lastToken);
-							InputStream res = request(api + "centuria/refreshtoken", "POST", headers, null);
+						tappedStatus = false;
+						boolean requireRelogin = true;
+						if (!lastToken.isEmpty()) {
+							// Contact API
+							try {
+								String api = hosts.get("api").getAsString();
+								if (!api.endsWith("/"))
+									api += "/";
+								HashMap<String, String> headers = new HashMap<String, String>();
+								headers.put("Authorization", "Bearer " + lastToken);
+								InputStream res = request(api + "centuria/refreshtoken", "POST", headers, null);
 
-							// Read response
-							String data = new String(IoUtil.readAllBytes(res), "UTF-8");
-							res.close();
-							JsonObject resp = new JsonParser().parse(data).getAsJsonObject();
-							authToken = resp.get("auth_token").getAsString();
-							lastToken = resp.get("refresh_token").getAsString();
-							accountID = resp.get("uuid").getAsString();
+								// Read response
+								String data = new String(IoUtil.readAllBytes(res), "UTF-8");
+								res.close();
+								JsonObject resp = new JsonParser().parse(data).getAsJsonObject();
+								authToken = resp.get("auth_token").getAsString();
+								lastToken = resp.get("refresh_token").getAsString();
+								accountID = resp.get("uuid").getAsString();
 
-							// Save
-							requireRelogin = false;
-							JsonObject login = new JsonObject();
-							login.addProperty("token", lastToken);
-							login.addProperty("loginName", lastAccountName);
-							writeString(new File(launcherDir, "login.json"), login.toString());
-						} catch (Exception e) {
-							isManuallySelected = false;
-						}
-					}
-
-					// Check
-					if (requireRelogin || isManuallySelected) {
-						// Show login
-						final String accNmF = lastAccountName;
-						log("Opened login window");
-
-						// Open window
-						String accountIDF = accountID;
-						String authTokenF = authToken;
-						boolean isManuallySelectedF = isManuallySelected;
-						activity.runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								showLogin();
+								// Save
+								requireRelogin = false;
+								JsonObject login = new JsonObject();
+								login.addProperty("token", lastToken);
+								login.addProperty("loginName", lastAccountName);
+								writeString(new File(launcherDir, "login.json"), login.toString());
+							} catch (Exception e) {
+								isManuallySelected = false;
 							}
+						}
 
-							private void showLogin() {
-								AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-								builder.setTitle("Player Login");
-								builder.setCancelable(false);
+						// Check
+						if (requireRelogin || isManuallySelected) {
+							// Show login
+							final String accNmF = lastAccountName;
+							log("Opened login window");
 
-								// Set text boxes
-								LinearLayout lila1 = new LinearLayout(activity);
-								lila1.setOrientation(LinearLayout.VERTICAL);
-								EditText usr = new EditText(activity);
-								if (accNmF != null)
-									usr.setText(accNmF);
-								EditText pass = new EditText(activity);
-								pass.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-								lila1.addView(new TextView(activity));
-								lila1.addView(new TextView(activity) {
-									{
-										setText("Log into your Centuria accoint");
-										setGravity(Gravity.CENTER);
-										setTextColor(Color.BLACK);
-										setTextSize(18);
-									}
-								});
-								lila1.addView(new TextView(activity));
-								lila1.addView(new TextView(activity) {
-									{
-										setText("Username");
-									}
-								});
-								lila1.addView(usr);
-								lila1.addView(new TextView(activity) {
-									{
-										setText("Password");
-									}
-								});
-								lila1.addView(pass);
-								lila1.addView(new TextView(activity));
-								builder.setView(lila1);
+							// Open window
+							String accountIDF = accountID;
+							String authTokenF = authToken;
+							boolean isManuallySelectedF = isManuallySelected;
+							activity.runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
+									showLogin();
+								}
 
-								// Set buttons
-								builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog, int id) {
-										// Try login
-										Thread th = new Thread(new Runnable() {
-											@Override
-											public void run() {
-												// Contact API
-												try {
-													String api = hosts.get("api").getAsString();
-													if (!api.endsWith("/"))
-														api += "/";
-													HashMap<String, String> headers = new HashMap<String, String>();
-													headers.put("Content-Type", "application/json");
-													JsonObject payload = new JsonObject();
-													payload.addProperty("username", usr.getText().toString());
-													payload.addProperty("password", pass.getText().toString());
-													ResponseData res = requestRaw(api + "a/authenticate", "POST",
-															headers, payload.toString().getBytes("UTF-8"));
-													if (res.statusCode == 200) {
-														// Read response
-														String data = new String(IoUtil.readAllBytes(res.bodyStream),
-																"UTF-8");
-														res.bodyStream.close();
-														JsonObject resp = new JsonParser().parse(data)
-																.getAsJsonObject();
-														String auth = resp.get("auth_token").getAsString();
-														String refresh = resp.get("refresh_token").getAsString();
+								private void showLogin() {
+									AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+									builder.setTitle("Player Login");
+									builder.setCancelable(false);
 
-														// Result
-														String accountID = resp.get("uuid").getAsString();
-														String accountName = usr.getText().toString();
-														String authToken = auth;
-														String refreshToken = refresh;
+									// Set text boxes
+									LinearLayout lila1 = new LinearLayout(activity);
+									lila1.setOrientation(LinearLayout.VERTICAL);
+									EditText usr = new EditText(activity);
+									if (accNmF != null)
+										usr.setText(accNmF);
+									EditText pass = new EditText(activity);
+									pass.setInputType(
+											InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+									lila1.addView(new TextView(activity));
+									lila1.addView(new TextView(activity) {
+										{
+											setText("Log into your Centuria accoint");
+											setGravity(Gravity.CENTER);
+											setTextColor(Color.BLACK);
+											setTextSize(18);
+										}
+									});
+									lila1.addView(new TextView(activity));
+									lila1.addView(new TextView(activity) {
+										{
+											setText("Username");
+										}
+									});
+									lila1.addView(usr);
+									lila1.addView(new TextView(activity) {
+										{
+											setText("Password");
+										}
+									});
+									lila1.addView(pass);
+									lila1.addView(new TextView(activity));
+									builder.setView(lila1);
 
+									// Set buttons
+									builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+										public void onClick(DialogInterface dialog, int id) {
+											// Try login
+											Thread th = new Thread(new Runnable() {
+												@Override
+												public void run() {
+													// Contact API
+													try {
+														String api = hosts.get("api").getAsString();
+														if (!api.endsWith("/"))
+															api += "/";
+														HashMap<String, String> headers = new HashMap<String, String>();
+														headers.put("Content-Type", "application/json");
+														JsonObject payload = new JsonObject();
+														payload.addProperty("username", usr.getText().toString());
+														payload.addProperty("password", pass.getText().toString());
+														ResponseData res = requestRaw(api + "a/authenticate", "POST",
+																headers, payload.toString().getBytes("UTF-8"));
+														if (res.statusCode == 200) {
+															// Read response
+															String data = new String(
+																	IoUtil.readAllBytes(res.bodyStream), "UTF-8");
+															res.bodyStream.close();
+															JsonObject resp = new JsonParser().parse(data)
+																	.getAsJsonObject();
+															String auth = resp.get("auth_token").getAsString();
+															String refresh = resp.get("refresh_token").getAsString();
+
+															// Result
+															String accountID = resp.get("uuid").getAsString();
+															String accountName = usr.getText().toString();
+															String authToken = auth;
+															String refreshToken = refresh;
+
+															try {
+																// Save
+																JsonObject login = new JsonObject();
+																login.addProperty("token", refreshToken);
+																login.addProperty("loginName", accountName);
+																writeString(new File(launcherDir, "login.json"),
+																		login.toString());
+
+																// Run launcher post-auth
+																postAuth(accountID, authToken);
+															} catch (Throwable e) {
+																Throwable t = e;
+																String stackTr = "";
+																while (t != null) {
+																	for (StackTraceElement ele : e.getStackTrace())
+																		stackTr += "\n  at: " + ele;
+																	t = t.getCause();
+																}
+																error("An error occurred while running the launcher!\n\nException: "
+																		+ e.getClass().getTypeName()
+																		+ (e.getMessage() != null
+																				? ": " + e.getMessage()
+																				: "")
+																		+ ":" + stackTr, "Launcher error");
+																return;
+															}
+														} else {
+															// Check error
+															String data = new String(
+																	IoUtil.readAllBytes(res.bodyStream), "UTF-8");
+															res.bodyStream.close();
+															JsonObject resp = new JsonParser().parse(data)
+																	.getAsJsonObject();
+															switch (resp.get("error").getAsString()) {
+															case "invalid_credential": {
+																activity.runOnUiThread(new Runnable() {
+																	@Override
+																	public void run() {
+																		nonFatalError("Credentials are invalid.",
+																				"Login error", new Runnable() {
+																					@Override
+																					public void run() {
+																						showLogin();
+																					}
+																				});
+																	}
+																});
+																return;
+															}
+															default: {
+																activity.runOnUiThread(new Runnable() {
+																	@Override
+																	public void run() {
+																		nonFatalError(
+																				"An unknown server error occured, please contact support.",
+																				"Login error", new Runnable() {
+																					@Override
+																					public void run() {
+																						showLogin();
+																					}
+																				});
+																	}
+																});
+																return;
+															}
+															}
+														}
+													} catch (Exception e) {
+														activity.runOnUiThread(new Runnable() {
+															@Override
+															public void run() {
+																nonFatalError(
+																		"An unknown error occured, please check your internet connection. If the error persists, please open a support ticket",
+																		"Login error", new Runnable() {
+																			@Override
+																			public void run() {
+																				showLogin();
+																			}
+																		});
+															}
+														});
+														return;
+													}
+												}
+											}, "Launcher thread");
+											th.setDaemon(true);
+											th.start();
+										}
+									});
+									builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+										public void onClick(DialogInterface dialog, int id) {
+											if (!isManuallySelectedF)
+												activity.finishAndRemoveTask();
+											else {
+												Thread th = new Thread(new Runnable() {
+
+													@Override
+													public void run() {
 														try {
-															// Save
-															JsonObject login = new JsonObject();
-															login.addProperty("token", refreshToken);
-															login.addProperty("loginName", accountName);
-															writeString(new File(launcherDir, "login.json"),
-																	login.toString());
-
 															// Run launcher post-auth
-															postAuth(accountID, authToken);
+															postAuth(accountIDF, authTokenF);
 														} catch (Throwable e) {
 															Throwable t = e;
 															String stackTr = "";
@@ -384,113 +507,27 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 																	+ ":" + stackTr, "Launcher error");
 															return;
 														}
-													} else {
-														// Check error
-														String data = new String(IoUtil.readAllBytes(res.bodyStream),
-																"UTF-8");
-														res.bodyStream.close();
-														JsonObject resp = new JsonParser().parse(data)
-																.getAsJsonObject();
-														switch (resp.get("error").getAsString()) {
-														case "invalid_credential": {
-															activity.runOnUiThread(new Runnable() {
-																@Override
-																public void run() {
-																	nonFatalError("Credentials are invalid.",
-																			"Login error", new Runnable() {
-																				@Override
-																				public void run() {
-																					showLogin();
-																				}
-																			});
-																}
-															});
-															return;
-														}
-														default: {
-															activity.runOnUiThread(new Runnable() {
-																@Override
-																public void run() {
-																	nonFatalError(
-																			"An unknown server error occured, please contact support.",
-																			"Login error", new Runnable() {
-																				@Override
-																				public void run() {
-																					showLogin();
-																				}
-																			});
-																}
-															});
-															return;
-														}
-														}
 													}
-												} catch (Exception e) {
-													activity.runOnUiThread(new Runnable() {
-														@Override
-														public void run() {
-															nonFatalError(
-																	"An unknown error occured, please check your internet connection. If the error persists, please open a support ticket",
-																	"Login error", new Runnable() {
-																		@Override
-																		public void run() {
-																			showLogin();
-																		}
-																	});
-														}
-													});
-													return;
-												}
+												}, "Launcher thread");
+												th.setDaemon(true);
+												th.start();
 											}
-										}, "Launcher thread");
-										th.setDaemon(true);
-										th.start();
-									}
-								});
-								builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-									public void onClick(DialogInterface dialog, int id) {
-										if (!isManuallySelectedF)
-											activity.finishAndRemoveTask();
-										else {
-											Thread th = new Thread(new Runnable() {
-
-												@Override
-												public void run() {
-													try {
-														// Run launcher post-auth
-														postAuth(accountIDF, authTokenF);
-													} catch (Throwable e) {
-														Throwable t = e;
-														String stackTr = "";
-														while (t != null) {
-															for (StackTraceElement ele : e.getStackTrace())
-																stackTr += "\n  at: " + ele;
-															t = t.getCause();
-														}
-														error("An error occurred while running the launcher!\n\nException: "
-																+ e.getClass().getTypeName()
-																+ (e.getMessage() != null ? ": " + e.getMessage() : "")
-																+ ":" + stackTr, "Launcher error");
-														return;
-													}
-												}
-											}, "Launcher thread");
-											th.setDaemon(true);
-											th.start();
 										}
-									}
-								});
+									});
 
-								// Show
-								builder.create().show();
-							}
-						});
-						return;
+									// Show
+									builder.create().show();
+								}
+							});
+							return;
+						}
+
+						// Run launcher post-auth
+						postAuth(accountID, authToken);
+					} else {
+						// Run game
+						startGame(false, null);
 					}
-
-					// Run launcher post-auth
-					postAuth(accountID, authToken);
 				} catch (Throwable e) {
 					Throwable t = e;
 					String stackTr = "";
@@ -537,75 +574,85 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				JsonObject respJ = new JsonParser().parse(dataS).getAsJsonObject();
 				boolean completedTutorial = respJ.get("tutorial_completed").getAsBoolean();
 
-				// Modloader update
-				log("Checking modloader files...");
+				// Start game
+				startGame(completedTutorial, authToken);
+			}
 
-				// Read version
-				String currentLoader = "";
-				if (new File(launcherDir, "loaderversion.info").exists()) {
-					currentLoader = readString(new File(launcherDir, "loaderversion.info"));
-				}
-				if (!modloader.get("version").getAsString().equals(currentLoader)) {
-					// Update modloader
-					log("Updating " + modloader.get("name").getAsString() + "...");
-					downloadFile(modloader.get("url").getAsString(), new File(launcherDir, "modloader.zip"));
-					progressValue = 0;
-					progressMax = 100;
-					updateProgress();
+			private void startGame(boolean completedTutorial, String authToken) throws Throwable {
+				// Check FTL
+				if (!disableFtl) {
+					// Modloader update
+					log("Checking modloader files...");
 
-					// Extract
-					log("Extracting " + modloader.get("name").getAsString() + "...");
-					unZip(new File(launcherDir, "modloader.zip"), new File(activity.getApplicationInfo().dataDir));
+					// Read version
+					String currentLoader = "";
+					if (new File(launcherDir, "loaderversion.info").exists()) {
+						currentLoader = readString(new File(launcherDir, "loaderversion.info"));
+					}
+					if (!modloader.get("version").getAsString().equals(currentLoader)) {
+						// Update modloader
+						log("Updating " + modloader.get("name").getAsString() + "...");
+						downloadFile(modloader.get("url").getAsString(), new File(launcherDir, "modloader.zip"));
+						progressValue = 0;
+						progressMax = 100;
+						updateProgress();
 
-					// Save version
-					writeString(new File(launcherDir, "loaderversion.info"), modloader.get("version").getAsString());
-					progressEnabled = false;
-					progressValue = 0;
-					progressMax = 100;
-					log("Update completed!");
-				}
+						// Extract
+						log("Extracting " + modloader.get("name").getAsString() + "...");
+						unZip(new File(launcherDir, "modloader.zip"), new File(activity.getApplicationInfo().dataDir));
 
-				// Client mod update
-				log("Checking for mod updates...");
+						// Save version
+						writeString(new File(launcherDir, "loaderversion.info"),
+								modloader.get("version").getAsString());
+						progressEnabled = false;
+						progressValue = 0;
+						progressMax = 100;
+						log("Update completed!");
+					}
 
-				// Read version
-				String currentModVersion = "";
-				String currentAssetVersion = "";
-				if (new File(launcherDir, "modversion.info").exists()) {
-					currentModVersion = readString(new File(launcherDir, "modversion.info"));
-				}
-				if (new File(launcherDir, "assetversion.info").exists()) {
-					currentAssetVersion = readString(new File(launcherDir, "assetversion.info"));
-				}
-				if (!serverInfo.get("modVersion").getAsString().equals(currentModVersion)) {
-					// Update mods
-					log("Updating client mods...");
+					// Client mod update
+					log("Checking for mod updates...");
 
-					// Download manifest
-					updateMods("assemblies/index.json", modloader.get("assemblyBaseDir").getAsString(), hosts,
-							authToken);
+					// Read version
+					String currentModVersion = "";
+					String currentAssetVersion = "";
+					if (new File(launcherDir, "modversion.info").exists()) {
+						currentModVersion = readString(new File(launcherDir, "modversion.info"));
+					}
+					if (new File(launcherDir, "assetversion.info").exists()) {
+						currentAssetVersion = readString(new File(launcherDir, "assetversion.info"));
+					}
+					if (!serverInfo.get("modVersion").getAsString().equals(currentModVersion)) {
+						// Update mods
+						log("Updating client mods...");
 
-					// Save version
-					writeString(new File(launcherDir, "modversion.info"), serverInfo.get("modVersion").getAsString());
-					progressEnabled = false;
-					progressValue = 0;
-					progressMax = 100;
-					log("Update completed!");
-				}
-				if (!serverInfo.get("assetVersion").getAsString().equals(currentAssetVersion)) {
-					// Update mods
-					log("Updating client mod assets...");
+						// Download manifest
+						updateMods("assemblies/index.json", modloader.get("assemblyBaseDir").getAsString(), hosts,
+								authToken);
 
-					// Download manifest
-					updateMods("assets/index.json", modloader.get("assetBaseDir").getAsString(), hosts, authToken);
+						// Save version
+						writeString(new File(launcherDir, "modversion.info"),
+								serverInfo.get("modVersion").getAsString());
+						progressEnabled = false;
+						progressValue = 0;
+						progressMax = 100;
+						log("Update completed!");
+					}
+					if (!serverInfo.get("assetVersion").getAsString().equals(currentAssetVersion)) {
+						// Update mods
+						log("Updating client mod assets...");
 
-					// Save version
-					writeString(new File(launcherDir, "assetversion.info"),
-							serverInfo.get("assetVersion").getAsString());
-					progressEnabled = false;
-					progressValue = 0;
-					progressMax = 100;
-					log("Update completed!");
+						// Download manifest
+						updateMods("assets/index.json", modloader.get("assetBaseDir").getAsString(), hosts, authToken);
+
+						// Save version
+						writeString(new File(launcherDir, "assetversion.info"),
+								serverInfo.get("assetVersion").getAsString());
+						progressEnabled = false;
+						progressValue = 0;
+						progressMax = 100;
+						log("Update completed!");
+					}
 				}
 
 				// Ready
@@ -615,136 +662,177 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				// Prepare to start
 				log("Preparing to start the game...");
 
-				// Find a port
-				ServerSocket s;
-				Random rnd = new Random();
-				int port;
-				log("Preparing client communication...");
-				while (true) {
-					port = rnd.nextInt(65535);
-					while (port < 1024)
+				// Start client communication server
+				ServerSocket serverSock = null;
+				if (!disableFtl) {
+					// Find a port
+					ServerSocket s;
+					Random rnd = new Random();
+					int port;
+					log("Preparing client communication...");
+					while (true) {
 						port = rnd.nextInt(65535);
-					try {
-						s = new ServerSocket(port, 0, InetAddress.getByName("127.0.0.1"));
-						break;
-					} catch (IOException e) {
+						while (port < 1024)
+							port = rnd.nextInt(65535);
+						try {
+							s = new ServerSocket(port, 0, InetAddress.getByName("127.0.0.1"));
+							break;
+						} catch (IOException e) {
+						}
 					}
+					serverSock = s;
 				}
-				ServerSocket serverSock = s;
+
+				// Start proxies if needed
+				if (useProxyMethod) {
+					log("Starting proxy servers...");
+					String hostDirector = hosts.get("director").getAsString();
+					String hostApi = hosts.get("api").getAsString();
+
+					// Create API proxy
+					HashMap<String, String> props = new HashMap<String, String>();
+					props.put("Address", "127.0.0.1");
+					props.put("Port", "6970");
+					ConnectiveHttpServer apiProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					apiProxy.registerProcessor(new ProxyProcessor(hostApi));
+					apiProxy.start();
+
+					// Create director proxy
+					props = new HashMap<String, String>();
+					props.put("Address", "127.0.0.1");
+					props.put("Port", "6969");
+					ConnectiveHttpServer directorProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					directorProxy.registerProcessor(new ProxyProcessor(hostDirector));
+					directorProxy.start();
+
+					// Create asset proxy
+					props = new HashMap<String, String>();
+					props.put("Address", "127.0.0.1");
+					props.put("Port", "6967");
+					ConnectiveHttpServer assetProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					assetProxy.registerProcessor(new ProxyProcessor(proxyAssetUrl));
+					assetProxy.start();
+				}
 
 				// Start the game
 				try {
 					// Prepare to start
 					log("Preparing game client...");
 
-					// Load windowsill
-					log("Loading Windowsill configuration...");
-					File clientDir = new File(activity.getApplicationInfo().dataDir);
-					JsonObject windowsillConfig = new JsonParser()
-							.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
-					File monoAssembly = new File(clientDir, windowsillConfig.get("monoAssembly").getAsString());
-					File monoDir = new File(clientDir, windowsillConfig.get("monoDir").getAsString());
-					File monoLibsDir = new File(clientDir, windowsillConfig.get("monoLibsDir").getAsString());
-					File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
-					File monoEtcDir = new File(monoDir, "etc");
-					monoEtcDir.mkdirs();
-					String mainClass = windowsillConfig.get("mainClass").getAsString();
-					String mainMethod = windowsillConfig.get("mainMethod").getAsString();
-					Log.i("FT-LAUNCHER", "");
-					Log.i("FT-LAUNCHER", "WINDOWSIL LOADER (WINDOWSILL) IS LOADING!");
-					Log.i("FT-LAUNCHER", "");
-					Log.i("FT-LAUNCHER", "Mono assembly: " + monoAssembly);
-					Log.i("FT-LAUNCHER", "Mono libraries: " + monoLibsDir);
-					Log.i("FT-LAUNCHER", "Mono directory: " + monoDir);
-					Log.i("FT-LAUNCHER", "Main assembly: " + mainAssembly);
-					Log.i("FT-LAUNCHER", "Entrypoint class: " + mainClass);
-					Log.i("FT-LAUNCHER", "Entrypoint method: " + mainMethod);
-					Log.i("FT-LAUNCHER", "");
+					// Setup FTL
+					if (!disableFtl) {
+						// Load windowsill
+						log("Loading Windowsill configuration...");
+						File clientDir = new File(activity.getApplicationInfo().dataDir);
+						JsonObject windowsillConfig = new JsonParser()
+								.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
+						File monoAssembly = new File(clientDir, windowsillConfig.get("monoAssembly").getAsString());
+						File monoDir = new File(clientDir, windowsillConfig.get("monoDir").getAsString());
+						File monoLibsDir = new File(clientDir, windowsillConfig.get("monoLibsDir").getAsString());
+						File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
+						File monoEtcDir = new File(monoDir, "etc");
+						monoEtcDir.mkdirs();
+						String mainClass = windowsillConfig.get("mainClass").getAsString();
+						String mainMethod = windowsillConfig.get("mainMethod").getAsString();
+						Log.i("FT-LAUNCHER", "");
+						Log.i("FT-LAUNCHER", "WINDOWSIL LOADER (WINDOWSILL) IS LOADING!");
+						Log.i("FT-LAUNCHER", "");
+						Log.i("FT-LAUNCHER", "Mono assembly: " + monoAssembly);
+						Log.i("FT-LAUNCHER", "Mono libraries: " + monoLibsDir);
+						Log.i("FT-LAUNCHER", "Mono directory: " + monoDir);
+						Log.i("FT-LAUNCHER", "Main assembly: " + mainAssembly);
+						Log.i("FT-LAUNCHER", "Entrypoint class: " + mainClass);
+						Log.i("FT-LAUNCHER", "Entrypoint method: " + mainMethod);
+						Log.i("FT-LAUNCHER", "");
 
-					// Check files
-					if (!monoDir.exists() || !monoDir.isDirectory()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono folder does not exist: "
-								+ windowsillConfig.get("monoDir").getAsString(), "Launcher error");
-						return;
-					}
-					if (!monoLibsDir.exists() || !monoLibsDir.isDirectory()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono libraries folder does not exist: "
-								+ windowsillConfig.get("monoLibsDir").getAsString(), "Launcher error");
-						return;
-					}
-					if (!monoAssembly.exists() || !monoAssembly.isFile()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly file does not exist: "
-								+ windowsillConfig.get("monoAssembly").getAsString(), "Launcher error");
-						return;
-					}
-					if (!mainAssembly.exists() || !mainAssembly.isFile()) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMod assembly file does not exist: "
-								+ windowsillConfig.get("mainAssembly").getAsString(), "Launcher error");
-						return;
-					}
+						// Check files
+						if (!monoDir.exists() || !monoDir.isDirectory()) {
+							error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono folder does not exist: "
+									+ windowsillConfig.get("monoDir").getAsString(), "Launcher error");
+							return;
+						}
+						if (!monoLibsDir.exists() || !monoLibsDir.isDirectory()) {
+							error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono libraries folder does not exist: "
+									+ windowsillConfig.get("monoLibsDir").getAsString(), "Launcher error");
+							return;
+						}
+						if (!monoAssembly.exists() || !monoAssembly.isFile()) {
+							error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly file does not exist: "
+									+ windowsillConfig.get("monoAssembly").getAsString(), "Launcher error");
+							return;
+						}
+						if (!mainAssembly.exists() || !mainAssembly.isFile()) {
+							error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMod assembly file does not exist: "
+									+ windowsillConfig.get("mainAssembly").getAsString(), "Launcher error");
+							return;
+						}
 
-					// Load mono
-					log("Loading Mono...");
-					long monoLib = WMNI.loadMonoLib(monoAssembly.getPath());
-					if (monoLib == 0) {
-						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly failed to load: "
-								+ WMNI.dlLoadError(), "Launcher error");
-						return;
+						// Load mono
+						log("Loading Mono...");
+						long monoLib = WMNI.loadMonoLib(monoAssembly.getPath());
+						if (monoLib == 0) {
+							error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly failed to load: "
+									+ WMNI.dlLoadError(), "Launcher error");
+							return;
+						}
+
+						// Init runtime
+						log("Initializing Mono runtime...");
+						long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getPath(), monoLibsDir.getPath(),
+								monoEtcDir.getPath());
+						log("Application domain: " + domain);
+						Thread.sleep(10000);
+
+						// TODO: windowsill setup etc
 					}
-
-					// Init runtime
-					log("Initializing Mono runtime...");
-					long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getPath(), monoLibsDir.getPath(),
-							monoEtcDir.getPath());
-					log("Application domain: " + domain);
-					Thread.sleep(10000);
-
-					// TODO: windowsill setup etc
 
 					// Start client
 					log("Starting client...");
 
 					// Accept client
-					final String authTokenF = authToken;
-					Thread clT = new Thread(new Runnable() {
-						@Override
-						public void run() {
-							Socket cl;
-							try {
-								cl = serverSock.accept();
-							} catch (IOException e) {
-								return;
-							}
-							try {
-								log("Communicating with client...");
-								launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), serverInfo, hosts,
-										ports, completedTutorial);
-								cl.close();
-								log("Finished startup!");
-								Thread.sleep(1000);
+					if (serverSock != null) {
+						final String authTokenF = authToken;
+						final ServerSocket serverSockF = serverSock;
+						Thread clT = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								Socket cl;
 								try {
-									serverSock.close();
+									cl = serverSockF.accept();
 								} catch (IOException e) {
+									return;
 								}
-								return;
-							} catch (Throwable e) {
-								Throwable t = e;
-								String stackTr = "";
-								while (t != null) {
-									for (StackTraceElement ele : e.getStackTrace())
-										stackTr += "\n  at: " + ele;
-									t = t.getCause();
+								try {
+									log("Communicating with client...");
+									launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), serverInfo, hosts,
+											ports, completedTutorial);
+									cl.close();
+									log("Finished startup!");
+									Thread.sleep(1000);
+									try {
+										serverSockF.close();
+									} catch (IOException e) {
+									}
+									return;
+								} catch (Throwable e) {
+									Throwable t = e;
+									String stackTr = "";
+									while (t != null) {
+										for (StackTraceElement ele : e.getStackTrace())
+											stackTr += "\n  at: " + ele;
+										t = t.getCause();
+									}
+									error("An error occurred while running the launcher!\n\nException: "
+											+ e.getClass().getTypeName()
+											+ (e.getMessage() != null ? ": " + e.getMessage() : "") + ":" + stackTr,
+											"Launcher error");
+									return;
 								}
-								error("An error occurred while running the launcher!\n\nException: "
-										+ e.getClass().getTypeName()
-										+ (e.getMessage() != null ? ": " + e.getMessage() : "") + ":" + stackTr,
-										"Launcher error");
-								return;
 							}
-						}
-					}, "Client Communication Thread");
-					clT.setDaemon(true);
-					clT.start();
+						}, "Client Communication Thread");
+						clT.setDaemon(true);
+						clT.start();
+					}
 
 					// Start
 					label = null;
@@ -804,7 +892,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				serverInfo.get("encryptedChat").getAsBoolean());
 
 		// Send autologin
-		if (completedTutorial) {
+		if (completedTutorial && authToken != null) {
 			Log.i("FT-LAUNCHER", "Sending autologin...");
 			sendCommand(cl, "autologin", authToken);
 		}
@@ -814,9 +902,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	}
 
 	private String downloadProtectedString(String url, String authToken) throws IOException {
+		if (authToken == null)
+			return downloadString(url);
 		HashMap<String, String> headers = new HashMap<String, String>();
 		headers.put("Authorization", "Bearer " + authToken);
 		InputStream res = request(url, "GET", headers, null);
+		String data = new String(IoUtil.readAllBytes(res), "UTF-8");
+		res.close();
+		return data;
+	}
+
+	private String downloadString(String url) throws IOException {
+		InputStream res = request(url, "GET", new HashMap<String, String>(), null);
 		String data = new String(IoUtil.readAllBytes(res), "UTF-8");
 		res.close();
 		return data;
@@ -1003,9 +1100,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		return suff;
 	}
 
-	private static class ResponseData {
+	public static class ResponseData {
 		public int statusCode;
 		public String statusLine;
+		public Map<String, String> headers;
 		public InputStream bodyStream;
 	}
 
@@ -1030,7 +1128,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Write request
 			conn.getOutputStream().write((method + " " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
-			conn.getOutputStream().write(("User-Agent: ftupdater\r\n").getBytes("UTF-8"));
+			conn.getOutputStream().write(("User-Agent: ftlauncher\r\n").getBytes("UTF-8"));
 			conn.getOutputStream().write(("Host: " + u.getHost() + "\r\n").getBytes("UTF-8"));
 			if (body != null)
 				conn.getOutputStream().write(("Content-Length: " + body.length + "\r\n").getBytes("UTF-8"));
@@ -1067,6 +1165,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			resp.statusLine = statusLine;
 			resp.statusCode = status;
 			resp.bodyStream = data;
+			resp.headers = responseHeadersOutput;
 			return resp;
 		} else {
 			// Default mode
@@ -1083,6 +1182,11 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			resp.statusLine = conn.getResponseCode() + " " + conn.getResponseMessage();
 			resp.statusCode = conn.getResponseCode();
 			resp.bodyStream = resp.statusCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
+			resp.headers = new HashMap<String, String>();
+			Map<String, List<String>> headerResp = conn.getHeaderFields();
+			for (String key : headerResp.keySet())
+				if (headerResp.get(key).size() != 0)
+					resp.headers.put(key, headerResp.get(key).get(0));
 			return resp;
 		}
 	}

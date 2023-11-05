@@ -84,7 +84,7 @@ public class FtUpdater {
 
 		// Check updates
 		log("Checking for updates...");
-		if (true) { // if (!currentVersion.equals(launcherVersion)) {
+		if (!currentVersion.equals(launcherVersion)) {
 			try {
 				// Update label
 				log("Updating launcher...");
