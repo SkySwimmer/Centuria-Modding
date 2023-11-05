@@ -1,5 +1,6 @@
 package org.asf.centuria.launcher.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,41 +15,9 @@ public class IoUtil {
 	 * @return Byte array
 	 */
 	public static byte[] readAllBytes(InputStream strm) throws IOException {
-		byte[] buf = new byte[20480];
-		int c = 0;
-		while (true) {
-			// Read
-			try {
-				int r = strm.read(buf, c, buf.length);
-				if (r == -1)
-					break;
-				c += r;
-			} catch (Exception e) {
-				int b = strm.read();
-				if (b == -1)
-					break;
-				buf[c++] = (byte) b;
-			}
-			if (c >= buf.length) {
-				// Grow buffer
-				if (c == Integer.MAX_VALUE)
-					break;
-
-				// Get new size
-				int nL;
-				if ((long) buf.length + 20480l >= Integer.MAX_VALUE) {
-					nL = Integer.MAX_VALUE;
-				} else
-					nL = buf.length + 20480;
-
-				// Grow
-				byte[] newBuf = new byte[nL];
-				for (int i = 0; i < buf.length; i++)
-					newBuf[i] = buf[i];
-				buf = newBuf;
-			}
-		}
-		return Arrays.copyOfRange(buf, 0, c);
+		ByteArrayOutputStream bO = new ByteArrayOutputStream();
+		transfer(strm, bO);
+		return bO.toByteArray();
 	}
 
 	/**

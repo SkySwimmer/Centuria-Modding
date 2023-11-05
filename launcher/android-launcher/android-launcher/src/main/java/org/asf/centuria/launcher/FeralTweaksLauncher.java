@@ -29,6 +29,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.asf.centuria.launcher.io.ChunkedStream;
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.centuria.launcher.io.LengthLimitedStream;
 import org.asf.centuria.launcher.processors.AssetProxyProcessor;
 import org.asf.centuria.launcher.processors.ProxyProcessor;
 import org.asf.connective.ConnectiveHttpServer;
@@ -94,6 +95,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
 
 	private String accountID;
+
+	private static boolean windowsillLoaded;
 
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
@@ -453,6 +456,9 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 															String data = new String(
 																	IoUtil.readAllBytes(res.bodyStream), "UTF-8");
 															res.bodyStream.close();
+															Log.i("FT-LAUNCHER", data);
+															Log.i("FT-LAUNCHER",
+																	res.bodyStream.getClass().getTypeName()); // FIXME
 															JsonObject resp = new JsonParser().parse(data)
 																	.getAsJsonObject();
 															switch (resp.get("error").getAsString()) {
@@ -591,13 +597,21 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
 
 				// Load windowsill
-				if (new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so").exists())
-					System.load(
-							new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so").getAbsolutePath());
-				else if (new File(launcherDir, "libwindowsill.so").exists())
-					System.load(new File(launcherDir, "libwindowsill.so").getAbsolutePath());
-				else if (new File(nativesDir, "libwindowsill.so").exists())
-					System.load(new File(nativesDir, "libwindowsill.so").getAbsolutePath());
+				try {
+					if (windowsillLoaded)
+						return;
+					if (new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so").exists())
+						System.load(new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so")
+								.getAbsolutePath());
+					else if (new File(launcherDir, "libwindowsill.so").exists())
+						System.load(new File(launcherDir, "libwindowsill.so").getAbsolutePath());
+					else if (new File(nativesDir, "libwindowsill.so").exists())
+						System.load(new File(nativesDir, "libwindowsill.so").getAbsolutePath());
+					windowsillLoaded = true;
+				} catch (Throwable e) {
+					// Due to how we mod, we cannot determine if the library is already loaded, so
+					// we need to prevent errors crashing the app instead
+				}
 			}
 
 			private void postAuth(String accountID, String authToken) throws Throwable {
@@ -1365,7 +1379,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			if (resp.headers.containsKey("transfer-encoding")
 					&& resp.headers.get("transfer-encoding").equalsIgnoreCase("chunked"))
 				resp.bodyStream = new ChunkedStream(resp.bodyStream);
-			resp.responseHolder = conn;
+			else if (resp.headers.containsKey("content-length")
+					&& Long.parseLong(resp.headers.get("content-length")) > 0)
+				resp.responseHolder = new LengthLimitedStream(resp.bodyStream,
+						Long.parseLong(resp.headers.get("content-length")));
 			return resp;
 		} else {
 			// Default mode

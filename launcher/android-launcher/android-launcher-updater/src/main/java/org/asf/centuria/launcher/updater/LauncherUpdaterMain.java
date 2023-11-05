@@ -283,59 +283,134 @@ public class LauncherUpdaterMain {
 						if (extras.containsKey("dataServerPort"))
 							port = extras.getInt("dataServerPort");
 
-						// Create and start server
-						ConnectiveHttpServer server;
-						Random rnd = new Random();
-						while (true) {
-							// Create server
-							if (port == -1) {
-								port = rnd.nextInt(65535);
-								while (port < 1024)
-									port = rnd.nextInt(65535);
-							}
-							HashMap<String, String> props = new HashMap<String, String>();
-							props.put("Address", address);
-							props.put("Port", Integer.toString(port));
-							server = ConnectiveHttpServer.create("HTTP/1.1", props);
-
-							// Setup
-							setupDataServer(server);
-
-							// Start
-							try {
-								server.start();
-							} catch (IOException e) {
-								if (port == -1)
-									throw e;
-							}
-
-							// Done
-							break;
-						}
-
-						// Log and lock
-						logDone = false;
+						// Ask the user if they wish to proceed
 						String addressF = address;
-						int portF = port;
+						int portTF = port;
 						activity.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								txt.setText("Waiting for requests...\n\n\nApplication data server started! Started on "
-										+ addressF + ", port " + portF //
-										+ "\n" //
-										+ "\nApplication data: http://" + addressF + ":" + portF + "/data/"
-										+ "\nExternal data: http://" + addressF + ":" + portF + "/externalfiles/"
-										+ "\nCache data: http://" + addressF + ":" + portF + "/cache/"
-										+ "\nExternal cache: http://" + addressF + ":" + portF + "/externalcache/");
-								logDone = true;
+								AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+								builder.setTitle("Application data bridge is being activated");
+								builder.setMessage(
+										"WARNING! The application data bridge was requested to be activated!\n\n"
+												+ "This feature allows other apps and other devices to access the files of this application. If you did not intend this feature to be enabled, please press cancel to prevent potential application data corruption!\n"
+												+ "\n" //
+												+ "Server will start on host: " + addressF + "\n" //
+												+ "And on port: " + (portTF == -1 ? "<random port>" : portTF) + "\n" //
+												+ "\n" //
+												+ "Proceed at your own risk");
+								builder.setPositiveButton("Enable bridge", new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int id) {
+										Thread th = new Thread(new Runnable() {
+
+											@Override
+											public void run() {
+												try {
+													int port = -1;
+													if (extras.containsKey("dataServerPort"))
+														port = extras.getInt("dataServerPort");
+
+													// Create and start server
+													ConnectiveHttpServer server;
+													Random rnd = new Random();
+													while (true) {
+														// Create server
+														if (port == -1) {
+															port = rnd.nextInt(65535);
+															while (port < 1024)
+																port = rnd.nextInt(65535);
+														}
+														HashMap<String, String> props = new HashMap<String, String>();
+														props.put("Address", addressF);
+														props.put("Port", Integer.toString(port));
+														server = ConnectiveHttpServer.create("HTTP/1.1", props);
+
+														// Setup
+														setupDataServer(server);
+
+														// Start
+														try {
+															server.start();
+														} catch (IOException e) {
+															if (port == -1)
+																throw e;
+														}
+
+														// Done
+														break;
+													}
+
+													// Log and lock
+													logDone = false;
+													int portF = port;
+													activity.runOnUiThread(new Runnable() {
+														@Override
+														public void run() {
+															txt.setText(
+																	"Waiting for requests...\n\n\nApplication data server started! Started on "
+																			+ addressF + ", port " + portF //
+																			+ "\n" //
+																			+ "\nApplication data: http://" + addressF
+																			+ ":" + portF + "/data/"
+																			+ "\nExternal data: http://" + addressF
+																			+ ":" + portF + "/externalfiles/"
+																			+ "\nCache data: http://" + addressF + ":"
+																			+ portF + "/cache/"
+																			+ "\nExternal cache: http://" + addressF
+																			+ ":" + portF + "/externalcache/");
+															logDone = true;
+														}
+													});
+													while (!logDone)
+														try {
+															Thread.sleep(10);
+														} catch (InterruptedException e) {
+														}
+													server.waitForExit();
+													activity.runOnUiThread(new Runnable() {
+
+														@Override
+														public void run() {
+															activity.finishAndRemoveTask();
+														}
+													});
+												} catch (Throwable e) {
+													Throwable t = e;
+													String stackTr = "";
+													while (t != null) {
+														for (StackTraceElement ele : e.getStackTrace())
+															stackTr += "\n  at: " + ele;
+														t = t.getCause();
+													}
+													error(activity,
+															"An error occurred while running the launcher update program!\n\nException: "
+																	+ e.getClass().getTypeName()
+																	+ (e.getMessage() != null ? ": " + e.getMessage()
+																			: "")
+																	+ ":" + stackTr,
+															"Launcher error");
+													return;
+												}
+											}
+										});
+										th.setDaemon(true);
+										th.start();
+									}
+								});
+								builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int id) {
+										// Restart
+										Intent intent = new Intent(activity.getApplicationContext(), activityCls);
+										intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+										intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+										intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+										activity.startActivity(intent);
+									}
+								});
+								builder.create().show();
 							}
 						});
-						while (!logDone)
-							try {
-								Thread.sleep(10);
-							} catch (InterruptedException e) {
-							}
-						server.waitForExit();
+						return;
 					}
 
 					// Log
