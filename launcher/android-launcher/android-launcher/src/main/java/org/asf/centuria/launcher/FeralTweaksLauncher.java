@@ -1381,7 +1381,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				resp.bodyStream = new ChunkedStream(resp.bodyStream);
 			else if (resp.headers.containsKey("content-length")
 					&& Long.parseLong(resp.headers.get("content-length")) > 0)
-				resp.responseHolder = new LengthLimitedStream(resp.bodyStream,
+				resp.bodyStream = new LengthLimitedStream(resp.bodyStream,
 						Long.parseLong(resp.headers.get("content-length")));
 			return resp;
 		} else {
