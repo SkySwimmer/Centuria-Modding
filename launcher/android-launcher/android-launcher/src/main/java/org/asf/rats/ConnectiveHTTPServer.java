@@ -136,6 +136,7 @@ public class ConnectiveHTTPServer {
 
 		connected = true;
 		socket = getServerSocket(port, ip);
+		serverProcessor.setDaemon(true);
 		serverProcessor.start();
 	}
 

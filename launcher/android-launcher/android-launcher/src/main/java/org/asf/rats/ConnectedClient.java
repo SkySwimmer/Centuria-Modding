@@ -208,6 +208,7 @@ public class ConnectedClient {
 							keepAlive();
 						}
 					}, "Client keepalive " + client);
+					keepAliveProcessor.setDaemon(true);
 					keepAliveProcessor.start();
 					resp.addDefaultHeaders(server);
 					resp.setHeader("Keep-Alive", "timeout=" + timeout + ", max=" + maxRequests);

@@ -538,7 +538,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			}
 
 			private void loadNativeLibraries(Activity activity) {
-				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
+//				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
 
 				// Load windowsill
 //				System.load(nativesDir + "/libwindowsill.so");
@@ -686,14 +686,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 					// Create API proxy
 					ConnectiveHTTPServer apiProxy = new ConnectiveHTTPServer();
-					apiProxy.setIp(InetAddress.getLoopbackAddress());
+					apiProxy.setIp(InetAddress.getByName("0.0.0.0"));
 					apiProxy.setPort(6970);
 					apiProxy.registerProcessor(new ProxyProcessor(hostApi));
 					apiProxy.start();
 
 					// Create director proxy
 					ConnectiveHTTPServer directorProxy = new ConnectiveHTTPServer();
-					directorProxy.setIp(InetAddress.getLoopbackAddress());
+					apiProxy.setIp(InetAddress.getByName("0.0.0.0"));
 					directorProxy.setPort(6969);
 					directorProxy.registerProcessor(new ProxyProcessor(hostDirector));
 					directorProxy.start();
@@ -1090,6 +1090,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		public String statusLine;
 		public Map<String, String> headers;
 		public InputStream bodyStream;
+		public Object responseHolder;
 	}
 
 	public static InputStream request(String url, String method, Map<String, String> headers, byte[] body)
@@ -1120,7 +1121,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			for (String key : headers.keySet())
 				conn.getOutputStream().write((key + ": " + headers.get(key) + "\r\n").getBytes("UTF-8"));
 			conn.getOutputStream().write(("\r\n").getBytes("UTF-8"));
-			conn.getOutputStream().write(body);
+			if (body != null)
+				conn.getOutputStream().write(body);
 
 			// Check response
 			Map<String, String> responseHeadersOutput = new HashMap<String, String>();
@@ -1151,6 +1153,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			resp.statusCode = status;
 			resp.bodyStream = data;
 			resp.headers = responseHeadersOutput;
+			resp.responseHolder = conn;
 			return resp;
 		} else {
 			// Default mode
@@ -1168,6 +1171,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			resp.statusCode = conn.getResponseCode();
 			resp.bodyStream = resp.statusCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
 			resp.headers = new HashMap<String, String>();
+			resp.responseHolder = conn;
 			Map<String, List<String>> headerResp = conn.getHeaderFields();
 			for (String key : headerResp.keySet())
 				if (headerResp.get(key).size() != 0)

@@ -1,11 +1,14 @@
 package org.asf.centuria.launcher.processors;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 
 import org.asf.centuria.launcher.FeralTweaksLauncher;
+import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.rats.processors.HttpUploadProcessor;
 
 public class ProxyProcessor extends HttpUploadProcessor {
@@ -82,7 +85,7 @@ public class ProxyProcessor extends HttpUploadProcessor {
 			}
 
 			// Set response
-			getResponse().setContent(contentType, resp.bodyStream);
+			getResponse().setContent(contentType, new ByteArrayInputStream(IoUtil.readAllBytes(resp.bodyStream)));
 		} catch (IOException e) {
 			setResponseCode(404);
 			setResponseMessage("Not found");
