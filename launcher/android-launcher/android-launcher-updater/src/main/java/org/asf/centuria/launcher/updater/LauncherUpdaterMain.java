@@ -272,8 +272,13 @@ public class LauncherUpdaterMain {
 					// Done, check extras
 					if (extras != null && extras.containsKey("exposeApplicationData")
 							&& extras.getBoolean("exposeApplicationData")) {
-						DataRequestProcessor.txt = txt;
-						RootRequestProcessor.txt = txt;
+						boolean background = true;
+						if (!extras.containsKey("runDataServerInBackground")
+								|| !extras.getBoolean("runDataServerInBackground")) {
+							DataRequestProcessor.txt = txt;
+							RootRequestProcessor.txt = txt;
+							background = false;
+						}
 
 						// Expose data
 						String address = "0.0.0.0";
@@ -286,6 +291,7 @@ public class LauncherUpdaterMain {
 						// Ask the user if they wish to proceed
 						String addressF = address;
 						int portTF = port;
+						boolean backgroundF = background;
 						activity.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
@@ -341,39 +347,97 @@ public class LauncherUpdaterMain {
 													}
 
 													// Log and lock
-													logDone = false;
-													int portF = port;
-													activity.runOnUiThread(new Runnable() {
-														@Override
-														public void run() {
-															txt.setText(
-																	"Waiting for requests...\n\n\nApplication data server started! Started on "
-																			+ addressF + ", port " + portF //
-																			+ "\n" //
-																			+ "\nApplication data: http://" + addressF
-																			+ ":" + portF + "/data/"
-																			+ "\nExternal data: http://" + addressF
-																			+ ":" + portF + "/externalfiles/"
-																			+ "\nCache data: http://" + addressF + ":"
-																			+ portF + "/cache/"
-																			+ "\nExternal cache: http://" + addressF
-																			+ ":" + portF + "/externalcache/");
-															logDone = true;
-														}
-													});
-													while (!logDone)
-														try {
-															Thread.sleep(10);
-														} catch (InterruptedException e) {
-														}
-													server.waitForExit();
-													activity.runOnUiThread(new Runnable() {
+													if (!backgroundF) {
+														logDone = false;
+														int portF = port;
+														activity.runOnUiThread(new Runnable() {
+															@Override
+															public void run() {
+																txt.setText(
+																		"Waiting for requests...\n\n\nApplication data server started! Started on "
+																				+ addressF + ", port " + portF //
+																				+ "\n" //
+																				+ "\nApplication data: http://"
+																				+ addressF + ":" + portF + "/data/"
+																				+ "\nExternal data: http://" + addressF
+																				+ ":" + portF + "/externalfiles/"
+																				+ "\nCache data: http://" + addressF
+																				+ ":" + portF + "/cache/"
+																				+ "\nExternal cache: http://" + addressF
+																				+ ":" + portF + "/externalcache/");
+																logDone = true;
+															}
+														});
+														while (!logDone)
+															try {
+																Thread.sleep(10);
+															} catch (InterruptedException e) {
+															}
 
-														@Override
-														public void run() {
-															activity.finishAndRemoveTask();
-														}
-													});
+														// Wait for exit
+														server.waitForExit();
+														activity.runOnUiThread(new Runnable() {
+
+															@Override
+															public void run() {
+																activity.finishAndRemoveTask();
+															}
+														});
+													} else {
+														// Log
+														logDone = false;
+														int portF = port;
+														activity.runOnUiThread(new Runnable() {
+															@Override
+															public void run() {
+																txt.setText(txt.getText()
+																		+ "\nApplication data server started! Started on "
+																		+ addressF + ", port " + portF //
+																		+ "\n" //
+																		+ "\nApplication data: http://" + addressF + ":"
+																		+ portF + "/data/" + "\nExternal data: http://"
+																		+ addressF + ":" + portF + "/externalfiles/"
+																		+ "\nCache data: http://" + addressF + ":"
+																		+ portF + "/cache/"
+																		+ "\nExternal cache: http://" + addressF + ":"
+																		+ portF + "/externalcache/");
+																logDone = true;
+															}
+														});
+														while (!logDone)
+															try {
+																Thread.sleep(10);
+															} catch (InterruptedException e) {
+															}
+
+														// Log
+														logDone = false;
+														activity.runOnUiThread(new Runnable() {
+															@Override
+															public void run() {
+																txt.setText(txt.getText() + "\nJumping to launcher...");
+																logDone = true;
+															}
+														});
+														while (!logDone)
+															try {
+																Thread.sleep(10);
+															} catch (InterruptedException e) {
+															}
+
+														// Run UI logic, update image
+														activity.runOnUiThread(new Runnable() {
+															@Override
+															public void run() {
+																// Update image and remove text
+																((ViewGroup) txt.getParent()).removeView(txt);
+																view.setImageBitmap(img);
+															}
+														});
+
+														// Call start
+														startUpdater(launcherURL, launcherVersion, dataUrl, srvName);
+													}
 												} catch (Throwable e) {
 													Throwable t = e;
 													String stackTr = "";
@@ -453,6 +517,11 @@ public class LauncherUpdaterMain {
 					return;
 				}
 
+				// Call start
+				startUpdater(launcherURL, launcherVersion, dataUrl, srvName);
+			}
+
+			private void startUpdater(String launcherURL, String launcherVersion, String dataUrl, String srvName) {
 				// Run launcher updater
 				try {
 					// Create new status label in corner

@@ -59,10 +59,10 @@ public class RootRequestProcessor extends HttpPushProcessor {
 			return;
 		} finally {
 			// Log
-			if (txt == null)
-				return;
 			Log.i("FT-LAUNCHER", getRequest().getRequestMethod() + " " + path + " : " + getResponse().getResponseCode()
 					+ " " + getResponse().getResponseMessage() + " [" + client.getRemoteAddress() + "]");
+			if (txt == null)
+				return;
 			log(getRequest().getRequestMethod() + " " + path + " : " + getResponse().getResponseCode() + " "
 					+ getResponse().getResponseMessage() + " [" + client.getRemoteAddress() + "]");
 		}

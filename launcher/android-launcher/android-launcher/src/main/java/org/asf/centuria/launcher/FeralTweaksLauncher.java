@@ -14,7 +14,6 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -456,9 +455,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 															String data = new String(
 																	IoUtil.readAllBytes(res.bodyStream), "UTF-8");
 															res.bodyStream.close();
-															Log.i("FT-LAUNCHER", data);
-															Log.i("FT-LAUNCHER",
-																	res.bodyStream.getClass().getTypeName()); // FIXME
 															JsonObject resp = new JsonParser().parse(data)
 																	.getAsJsonObject();
 															switch (resp.get("error").getAsString()) {
@@ -1420,57 +1416,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	public void downloadFile(String url, File outp) throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
-		if (url.startsWith("http:")) {
-			// Plain HTTP
-			URL u = new URL(url);
-			Socket conn = new Socket(u.getHost(), u.getPort());
-			Log.i("FT-LAUNCHER", "Downloading: " + url + " -> " + outp.getName());
+		Log.i("FT-LAUNCHER", "Downloading: " + url + " -> " + outp.getName());
 
-			// Write request
-			conn.getOutputStream().write(("GET " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
-			conn.getOutputStream().write(("User-Agent: ftupdater\r\n").getBytes("UTF-8"));
-			conn.getOutputStream().write(("Host: " + u.getHost() + "\r\n").getBytes("UTF-8"));
-			conn.getOutputStream().write(("\r\n").getBytes("UTF-8"));
+		// Request
+		ResponseData req = requestRaw(url, "GET", new HashMap<String, String>(), null);
 
-			// Check response
-			Map<String, String> responseHeadersOutput = new HashMap<String, String>();
-			String line = readStreamLine(conn.getInputStream());
-			String statusLine = line;
-			if (!line.startsWith("HTTP/1.1 ")) {
-				conn.close();
-				throw new IOException("Server returned invalid protocol");
-			}
-			while (true) {
-				line = readStreamLine(conn.getInputStream());
-				if (line.equals(""))
-					break;
-				String key = line.substring(0, line.indexOf(": "));
-				String value = line.substring(line.indexOf(": ") + 2);
-				responseHeadersOutput.put(key.toLowerCase(), value);
-			}
+		// Handle response
+		data = req.bodyStream;
+		progressValue = 0;
+		progressMax = (int) (Long.parseLong(req.headers.get("content-length")) / 1000);
+		progressEnabled = true;
+		updateProgress();
 
-			// Verify response
-			int status = Integer.parseInt(statusLine.split(" ")[1]);
-			if (status != 200) {
-				conn.close();
-				throw new IOException("Server returned HTTP " + statusLine.substring("HTTP/1.1 ".length()));
-			}
-
-			// Set data
-			data = conn.getInputStream();
-			progressValue = 0;
-			progressMax = (int) (Long.parseLong(responseHeadersOutput.get("content-length")) / 1000);
-			progressEnabled = true;
-			updateProgress();
-		} else {
-			// Default mode
-			URLConnection urlConnection = new URL(url).openConnection();
-			progressValue = 0;
-			progressMax = urlConnection.getContentLength() / 1000;
-			progressEnabled = true;
-			updateProgress();
-			data = urlConnection.getInputStream();
-		}
 		FileOutputStream out = new FileOutputStream(outp);
 		while (true) {
 			byte[] b = IoUtil.readNBytes(data, 1000);
