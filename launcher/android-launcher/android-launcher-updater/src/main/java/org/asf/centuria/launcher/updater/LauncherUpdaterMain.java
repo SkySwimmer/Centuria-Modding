@@ -3,7 +3,13 @@ package org.asf.centuria.launcher.updater;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Random;
+
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.centuria.launcher.updater.http.DataRequestProcessor;
+import org.asf.centuria.launcher.updater.http.RootRequestProcessor;
+import org.asf.connective.ConnectiveHttpServer;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +23,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -141,35 +148,50 @@ public class LauncherUpdaterMain {
 					// Read server info
 					String url;
 					String launcherName = "androidLauncher";
-					try {
-						InputStream strm = am.open("server.json");
-						JsonObject conf = new JsonParser().parse(new String(IoUtil.readAllBytes(strm), "UTF-8"))
-								.getAsJsonObject();
-						srvName = conf.get("serverName").getAsString();
-						url = conf.get("serverConfig").getAsString();
-						if (conf.has("launcherChannelName"))
-							launcherName = conf.get("launcherChannelName").getAsString();
+
+					// Check extras
+					Bundle extras = activity.getIntent().getExtras();
+					if (extras != null && extras.containsKey("serverConfig") && extras.containsKey("serverName")) {
+						// From extras
+						url = extras.getString("serverConfig");
+						srvName = extras.getString("serverName");
 						dataUrl = url;
-						strm.close();
-					} catch (Exception e) {
-						Throwable t = e;
-						String stackTr = "";
-						while (t != null) {
-							for (StackTraceElement ele : e.getStackTrace())
-								stackTr += "\n  at: " + ele;
-							t = t.getCause();
+					} else {
+						// From assets
+						try {
+							InputStream strm = am.open("server.json");
+							JsonObject conf = new JsonParser().parse(new String(IoUtil.readAllBytes(strm), "UTF-8"))
+									.getAsJsonObject();
+							srvName = conf.get("serverName").getAsString();
+							url = conf.get("serverConfig").getAsString();
+							if (conf.has("launcherChannelName"))
+								launcherName = conf.get("launcherChannelName").getAsString();
+							dataUrl = url;
+							strm.close();
+						} catch (Exception e) {
+							Throwable t = e;
+							String stackTr = "";
+							while (t != null) {
+								for (StackTraceElement ele : e.getStackTrace())
+									stackTr += "\n  at: " + ele;
+								t = t.getCause();
+							}
+							error(activity,
+									"Invalid launcher configuration, please add a valid file named 'server.json' to 'assets' in a resource-type patch file.\n\nExpected structure of server.json:\n"
+											+ "{\n" //
+											+ "    \"serverName\": \"<name of server>\"," //
+											+ "\n    \"serverConfig\": \"<url to server.json on the remote server>\"\n" //
+											+ "}" //
+											+ "\n\nException: " + e.getClass().getTypeName()
+											+ (e.getMessage() != null ? ": " + e.getMessage() : "") + ":" + stackTr,
+									"Launcher error");
+							return;
 						}
-						error(activity,
-								"Invalid launcher configuration, please add a valid file named 'server.json' to 'assets' in a resource-type patch file.\n\nExpected structure of server.json:\n"
-										+ "{\n" //
-										+ "    \"serverName\": \"<name of server>\"," //
-										+ "\n    \"serverConfig\": \"<url to server.json on the remote server>\"\n" //
-										+ "}" //
-										+ "\n\nException: " + e.getClass().getTypeName()
-										+ (e.getMessage() != null ? ": " + e.getMessage() : "") + ":" + stackTr,
-								"Launcher error");
-						return;
 					}
+
+					// Channel
+					if (extras != null && extras.containsKey("launcherChannelName"))
+						launcherName = extras.getString("launcherChannelName");
 
 					// Log
 					logDone = false;
@@ -246,6 +268,73 @@ public class LauncherUpdaterMain {
 					// Assign fields
 					launcherVersion = version;
 					launcherURL = url;
+
+					// Done, check extras
+					if (extras != null && extras.containsKey("exposeApplicationData")
+							&& extras.getBoolean("exposeApplicationData")) {
+						DataRequestProcessor.txt = txt;
+						RootRequestProcessor.txt = txt;
+
+						// Expose data
+						String address = "0.0.0.0";
+						if (extras.containsKey("dataServerAddress"))
+							address = extras.getString("dataServerAddress");
+						int port = -1;
+						if (extras.containsKey("dataServerPort"))
+							port = extras.getInt("dataServerPort");
+
+						// Create and start server
+						ConnectiveHttpServer server;
+						Random rnd = new Random();
+						while (true) {
+							// Create server
+							if (port == -1) {
+								port = rnd.nextInt(65535);
+								while (port < 1024)
+									port = rnd.nextInt(65535);
+							}
+							HashMap<String, String> props = new HashMap<String, String>();
+							props.put("Address", address);
+							props.put("Port", Integer.toString(port));
+							server = ConnectiveHttpServer.create("HTTP/1.1", props);
+
+							// Setup
+							setupDataServer(server);
+
+							// Start
+							try {
+								server.start();
+							} catch (IOException e) {
+								if (port == -1)
+									throw e;
+							}
+
+							// Done
+							break;
+						}
+
+						// Log and lock
+						logDone = false;
+						String addressF = address;
+						int portF = port;
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								txt.setText("Waiting for requests...\n\nApplication data server started! Started on "
+										+ addressF + ", port " + portF //
+
+										+ "\nApplication data: http://" + addressF + ":" + portF + "/data/"
+										+ "\nCache data: http://" + addressF + ":" + portF + "/cache/");
+								logDone = true;
+							}
+						});
+						while (!logDone)
+							try {
+								Thread.sleep(10);
+							} catch (InterruptedException e) {
+							}
+						server.waitForExit();
+					}
 
 					// Log
 					logDone = false;
@@ -350,6 +439,14 @@ public class LauncherUpdaterMain {
 					return;
 				}
 			}
+
+			private void setupDataServer(ConnectiveHttpServer server) {
+				server.registerProcessor(new RootRequestProcessor());
+				server.registerProcessor(
+						new DataRequestProcessor(activity.getApplicationContext().getCacheDir(), "/cache"));
+				server.registerProcessor(
+						new DataRequestProcessor(activity.getApplicationContext().getDataDir(), "/data"));
+			}
 		}, "Launcher thread");
 		th.setDaemon(true);
 		th.start();
@@ -383,6 +480,10 @@ public class LauncherUpdaterMain {
 
 	public static Context getApplicationContext() {
 		return context;
+	}
+
+	public static Activity getEntryActivity() {
+		return activity;
 	}
 
 }

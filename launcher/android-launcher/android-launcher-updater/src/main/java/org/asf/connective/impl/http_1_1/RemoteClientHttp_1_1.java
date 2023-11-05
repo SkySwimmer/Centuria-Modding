@@ -444,7 +444,7 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 			AsyncTaskManager.runAsync(new Runnable() {
 				@Override
 				public void run() {
-					receive();
+					keepAlive();
 				}
 			});
 			response.addHeader("Connection", "Keep-Alive");
