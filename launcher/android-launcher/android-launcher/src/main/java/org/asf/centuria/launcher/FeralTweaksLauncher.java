@@ -603,7 +603,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 						// Extract
 						log("Extracting " + modloader.get("name").getAsString() + "...");
-						unZip(new File(launcherDir, "modloader.zip"), new File(activity.getApplicationInfo().dataDir));
+						unZip(new File(launcherDir, "modloader.zip"),
+								new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString()));
 
 						// Save version
 						writeString(new File(launcherDir, "loaderversion.info"),
@@ -727,7 +728,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					if (!disableFtl) {
 						// Load windowsill
 						log("Loading Windowsill configuration...");
-						File clientDir = new File(activity.getApplicationInfo().dataDir);
+						File clientDir = new File(activity.getExternalFilesDir(null),
+								modloader.get("name").getAsString());
 						JsonObject windowsillConfig = new JsonParser()
 								.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
 						File monoAssembly = new File(clientDir, windowsillConfig.get("monoAssembly").getAsString());
@@ -976,7 +978,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Download mod
 			strm = request(api + path, "GET", headers, null);
-			File outputFile = new File(new File(activity.getApplicationInfo().dataDir), output);
+			File outputFile = new File(
+					new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString()), output);
 			outputFile.getParentFile().mkdirs();
 			FileOutputStream outp = new FileOutputStream(outputFile);
 			IoUtil.transfer(strm, outp);

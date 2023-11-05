@@ -44,7 +44,18 @@ public class RootRequestProcessor extends HttpPushProcessor {
 
 			// Generate page
 			CommonIndexPage.index(new File("root"), getRequest(), getResponse(),
-					new File[] { new File("cache"), new File("data") }, new File[0]);
+
+					new File[] {
+
+							new File("cache"),
+
+							new File("data"),
+
+							new File("externalcache"),
+
+							new File("externalfiles")
+
+					}, new File[0]);
 			return;
 		} finally {
 			// Log

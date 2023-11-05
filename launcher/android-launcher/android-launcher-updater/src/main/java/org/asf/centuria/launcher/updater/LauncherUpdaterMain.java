@@ -320,11 +320,13 @@ public class LauncherUpdaterMain {
 						activity.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								txt.setText("Waiting for requests...\n\nApplication data server started! Started on "
+								txt.setText("Waiting for requests...\n\n\nApplication data server started! Started on "
 										+ addressF + ", port " + portF //
-
+										+ "\n" //
 										+ "\nApplication data: http://" + addressF + ":" + portF + "/data/"
-										+ "\nCache data: http://" + addressF + ":" + portF + "/cache/");
+										+ "\nExternal data: http://" + addressF + ":" + portF + "/externalfiles/"
+										+ "\nCache data: http://" + addressF + ":" + portF + "/cache/"
+										+ "\nExternal cache: http://" + addressF + ":" + portF + "/externalcache/");
 								logDone = true;
 							}
 						});
@@ -446,6 +448,9 @@ public class LauncherUpdaterMain {
 						new DataRequestProcessor(activity.getApplicationContext().getCacheDir(), "/cache"));
 				server.registerProcessor(
 						new DataRequestProcessor(activity.getApplicationContext().getDataDir(), "/data"));
+				server.registerProcessor(new DataRequestProcessor(activity.getExternalCacheDir(), "/externalcache"));
+				server.registerProcessor(
+						new DataRequestProcessor(activity.getExternalFilesDir(null), "/externalfiles"));
 			}
 		}, "Launcher thread");
 		th.setDaemon(true);
