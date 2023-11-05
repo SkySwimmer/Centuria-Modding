@@ -32,11 +32,11 @@ git pull
 
 # Build
 echo Compiling...
-ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh mono+libs --cross --arch arm64 -c release || exit 1
+ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh mono+libs --cross --arch arm64 -os android -c release /p:RunAOTCompilation=false /p:MonoForceInterpreter=true || exit 1
 
 # Copy
 echo Copying files...
 mkdir ../../monolib
 cp -rfv artifacts/obj/mono/*nux.arm64.*/out/include/. ../../monolib/include
 cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/native/. ../../monolib/lib
-cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/lib/. ../../monolib/lib
+cp -rfv artifacts/bin/microsoft.netcore.app.runtime.*/*/runtimes/*/lib/*/. ../../monolib/lib

@@ -512,7 +512,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				System.load(nativesDir + "/libwindowsill.so");
 			}
 
-			private void postAuth(String accountID, String authToken) throws Exception {
+			private void postAuth(String accountID, String authToken) throws Throwable {
 				// Success
 				log("Login success!");
 
@@ -685,7 +685,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 					// Load mono
 					log("Loading Mono...");
-					long monoLib = WMNI.loadMonoLib(monoAssembly.getCanonicalPath());
+					long monoLib = WMNI.loadMonoLib(monoAssembly.getPath());
 					if (monoLib == 0) {
 						error("An error occurred while running the launcher!\n\nCritical windowsill error!\n\nMono assembly failed to load: "
 								+ WMNI.dlLoadError(), "Launcher error");
@@ -694,8 +694,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 					// Init runtime
 					log("Initializing Mono runtime...");
-					long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getCanonicalPath(),
-							monoLibsDir.getCanonicalPath(), monoEtcDir.getCanonicalPath());
+					long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getPath(), monoLibsDir.getPath(),
+							monoEtcDir.getPath());
 					log("Application domain: " + domain);
 					Thread.sleep(10000);
 
@@ -749,7 +749,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					// Start
 					label = null;
 					startGameCallback.run();
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					try {
 						serverSock.close();
 					} catch (IOException e2) {
@@ -875,7 +875,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Download mod
 			strm = request(api + path, "GET", headers, null);
-			File outputFile = new File(launcherDir, output);
+			File outputFile = new File(new File(activity.getApplicationInfo().dataDir), output);
 			outputFile.getParentFile().mkdirs();
 			FileOutputStream outp = new FileOutputStream(outputFile);
 			IoUtil.transfer(strm, outp);
