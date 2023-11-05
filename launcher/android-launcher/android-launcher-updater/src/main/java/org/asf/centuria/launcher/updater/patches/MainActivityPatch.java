@@ -21,8 +21,16 @@ public class MainActivityPatch extends Activity {
 
 	@InjectAt(location = InjectLocation.HEAD)
 	public void onCreate(Bundle bundle) {
-		// Cancel startup if needed
-		// Call updater main init method
+		// Okay fluid injects the bytecode directly into the target, meaning that this
+		// is pasted at the start of the method if its HEAD, and at the end if its TAIL
+		//
+		// We inject into onCreate to hook into unity initialization and jump into the
+		// launcher before unity gets a chance to initialize
+		//
+		// If the launcher signals startup, the jump to the launcher will be skipped
+		// and the game will launch normally
+
+		// Call updater main init method and jump away from Unity's code
 		if (LauncherUpdaterMain.mainInit(this)) {
 			// Cancel
 			cancelledByFTL = true;
@@ -30,7 +38,7 @@ public class MainActivityPatch extends Activity {
 			return;
 		}
 
-		// Return
+		// Run normal code after this
 		return;
 	}
 

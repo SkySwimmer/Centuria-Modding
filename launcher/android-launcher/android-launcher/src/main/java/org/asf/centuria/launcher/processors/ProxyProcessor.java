@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 import org.asf.centuria.launcher.FeralTweaksLauncher;
 import org.asf.centuria.launcher.io.IoUtil;
-import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.rats.processors.HttpUploadProcessor;
 
 public class ProxyProcessor extends HttpUploadProcessor {
