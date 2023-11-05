@@ -10,6 +10,7 @@ import com.google.gson.JsonParser;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -35,6 +36,7 @@ public class LauncherUpdaterMain {
 
 	private static boolean inited = false;
 	private static Activity activity;
+	private static Context context;
 	private static Class<? extends Activity> activityCls;
 
 	private static boolean logDone = false;
@@ -58,6 +60,7 @@ public class LauncherUpdaterMain {
 	 */
 	public static boolean mainInit(Activity activity) {
 		LauncherUpdaterMain.activity = activity;
+		context = activity.getApplicationContext();
 		activityCls = activity.getClass();
 		if (inited) {
 			inited = false;
@@ -108,7 +111,10 @@ public class LauncherUpdaterMain {
 					}
 				});
 				while (!logDone)
-					;
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+					}
 
 				// Prepare
 				AssetManager am = activity.getAssets();
@@ -127,7 +133,10 @@ public class LauncherUpdaterMain {
 						}
 					});
 					while (!logDone)
-						;
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+						}
 
 					// Read server info
 					String url;
@@ -172,7 +181,10 @@ public class LauncherUpdaterMain {
 						}
 					});
 					while (!logDone)
-						;
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+						}
 
 					// Download data
 					InputStream strm = new URL(url).openStream();
@@ -221,7 +233,10 @@ public class LauncherUpdaterMain {
 						}
 					});
 					while (!logDone)
-						;
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+						}
 
 					// Download splash
 					strm = new URL(splash).openStream();
@@ -242,7 +257,10 @@ public class LauncherUpdaterMain {
 						}
 					});
 					while (!logDone)
-						;
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+						}
 
 					// Run UI logic, update image
 					activity.runOnUiThread(new Runnable() {
@@ -361,6 +379,10 @@ public class LauncherUpdaterMain {
 				builder.create().show();
 			}
 		});
+	}
+
+	public static Context getApplicationContext() {
+		return context;
 	}
 
 }

@@ -10,11 +10,11 @@ import org.asf.connective.processors.HttpPushProcessor;
 
 import android.util.Log;
 
-public class ProxyProcessor extends HttpPushProcessor {
+public class AssetProxyProcessor extends HttpPushProcessor {
 
 	public String newHost;
 
-	public ProxyProcessor(String newHost) {
+	public AssetProxyProcessor(String newHost) {
 		if (!newHost.endsWith("/"))
 			newHost += "/";
 		this.newHost = newHost;
@@ -22,7 +22,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 
 	@Override
 	public HttpPushProcessor createNewInstance() {
-		return new ProxyProcessor(newHost);
+		return new AssetProxyProcessor(newHost);
 	}
 
 	@Override

@@ -23,9 +23,13 @@ import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.net.ssl.SSLSocketFactory;
+
+import org.asf.centuria.launcher.io.ChunkedStream;
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.centuria.launcher.processors.AssetProxyProcessor;
 import org.asf.centuria.launcher.processors.ProxyProcessor;
-import org.asf.rats.ConnectiveHTTPServer;
+import org.asf.connective.ConnectiveHttpServer;
 import org.asf.windowsill.WMNI;
 
 import com.google.gson.JsonArray;
@@ -76,6 +80,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private boolean disableLogin;
 	private boolean disableFtl;
 	private boolean useProxyMethod;
+	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
 
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
@@ -146,6 +151,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						disableLogin = androidLauncher.get("disableLogin").getAsBoolean();
 					if (androidLauncher.has("useProxyMethod"))
 						useProxyMethod = androidLauncher.get("useProxyMethod").getAsBoolean();
+					if (androidLauncher.has("proxyAssetUrl"))
+						proxyAssetUrl = androidLauncher.get("proxyAssetUrl").getAsString();
+					if (!proxyAssetUrl.endsWith("/"))
+						proxyAssetUrl += "/";
 
 					// Handle relative paths for banner
 					if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
@@ -685,18 +694,28 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					String hostApi = hosts.get("api").getAsString();
 
 					// Create API proxy
-					ConnectiveHTTPServer apiProxy = new ConnectiveHTTPServer();
-					apiProxy.setIp(InetAddress.getByName("0.0.0.0"));
-					apiProxy.setPort(6970);
+					HashMap<String, String> props = new HashMap<String, String>();
+					props.put("Address", "127.0.0.1");
+					props.put("Port", "6970");
+					ConnectiveHttpServer apiProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
 					apiProxy.registerProcessor(new ProxyProcessor(hostApi));
 					apiProxy.start();
 
 					// Create director proxy
-					ConnectiveHTTPServer directorProxy = new ConnectiveHTTPServer();
-					apiProxy.setIp(InetAddress.getByName("0.0.0.0"));
-					directorProxy.setPort(6969);
+					props = new HashMap<String, String>();
+					props.put("Address", "127.0.0.1");
+					props.put("Port", "6969");
+					ConnectiveHttpServer directorProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
 					directorProxy.registerProcessor(new ProxyProcessor(hostDirector));
 					directorProxy.start();
+
+					// Create asset proxy
+					props = new HashMap<String, String>();
+					props.put("Address", "0.0.0.0");
+					props.put("Port", "6967");
+					ConnectiveHttpServer assetProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					assetProxy.registerProcessor(new AssetProxyProcessor(proxyAssetUrl));
+					assetProxy.start();
 				}
 
 				// Start the game
@@ -1107,10 +1126,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
-		if (url.startsWith("http:")) {
+		if (url.startsWith("http:") || url.startsWith("https:")) {
 			// Plain HTTP
 			URL u = new URL(url);
-			Socket conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
+			Socket conn;
+			if (url.startsWith("http:")) {
+				// Plain
+				conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
+			} else {
+				// TLS
+				SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+				conn = factory.createSocket(u.getHost(), u.getPort() == -1 ? 443 : u.getPort());
+			}
 
 			// Write request
 			conn.getOutputStream().write((method + " " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
@@ -1153,6 +1180,9 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			resp.statusCode = status;
 			resp.bodyStream = data;
 			resp.headers = responseHeadersOutput;
+			if (resp.headers.containsKey("transfer-encoding")
+					&& resp.headers.get("transfer-encoding").equalsIgnoreCase("chunked"))
+				resp.bodyStream = new ChunkedStream(resp.bodyStream);
 			resp.responseHolder = conn;
 			return resp;
 		} else {
@@ -1175,7 +1205,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			Map<String, List<String>> headerResp = conn.getHeaderFields();
 			for (String key : headerResp.keySet())
 				if (headerResp.get(key).size() != 0)
-					resp.headers.put(key, headerResp.get(key).get(0));
+					resp.headers.put(key.toLowerCase(), headerResp.get(key).get(0));
 			return resp;
 		}
 	}
