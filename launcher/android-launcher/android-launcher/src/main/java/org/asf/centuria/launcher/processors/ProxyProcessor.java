@@ -1,14 +1,14 @@
 package org.asf.centuria.launcher.processors;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 
 import org.asf.centuria.launcher.FeralTweaksLauncher;
-import org.asf.centuria.launcher.io.IoUtil;
-import org.asf.connective.RemoteClient;
-import org.asf.connective.processors.HttpPushProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 
-public class ProxyProcessor extends HttpPushProcessor {
+public class ProxyProcessor extends HttpUploadProcessor {
 
 	public String newHost;
 
@@ -19,7 +19,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 	}
 
 	@Override
-	public HttpPushProcessor createNewInstance() {
+	public HttpUploadProcessor createNewInstance() {
 		return new ProxyProcessor(newHost);
 	}
 
@@ -29,7 +29,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 	}
 
 	@Override
-	public boolean supportsNonPush() {
+	public boolean supportsGet() {
 		return true;
 	}
 
@@ -39,52 +39,53 @@ public class ProxyProcessor extends HttpPushProcessor {
 	}
 
 	@Override
-	public void process(String path, String method, RemoteClient client, String contentType) throws IOException {
+	public void process(String contentType, Socket client, String method) {
 		// Parse path
+		String path = getRequestPath();
 		if (path.startsWith("/"))
 			path = path.substring(1);
 
 		// Build url
 		String url = newHost + path;
-		if (!getRequest().getRequestQuery().isEmpty())
-			url += "?" + getRequest().getRequestQuery();
+		if (getRequest().query != null && !getRequest().query.isEmpty())
+			url += "?" + getRequest().query;
 
 		// Proxy
 		try {
 			// Set headers
 			HashMap<String, String> headers = new HashMap<String, String>();
-			for (String name : getHeaders().getHeaderNames()) {
+			for (String name : getHeaders().keySet()) {
 				if (name.equalsIgnoreCase("Host"))
 					continue;
 				headers.put(name, getHeader(name));
 			}
 
 			byte[] body = null;
-			if (getRequest().hasRequestBody()) {
-				if (getRequest().getBodyLength() != -1)
-					body = IoUtil.readNBytes(getRequest().getBodyStream(), (int) getRequest().getBodyLength());
-				else
-					body = IoUtil.readAllBytes(getRequest().getBodyStream());
+			if (getRequest().getRequestBodyStream() != null) {
+				ByteArrayOutputStream bO = new ByteArrayOutputStream();
+				getRequest().transferRequestBody(bO);
+				body = bO.toByteArray();
 			}
 			FeralTweaksLauncher.ResponseData resp = FeralTweaksLauncher.requestRaw(url, method, headers, body);
 
 			// Read response code
 			int responseCode = resp.statusCode;
 			String responseMessage = resp.statusLine.substring((Integer.toString(resp.statusCode) + " ").length());
-			setResponseStatus(responseCode, responseMessage);
+			setResponseCode(responseCode);
+			setResponseMessage(responseMessage);
 
 			// Read headers
 			for (String name : resp.headers.keySet()) {
 				if (name == null || name.equalsIgnoreCase("transfer-encoding"))
 					continue;
-				setResponseHeader(name, resp.headers.get(name), false);
+				setResponseHeader(name, resp.headers.get(name));
 			}
 
 			// Set response
-			setResponseContent(resp.bodyStream);
+			getResponse().setContent(contentType, resp.bodyStream);
 		} catch (IOException e) {
-			// Log error
-			setResponseStatus(404, "Not found");
+			setResponseCode(404);
+			setResponseMessage("Not found");
 		}
 	}
 

@@ -25,7 +25,7 @@ import java.util.zip.ZipFile;
 
 import org.asf.centuria.launcher.io.IoUtil;
 import org.asf.centuria.launcher.processors.ProxyProcessor;
-import org.asf.connective.ConnectiveHttpServer;
+import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.windowsill.WMNI;
 
 import com.google.gson.JsonArray;
@@ -541,7 +541,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
 
 				// Load windowsill
-				System.load(nativesDir + "/libwindowsill.so");
+//				System.load(nativesDir + "/libwindowsill.so");
 			}
 
 			private void postAuth(String accountID, String authToken) throws Throwable {
@@ -685,18 +685,16 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					String hostApi = hosts.get("api").getAsString();
 
 					// Create API proxy
-					HashMap<String, String> props = new HashMap<String, String>();
-					props.put("Address", "127.0.0.1");
-					props.put("Port", "6970");
-					ConnectiveHttpServer apiProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					ConnectiveHTTPServer apiProxy = new ConnectiveHTTPServer();
+					apiProxy.setIp(InetAddress.getLoopbackAddress());
+					apiProxy.setPort(6970);
 					apiProxy.registerProcessor(new ProxyProcessor(hostApi));
 					apiProxy.start();
 
 					// Create director proxy
-					props = new HashMap<String, String>();
-					props.put("Address", "127.0.0.1");
-					props.put("Port", "6969");
-					ConnectiveHttpServer directorProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
+					ConnectiveHTTPServer directorProxy = new ConnectiveHTTPServer();
+					directorProxy.setIp(InetAddress.getLoopbackAddress());
+					directorProxy.setPort(6969);
 					directorProxy.registerProcessor(new ProxyProcessor(hostDirector));
 					directorProxy.start();
 				}
