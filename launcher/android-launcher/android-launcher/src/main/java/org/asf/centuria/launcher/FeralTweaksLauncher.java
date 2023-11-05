@@ -1,6 +1,8 @@
 package org.asf.centuria.launcher;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -59,10 +61,18 @@ import android.widget.TextView;
 
 public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
+	private static FeralTweaksLauncher instance;
+
 	private boolean tappedStatus;
 
 	private TextView label;
 	private Activity activity;
+
+	private File launcherDir;
+	private File nativeLibraryDir;
+	private File modPersistentDataDir;
+	private File persistentDataDir;
+	private File loaderDir;
 
 	private String os;
 	private String feralPlat;
@@ -78,15 +88,26 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 	private boolean logDone = false;
 	private boolean disableLogin;
-	private boolean disableFtl;
+	private boolean disableModloader;
 	private boolean useProxyMethod;
+
 	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
+
+	private String accountID;
 
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
 			String srvName) {
 		// Assign
+		instance = this;
 		this.activity = activity;
+		this.launcherDir = launcherDir;
+		this.nativeLibraryDir = new File(activity.getApplicationInfo().dataDir, "natives");
+		this.modPersistentDataDir = new File(activity.getExternalFilesDir(null), "FT Save Data");
+		this.persistentDataDir = activity.getExternalFilesDir(null);
+		persistentDataDir.mkdirs();
+		nativeLibraryDir.mkdirs();
+		launcherDir.mkdirs();
 
 		// Setup UI
 
@@ -145,8 +166,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					JsonObject loader = launcher.get("modloader").getAsJsonObject();
 
 					// Check settings
-					if (androidLauncher.has("disableFeraltweaks"))
-						disableFtl = androidLauncher.get("disableFeraltweaks").getAsBoolean();
+					if (androidLauncher.has("disableModloader"))
+						disableModloader = androidLauncher.get("disableModloader").getAsBoolean();
+					else if (androidLauncher.has("disableFeraltweaks"))
+						disableModloader = androidLauncher.get("disableFeraltweaks").getAsBoolean();
 					if (androidLauncher.has("disableLogin"))
 						disableLogin = androidLauncher.get("disableLogin").getAsBoolean();
 					if (androidLauncher.has("useProxyMethod"))
@@ -178,7 +201,12 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 								+ os, "Launcher Error");
 						return;
 					}
+
+					// Assign
 					modloader = loader.get(feralPlat).getAsJsonObject();
+					loaderDir = new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString());
+					modPersistentDataDir.mkdirs();
+					loaderDir.mkdirs();
 
 					// Download banner
 					strm = new URL(banner).openStream();
@@ -257,7 +285,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						if (new File(launcherDir, "login.json").exists()) {
 							try {
 								JsonObject login = new JsonParser()
-										.parse(readString(new File(launcherDir, "login.json"))).getAsJsonObject();
+										.parse(readFileAsString(new File(launcherDir, "login.json"))).getAsJsonObject();
 								lastToken = login.get("token").getAsString();
 								lastAccountName = login.get("loginName").getAsString();
 
@@ -432,7 +460,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 																activity.runOnUiThread(new Runnable() {
 																	@Override
 																	public void run() {
-																		nonFatalError("Credentials are invalid.",
+																		showNonFatalErrorMessage(
+																				"Credentials are invalid.",
 																				"Login error", new Runnable() {
 																					@Override
 																					public void run() {
@@ -447,7 +476,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 																activity.runOnUiThread(new Runnable() {
 																	@Override
 																	public void run() {
-																		nonFatalError(
+																		showNonFatalErrorMessage(
 																				"An unknown server error occured, please contact support.",
 																				"Login error", new Runnable() {
 																					@Override
@@ -465,8 +494,20 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 														activity.runOnUiThread(new Runnable() {
 															@Override
 															public void run() {
-																nonFatalError(
-																		"An unknown error occured, please check your internet connection. If the error persists, please open a support ticket",
+																Throwable t = e;
+																String stackTr = "";
+																while (t != null) {
+																	for (StackTraceElement ele : e.getStackTrace())
+																		stackTr += "\n  at: " + ele;
+																	t = t.getCause();
+																}
+																showNonFatalErrorMessage(
+																		"An unknown error occured, please check your internet connection. If the error persists, please open a support ticket\n\nException: "
+																				+ e.getClass().getTypeName()
+																				+ (e.getMessage() != null
+																						? ": " + e.getMessage()
+																						: "")
+																				+ ":" + stackTr,
 																		"Login error", new Runnable() {
 																			@Override
 																			public void run() {
@@ -547,15 +588,22 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			}
 
 			private void loadNativeLibraries(Activity activity) {
-//				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
+				String nativesDir = activity.getApplicationInfo().nativeLibraryDir;
 
 				// Load windowsill
-//				System.load(nativesDir + "/libwindowsill.so");
+				if (new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so").exists())
+					System.load(
+							new File(new File(launcherDir, "launcher-binaries"), "libwindowsill.so").getAbsolutePath());
+				else if (new File(launcherDir, "libwindowsill.so").exists())
+					System.load(new File(launcherDir, "libwindowsill.so").getAbsolutePath());
+				else if (new File(nativesDir, "libwindowsill.so").exists())
+					System.load(new File(nativesDir, "libwindowsill.so").getAbsolutePath());
 			}
 
 			private void postAuth(String accountID, String authToken) throws Throwable {
 				// Success
 				log("Login success!");
+				FeralTweaksLauncher.this.accountID = accountID;
 
 				// Pull details
 				String api = hosts.get("api").getAsString();
@@ -583,15 +631,15 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			}
 
 			private void startGame(boolean completedTutorial, String authToken) throws Throwable {
-				// Check FTL
-				if (!disableFtl) {
+				// Check modding
+				if (!disableModloader) {
 					// Modloader update
 					log("Checking modloader files...");
 
 					// Read version
 					String currentLoader = "";
 					if (new File(launcherDir, "loaderversion.info").exists()) {
-						currentLoader = readString(new File(launcherDir, "loaderversion.info"));
+						currentLoader = readFileAsString(new File(launcherDir, "loaderversion.info"));
 					}
 					if (!modloader.get("version").getAsString().equals(currentLoader)) {
 						// Update modloader
@@ -603,8 +651,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 						// Extract
 						log("Extracting " + modloader.get("name").getAsString() + "...");
-						unZip(new File(launcherDir, "modloader.zip"),
-								new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString()));
+						unZip(new File(launcherDir, "modloader.zip"), loaderDir);
+						copyNativeLibs(loaderDir, "");
 
 						// Save version
 						writeString(new File(launcherDir, "loaderversion.info"),
@@ -622,10 +670,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					String currentModVersion = "";
 					String currentAssetVersion = "";
 					if (new File(launcherDir, "modversion.info").exists()) {
-						currentModVersion = readString(new File(launcherDir, "modversion.info"));
+						currentModVersion = readFileAsString(new File(launcherDir, "modversion.info"));
 					}
 					if (new File(launcherDir, "assetversion.info").exists()) {
-						currentAssetVersion = readString(new File(launcherDir, "assetversion.info"));
+						currentAssetVersion = readFileAsString(new File(launcherDir, "assetversion.info"));
 					}
 					if (!serverInfo.get("modVersion").getAsString().equals(currentModVersion)) {
 						// Update mods
@@ -669,7 +717,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 				// Start client communication server
 				ServerSocket serverSock = null;
-				if (!disableFtl) {
+				if (!disableModloader) {
 					// Find a port
 					ServerSocket s;
 					Random rnd = new Random();
@@ -724,18 +772,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					// Prepare to start
 					log("Preparing game client...");
 
-					// Setup FTL
-					if (!disableFtl) {
+					// Setup modloader
+					if (!disableModloader) {
 						// Load windowsill
 						log("Loading Windowsill configuration...");
-						File clientDir = new File(activity.getExternalFilesDir(null),
-								modloader.get("name").getAsString());
 						JsonObject windowsillConfig = new JsonParser()
-								.parse(readString(new File(clientDir, "windowsil.config.json"))).getAsJsonObject();
-						File monoAssembly = new File(clientDir, windowsillConfig.get("monoAssembly").getAsString());
-						File monoDir = new File(clientDir, windowsillConfig.get("monoDir").getAsString());
-						File monoLibsDir = new File(clientDir, windowsillConfig.get("monoLibsDir").getAsString());
-						File mainAssembly = new File(clientDir, windowsillConfig.get("mainAssembly").getAsString());
+								.parse(readFileAsString(new File(loaderDir, "windowsil.config.json")))
+								.getAsJsonObject();
+						File monoAssembly = new File(nativeLibraryDir,
+								windowsillConfig.get("monoAssembly").getAsString());
+						File monoDir = new File(loaderDir, windowsillConfig.get("monoDir").getAsString());
+						File monoLibsDir = new File(loaderDir, windowsillConfig.get("monoLibsDir").getAsString());
+						File mainAssembly = new File(loaderDir, windowsillConfig.get("mainAssembly").getAsString());
 						File monoEtcDir = new File(monoDir, "etc");
 						monoEtcDir.mkdirs();
 						String mainClass = windowsillConfig.get("mainClass").getAsString();
@@ -784,7 +832,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 						// Init runtime
 						log("Initializing Mono runtime...");
-						long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", clientDir.getPath(), monoLibsDir.getPath(),
+						long domain = WMNI.initRuntime(monoLib, "WINDOWSIL", loaderDir.getPath(), monoLibsDir.getPath(),
 								monoEtcDir.getPath());
 						log("Application domain: " + domain);
 						Thread.sleep(10000);
@@ -849,6 +897,35 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					} catch (IOException e2) {
 					}
 					throw e;
+				}
+			}
+
+			private void copyNativeLibs(File dir, String pref) throws IOException {
+				if (!dir.exists())
+					return;
+				for (File subDir : dir.listFiles(new FileFilter() {
+					@Override
+					public boolean accept(File t) {
+						return t.isDirectory();
+					}
+				})) {
+					copyNativeLibs(subDir, pref + dir.getName() + "/");
+				}
+				for (File file : dir.listFiles(new FileFilter() {
+					@Override
+					public boolean accept(File t) {
+						return !t.isDirectory() && t.getName().endsWith(".so");
+					}
+				})) {
+					// Copy to native library folder
+					File nativeLib = new File(nativeLibraryDir, pref + file.getName());
+					Log.i("FT-LAUNCHER", "Copying " + file.getName() + " into " + nativeLib + "...");
+					nativeLib.getParentFile().mkdirs();
+					InputStream strm = new FileInputStream(file);
+					FileOutputStream outp = new FileOutputStream(nativeLib);
+					IoUtil.transfer(strm, outp);
+					outp.close();
+					strm.close();
 				}
 			}
 
@@ -918,7 +995,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		return data;
 	}
 
-	private String downloadString(String url) throws IOException {
+	/**
+	 * Downloads String contents from a HTTP server
+	 * 
+	 * @param url URL to download from
+	 * @return Response string
+	 * @throws IOException If the HTTP request fails
+	 */
+	public String downloadString(String url) throws IOException {
 		InputStream res = request(url, "GET", new HashMap<String, String>(), null);
 		String data = new String(IoUtil.readAllBytes(res), "UTF-8");
 		res.close();
@@ -978,8 +1062,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Download mod
 			strm = request(api + path, "GET", headers, null);
-			File outputFile = new File(
-					new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString()), output);
+			File outputFile = new File(loaderDir, output);
 			outputFile.getParentFile().mkdirs();
 			FileOutputStream outp = new FileOutputStream(outputFile);
 			IoUtil.transfer(strm, outp);
@@ -987,30 +1070,84 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			strm.close();
 			Log.i("FT-LAUNCHER", "Downloading " + path + " into " + output + "...");
 
+			// Check if its a native library
+			if (path.endsWith(".so")) {
+				// Copy to native library folder
+				File nativeLib = new File(nativeLibraryDir, output);
+				Log.i("FT-LAUNCHER", "Copying " + path + " into " + nativeLib + "...");
+				nativeLib.getParentFile().mkdirs();
+				strm = new FileInputStream(outputFile);
+				outp = new FileOutputStream(nativeLib);
+				IoUtil.transfer(strm, outp);
+				outp.close();
+				strm.close();
+			}
+
 			// Increase progress
 			progressValue++;
 			updateProgress();
 		}
 	}
 
+	/**
+	 * Writes strings to files
+	 * 
+	 * @param file File object to write to
+	 * @param str  File content
+	 * @throws IOException If writing fails
+	 */
 	private static void writeString(File file, String str) throws IOException {
 		writeBytes(file, str.getBytes("UTF-8"));
 	}
 
-	private static void writeBytes(File file, byte[] d) throws IOException {
+	/**
+	 * Writes files
+	 * 
+	 * @param file File object to write to
+	 * @param d    Bytes to write
+	 * @throws IOException If writing fails
+	 */
+	public static void writeBytes(File file, byte[] d) throws IOException {
 		FileOutputStream sO = new FileOutputStream(file);
 		sO.write(d);
 		sO.close();
 	}
 
-	private static String readString(File file) throws IOException {
+	/**
+	 * Reads files as strings
+	 * 
+	 * @param file File to read
+	 * @return File contents as string
+	 * @throws IOException If reading fails
+	 */
+	public String readFileAsString(File file) throws IOException {
 		InputStream strm = new FileInputStream(file);
 		String res = new String(IoUtil.readAllBytes(strm), "UTF-8");
 		strm.close();
 		return res;
 	}
 
-	private void error(String message, String title) {
+	/**
+	 * Reads files
+	 * 
+	 * @param file File to read
+	 * @return File contents as binary array
+	 * @throws IOException If reading fails
+	 */
+	public byte[] readFileBytes(File file) throws IOException {
+		InputStream strm = new FileInputStream(file);
+		byte[] res = IoUtil.readAllBytes(strm);
+		strm.close();
+		return res;
+	}
+
+	/**
+	 * Shows a fatal error message and exits the program
+	 * 
+	 * @param message Message to display
+	 * @param title   Window title
+	 */
+	public void error(String message, String title) {
 		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -1036,7 +1173,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		});
 	}
 
-	private void nonFatalError(String message, String title, Runnable returnCallback) {
+	/**
+	 * Shows a non-fatal error message
+	 * 
+	 * @param message        Message to display
+	 * @param title          Window title
+	 * @param returnCallback Runnable that is invoked when the window closes
+	 */
+	public void showNonFatalErrorMessage(String message, String title, Runnable returnCallback) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 		builder.setTitle(title);
 		builder.setMessage(message);
@@ -1056,7 +1200,12 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 	private String lastMsg;
 
-	private synchronized void log(String message) {
+	/**
+	 * Logs messages and displays them on the label
+	 * 
+	 * @param message Message to log
+	 */
+	public synchronized void log(String message) {
 		if (label != null) {
 			logDone = false;
 			activity.runOnUiThread(new Runnable() {
@@ -1080,7 +1229,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		Log.i("FT-LAUNCHER", message);
 	}
 
-	private void updateProgress() {
+	/**
+	 * Updates the progress label
+	 */
+	public void updateProgress() {
 		if (label != null) {
 			activity.runOnUiThread(new Runnable() {
 				@Override
@@ -1107,15 +1259,31 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		return suff;
 	}
 
-	public static class ResponseData {
+	public static class ResponseData implements Closeable {
 		public int statusCode;
 		public String statusLine;
 		public Map<String, String> headers;
 		public InputStream bodyStream;
 		public Object responseHolder;
+
+		@Override
+		public void close() throws IOException {
+			bodyStream.close();
+		}
 	}
 
-	public static InputStream request(String url, String method, Map<String, String> headers, byte[] body)
+	/**
+	 * Sends HTTP requests
+	 * 
+	 * @param url     URL to send the request to
+	 * @param method  Request method
+	 * @param headers Request headers
+	 * @param body    Request body
+	 * @return Response stream (NEEDS TO BE CLOSED)
+	 * @throws MalformedURLException If the URL is not of a valid format
+	 * @throws IOException           If a transfer error occurs
+	 */
+	public InputStream request(String url, String method, Map<String, String> headers, byte[] body)
 			throws MalformedURLException, IOException {
 		ResponseData res = requestRaw(url, method, headers, body);
 		if (res.statusCode != 200) {
@@ -1125,7 +1293,18 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		return res.bodyStream;
 	}
 
-	public static ResponseData requestRaw(String url, String method, Map<String, String> headers, byte[] body)
+	/**
+	 * Sends raw HTTP requests
+	 * 
+	 * @param url     URL to send the request to
+	 * @param method  Request method
+	 * @param headers Request headers
+	 * @param body    Request body
+	 * @return ResponseData instance (NEEDS TO BE CLOSED WHEN DONE)
+	 * @throws MalformedURLException If the URL is not of a valid format
+	 * @throws IOException           If a transfer error occurs
+	 */
+	public ResponseData requestRaw(String url, String method, Map<String, String> headers, byte[] body)
 			throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
@@ -1213,13 +1392,22 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		}
 	}
 
-	private void downloadFile(String url, File outp) throws MalformedURLException, IOException {
+	/**
+	 * Downloads files with progress
+	 * 
+	 * @param url  URL of the file to download
+	 * @param outp Output file object
+	 * @throws MalformedURLException If the URL is not of a valid format
+	 * @throws IOException           If a download error occurs
+	 */
+	public void downloadFile(String url, File outp) throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
 		if (url.startsWith("http:")) {
 			// Plain HTTP
 			URL u = new URL(url);
 			Socket conn = new Socket(u.getHost(), u.getPort());
+			Log.i("FT-LAUNCHER", "Downloading: " + url + " -> " + outp.getName());
 
 			// Write request
 			conn.getOutputStream().write(("GET " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
@@ -1283,7 +1471,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		updateProgress();
 	}
 
-	private void unZip(File input, File output) throws IOException {
+	/**
+	 * Unzips files with progress
+	 * 
+	 * @param input  Input zip file
+	 * @param output Output folder
+	 * @throws IOException If unzipping fails
+	 */
+	public void unZip(File input, File output) throws IOException {
 		output.mkdirs();
 
 		// count entries
@@ -1314,6 +1509,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			if (ent.isDirectory()) {
 				new File(output, ent.getName()).mkdirs();
 			} else {
+				Log.i("FT-LAUNCHER", "Unzipping: " + ent.getName());
 				File out = new File(output, ent.getName());
 				if (out.getParentFile() != null && !out.getParentFile().exists())
 					out.getParentFile().mkdirs();
@@ -1346,6 +1542,87 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				buffer += ch;
 			}
 		}
+	}
+
+	/**
+	 * Retrieves the launcher instance
+	 * 
+	 * @return FeralTweaksLauncher instance
+	 */
+	public static FeralTweaksLauncher getInstance() {
+		return instance;
+	}
+
+	/**
+	 * Retrieves the launcher storage directory
+	 * 
+	 * @return Launcher storage directory object
+	 */
+	public File getLauncherDirectory() {
+		return launcherDir;
+	}
+
+	/**
+	 * Retrieves the launcher native library storage directory
+	 * 
+	 * @return Native library directory object
+	 */
+	public File getNativeLibraryDirectory() {
+		return nativeLibraryDir;
+	}
+
+	/**
+	 * Retrieves the FeralTweaks persistent data directory
+	 * 
+	 * @return Persistent data directory object
+	 */
+	public File getFtPersistentDataDirectory() {
+		return modPersistentDataDir;
+	}
+
+	/**
+	 * Retrieves the persistent data directory of the game
+	 * 
+	 * @return Persistent data directory object
+	 */
+	public File getUnityPersistentDataDirectory() {
+		return persistentDataDir;
+	}
+
+	/**
+	 * Retrieves the modloader
+	 * 
+	 * @return Modloader directory object
+	 */
+	public File getModloaderDirectory() {
+		return loaderDir;
+	}
+
+	/**
+	 * Checks if the login system is enabled
+	 * 
+	 * @return True if enabled, false otherwise
+	 */
+	public boolean isLoginEnabled() {
+		return !disableLogin;
+	}
+
+	/**
+	 * Retrieves the account ID currently logged into
+	 * 
+	 * @return Account ID string
+	 */
+	public String getAccountID() {
+		return accountID;
+	}
+
+	/**
+	 * Checks if modding is supported
+	 * 
+	 * @return True if supported, false otherwise
+	 */
+	public boolean isModdingSupported() {
+		return !disableModloader;
 	}
 
 }

@@ -72,7 +72,7 @@ public class FtUpdater {
 	public void run() throws Exception {
 		// Set status
 		log("Checking launcher files...");
-		File dir = new File(activity.getExternalFilesDir(null), "FT Launcher");
+		File dir = new File(activity.getApplicationInfo().dataDir, "FT Launcher");
 		dir.mkdirs();
 
 		// Check version file

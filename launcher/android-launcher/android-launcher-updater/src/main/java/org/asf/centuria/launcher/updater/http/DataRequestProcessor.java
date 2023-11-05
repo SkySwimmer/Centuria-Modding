@@ -230,10 +230,20 @@ public class DataRequestProcessor extends HttpPushProcessor {
 	private static void deleteDir(File dir) {
 		if (!dir.exists())
 			return;
-		for (File subDir : dir.listFiles(t -> t.isDirectory())) {
+		for (File subDir : dir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File t) {
+				return t.isDirectory();
+			}
+		})) {
 			deleteDir(subDir);
 		}
-		for (File file : dir.listFiles(t -> !t.isDirectory())) {
+		for (File file : dir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File t) {
+				return !t.isDirectory();
+			}
+		})) {
 			file.delete();
 		}
 		dir.delete();

@@ -122,6 +122,16 @@ if [ ! -f build/launcher-binaries/launcher-binary.dex ]; then
 fi
 echo
 
+# Windowsill
+echo Building windowsill...
+cd ../windowsill-cpp/
+chmod +x buildpackage.sh
+./buildpackage.sh || exit 1
+cd ../android-launcher
+echo Copying libraries...
+cp -v ../windowsill-cpp/src/build/*.so build/launcher-binaries
+
+
 # Create zip
 echo Creating zip...
 cd build/launcher-binaries
