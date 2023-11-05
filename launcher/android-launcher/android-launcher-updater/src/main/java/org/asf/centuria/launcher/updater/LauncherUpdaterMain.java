@@ -391,7 +391,7 @@ public class LauncherUpdaterMain {
 															@Override
 															public void run() {
 																txt.setText(txt.getText()
-																		+ "\nApplication data server started! Started on "
+																		+ "\n\nApplication data server started! Started on "
 																		+ addressF + ", port " + portF //
 																		+ "\n" //
 																		+ "\nApplication data: http://" + addressF + ":"
@@ -410,12 +410,19 @@ public class LauncherUpdaterMain {
 															} catch (InterruptedException e) {
 															}
 
+														// Wait
+														try {
+															Thread.sleep(5000);
+														} catch (InterruptedException e) {
+														}
+
 														// Log
 														logDone = false;
 														activity.runOnUiThread(new Runnable() {
 															@Override
 															public void run() {
-																txt.setText(txt.getText() + "\nJumping to launcher...");
+																txt.setText(
+																		txt.getText() + "\n\nJumping to launcher...");
 																logDone = true;
 															}
 														});

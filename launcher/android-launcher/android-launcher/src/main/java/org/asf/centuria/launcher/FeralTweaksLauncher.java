@@ -662,7 +662,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						// Extract
 						log("Extracting " + modloader.get("name").getAsString() + "...");
 						unZip(new File(launcherDir, "modloader.zip"), loaderDir);
-						copyNativeLibs(loaderDir, "");
+						copyNativeLibs(loaderDir, modloader.get("name").getAsString() + "/");
 
 						// Save version
 						writeString(new File(launcherDir, "loaderversion.info"),
@@ -789,7 +789,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						JsonObject windowsillConfig = new JsonParser()
 								.parse(readFileAsString(new File(loaderDir, "windowsil.config.json")))
 								.getAsJsonObject();
-						File monoAssembly = new File(nativeLibraryDir,
+						File monoAssembly = new File(new File(nativeLibraryDir, modloader.get("name").getAsString()),
 								windowsillConfig.get("monoAssembly").getAsString());
 						File monoDir = new File(loaderDir, windowsillConfig.get("monoDir").getAsString());
 						File monoLibsDir = new File(loaderDir, windowsillConfig.get("monoLibsDir").getAsString());
@@ -919,7 +919,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						return t.isDirectory();
 					}
 				})) {
-					copyNativeLibs(subDir, pref + dir.getName() + "/");
+					copyNativeLibs(subDir, pref + subDir.getName() + "/");
 				}
 				for (File file : dir.listFiles(new FileFilter() {
 					@Override
