@@ -76,7 +76,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private boolean disableLogin;
 	private boolean disableFtl;
 	private boolean useProxyMethod;
-	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
 
 	@Override
 	public void startLauncher(Activity activity, File launcherDir, Runnable startGameCallback, String dataUrl,
@@ -147,10 +146,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						disableLogin = androidLauncher.get("disableLogin").getAsBoolean();
 					if (androidLauncher.has("useProxyMethod"))
 						useProxyMethod = androidLauncher.get("useProxyMethod").getAsBoolean();
-					if (androidLauncher.has("proxyAssetUrl"))
-						proxyAssetUrl = androidLauncher.get("proxyAssetUrl").getAsString();
-					if (!proxyAssetUrl.endsWith("/"))
-						proxyAssetUrl += "/";
 
 					// Handle relative paths for banner
 					if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
@@ -704,14 +699,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					ConnectiveHttpServer directorProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
 					directorProxy.registerProcessor(new ProxyProcessor(hostDirector));
 					directorProxy.start();
-
-					// Create asset proxy
-					props = new HashMap<String, String>();
-					props.put("Address", "127.0.0.1");
-					props.put("Port", "6967");
-					ConnectiveHttpServer assetProxy = ConnectiveHttpServer.create("HTTP/1.1", props);
-					assetProxy.registerProcessor(new ProxyProcessor(proxyAssetUrl));
-					assetProxy.start();
 				}
 
 				// Start the game
@@ -1124,7 +1111,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		if (url.startsWith("http:")) {
 			// Plain HTTP
 			URL u = new URL(url);
-			Socket conn = new Socket(u.getHost(), u.getPort());
+			Socket conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
 
 			// Write request
 			conn.getOutputStream().write((method + " " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));

@@ -325,7 +325,7 @@ public class FtUpdater {
 		if (url.startsWith("http:")) {
 			// Plain HTTP
 			URL u = new URL(url);
-			Socket conn = new Socket(u.getHost(), u.getPort());
+			Socket conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
 
 			// Write request
 			conn.getOutputStream().write(("GET " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
