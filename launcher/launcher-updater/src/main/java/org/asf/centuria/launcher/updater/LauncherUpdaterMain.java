@@ -1007,6 +1007,11 @@ public class LauncherUpdaterMain {
 	}
 
 	private static void deleteDir(File dir, JProgressBar progressBar) {
+		if (Files.isSymbolicLink(dir.toPath())) {
+			// Skip symlink
+			dir.delete();
+			return;
+		}
 		if (!dir.exists() || dir.listFiles() == null) {
 			if (progressBar != null) {
 				try {
