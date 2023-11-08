@@ -33,7 +33,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4"/>
     <PackageReference Include="Iced" Version="1.17.0"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1"/>
     <Reference Include="Il2CppInterop.Runtime">
       <HintPath>Libaries\Il2CppInterop.Runtime.dll</HintPath>
       <Private>true</Private>
