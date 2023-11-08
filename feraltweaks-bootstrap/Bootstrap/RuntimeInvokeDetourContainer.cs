@@ -38,6 +38,17 @@ namespace FeralTweaksBootstrap
                     IntPtr res = Original(method, obj, parameters, except);
                     Unhook();
 
+                    // Finish loading
+                    FeralTweaksLoader.LoadFinish();
+     
+                    // Load all assemblies
+                    FeralTweaksLoader.LogInfo("Loading assemblies...");
+                    foreach (FileInfo file in new DirectoryInfo("FeralTweaks/cache/assemblies").GetFiles("*.dll"))
+                    {
+                        FeralTweaksLoader.LogDebug("Loading assembly: " + file.Name);
+                        Assembly.Load(file.Name.Replace(".dll", ""));
+                    }
+
                     // Init logging
                     if (Bootstrap.logUnityToConsole || Bootstrap.logUnityToFile)
                     {
@@ -56,17 +67,6 @@ namespace FeralTweaksBootstrap
                         objC.name = "~FTL";
                         objC.AddComponent<LogHandler>();
                         GameObject.DontDestroyOnLoad(objC);
-                    }
-
-                    // Finish loading
-                    FeralTweaksLoader.LoadFinish();
-     
-                    // Load all assemblies
-                    FeralTweaksLoader.LogInfo("Loading assemblies...");
-                    foreach (FileInfo file in new DirectoryInfo("FeralTweaks/cache/assemblies").GetFiles("*.dll"))
-                    {
-                        FeralTweaksLoader.LogDebug("Loading assembly: " + file.Name);
-                        Assembly.Load(file.Name.Replace(".dll", ""));
                     }
 
                     // Log finish

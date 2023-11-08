@@ -176,7 +176,8 @@ public class LauncherUpdaterMain {
 				boolean inHome = false;
 				if (System.getenv("LOCALAPPDATA") == null) {
 					instDir = new File(System.getProperty("user.home") + "/.local/share");
-					if (!instDir.exists()) {
+					if (!instDir.exists() || (System.getProperty("os.name").toLowerCase().contains("darwin")
+							|| System.getProperty("os.name").toLowerCase().contains("mac"))) {
 						inHome = true;
 						instDir = new File(System.getProperty("user.home"));
 					}
@@ -360,7 +361,8 @@ public class LauncherUpdaterMain {
 			boolean inHome = false;
 			if (System.getenv("LOCALAPPDATA") == null) {
 				instDir = new File(System.getProperty("user.home") + "/.local/share");
-				if (!instDir.exists()) {
+				if (!instDir.exists() || (System.getProperty("os.name").toLowerCase().contains("darwin")
+						|| System.getProperty("os.name").toLowerCase().contains("mac"))) {
 					inHome = true;
 					instDir = new File(System.getProperty("user.home"));
 				}
@@ -502,7 +504,8 @@ public class LauncherUpdaterMain {
 		File instDir2;
 		if (System.getenv("LOCALAPPDATA") == null) {
 			instDir2 = new File(System.getProperty("user.home") + "/.local/share");
-			if (!instDir2.exists()) {
+			if (!instDir2.exists() || (System.getProperty("os.name").toLowerCase().contains("darwin")
+					|| System.getProperty("os.name").toLowerCase().contains("mac"))) {
 				inHome = true;
 				instDir2 = new File(System.getProperty("user.home"));
 			}
@@ -927,7 +930,8 @@ public class LauncherUpdaterMain {
 		boolean inHome = false;
 		if (System.getenv("LOCALAPPDATA") == null) {
 			instDir = new File(System.getProperty("user.home") + "/.local/share");
-			if (!instDir.exists()) {
+			if (!instDir.exists() || (System.getProperty("os.name").toLowerCase().contains("darwin")
+					|| System.getProperty("os.name").toLowerCase().contains("mac"))) {
 				inHome = true;
 				instDir = new File(System.getProperty("user.home"));
 			}
