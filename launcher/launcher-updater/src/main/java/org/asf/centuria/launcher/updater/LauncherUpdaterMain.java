@@ -651,7 +651,7 @@ public class LauncherUpdaterMain {
 
 		// Copy server info
 		log("Copying server information...");
-		File sOut = new File(launcherOut, "server.json");
+		File sOut = new File(launcherOut, os == 0 ? "Contents/Resources/server.json" : "server.json");
 		if (sOut.exists())
 			sOut.delete();
 		Files.copy(new File("server.json").toPath(), sOut.toPath());
