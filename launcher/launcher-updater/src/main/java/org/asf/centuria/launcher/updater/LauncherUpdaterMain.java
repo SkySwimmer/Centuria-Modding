@@ -667,7 +667,7 @@ public class LauncherUpdaterMain {
 			}
 		}
 		copyDir(new File(os == 1 ? "win" : "linux"),
-				new File(launcherOut, os == 1 ? "win" : (os == 0 ? "osx" : "linux")), progressBar);
+				new File(launcherOut, os == 1 ? "win" : (os == 0 ? "Contents/Resources/osx" : "linux")), progressBar);
 		try {
 			SwingUtilities.invokeAndWait(() -> {
 				progressBar.setMaximum(100);
@@ -1063,6 +1063,10 @@ public class LauncherUpdaterMain {
 
 	private static int countDir(File dir) {
 		if (!dir.exists() || dir.listFiles() == null) {
+			return 1;
+		}
+		if (Files.isSymbolicLink(dir.toPath())) {
+			// Skip symlink
 			return 1;
 		}
 
