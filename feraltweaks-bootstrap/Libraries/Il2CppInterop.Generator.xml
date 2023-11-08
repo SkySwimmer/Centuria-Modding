@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Il2CppInterop.Generator</name>
+    </assembly>
+    <members>
+        <member name="T:System.Runtime.CompilerServices.IsExternalInit">
+            <summary>
+                Reserved to be used by the compiler for tracking metadata.
+                This class should not be used by developers in source code.
+            </summary>
+            <remarks>
+                This definition is provided by the <i>IsExternalInit</i> NuGet package (https://www.nuget.org/packages/IsExternalInit).
+                Please see https://github.com/manuelroemer/IsExternalInit for more information.
+            </remarks>
+        </member>
+        <member name="M:Il2CppInterop.Generator.GeneratorOptions.ReadRenameMap(System.String)">
+            <summary>
+                Reads a rename map from the specified name into the specified instance of options
+            </summary>
+        </member>
+        <member name="M:Il2CppInterop.Generator.GeneratorOptions.ReadRenameMap(System.IO.Stream,System.Boolean)">
+            <summary>
+                Reads a rename map from the specified name into the specified instance of options.
+                The stream is not closed by this method.
+            </summary>
+        </member>
+        <member name="F:Il2CppInterop.Generator.GeneratorOptions.PrefixMode.OptIn">
+            <summary>
+                Only specified namespaces and assemblies will be renamed.
+            </summary>
+        </member>
+        <member name="F:Il2CppInterop.Generator.GeneratorOptions.PrefixMode.OptOut">
+            <summary>
+                Only specified namespaces and assemblies will not be renamed.
+            </summary>
+        </member>
+    </members>
+</doc>
