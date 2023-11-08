@@ -2,25 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>net60</TargetFramework>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <OutputPath>run\FeralTweaks</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <LangVersion>latest</LangVersion>
     <AssemblyName>FeralTweaksBootstrap</AssemblyName>
     <RootNamespace>FeralTweaksBootstrap</RootNamespace>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>run\FeralTweaks\FeralTweaksBootstrap.xml</DocumentationFile>
   </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
 
+  <ItemGroup>
+    <Content Remove="build\**" />
+    <Compile Remove="build\**" />
+    <EmbeddedResource Remove="build\**" />
+    <None Remove="build\**" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="Il2CppSystem">
       <HintPath>Libaries\Il2CppSystem.dll</HintPath>

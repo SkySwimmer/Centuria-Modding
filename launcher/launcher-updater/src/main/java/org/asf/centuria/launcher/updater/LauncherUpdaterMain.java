@@ -592,14 +592,10 @@ public class LauncherUpdaterMain {
 
 		// Create output
 		log("Creating installation directories...");
-		File launcherOut;
-		if (os != 0)
-			// Windows and Linux
-			launcherOut = new File(instDir, "centuria-launcher");
-		else
-			// MacOS
-			launcherOut = new File("/Applications/" + srvName + ".app");
+		File launcherOut = new File(instDir, "centuria-launcher");
 		launcherOut.mkdirs();
+		if (os == 0)
+			new File("/Applications/" + srvName + ".app").mkdirs();
 
 		// Install launcher
 		log("Copying base launcher...");
@@ -624,20 +620,13 @@ public class LauncherUpdaterMain {
 		} catch (InvocationTargetException | InterruptedException e) {
 		}
 
-		// Windows and linux only, macos package cannot be modified
-		if (os != 0) {
-			// Copy server info
-			log("Copying server information...");
-			File sOut = new File(launcherOut, "server.json");
-			if (sOut.exists())
-				sOut.delete();
-			Files.copy(new File("server.json").toPath(), sOut.toPath());
-
-			// Copy runtime
-			log("Copying java runtime...");
+		// MacOS only
+		if (os == 0) {
+			// Install launcher
+			log("Installing launcher application...");
 			if (progressBar != null) {
 				try {
-					int c = countDir(new File(os == 1 ? "win" : "linux"));
+					int c = countDir(instSource);
 					SwingUtilities.invokeAndWait(() -> {
 						progressBar.setMaximum(c);
 						progressBar.setValue(0);
@@ -646,7 +635,7 @@ public class LauncherUpdaterMain {
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
 			}
-			copyDir(new File(os == 1 ? "win" : "linux"), new File(launcherOut, os == 1 ? "win" : "linux"), progressBar);
+			copyDir(instSource, new File("/Applications/" + srvName + ".app"), progressBar);
 			try {
 				SwingUtilities.invokeAndWait(() -> {
 					progressBar.setMaximum(100);
@@ -655,17 +644,48 @@ public class LauncherUpdaterMain {
 				});
 			} catch (InvocationTargetException | InterruptedException e) {
 			}
+		}
 
-			// Set perms
-			if (os == 2) {
-				// Linux-only
-				log("Setting permissions...");
-				ProcessBuilder proc = new ProcessBuilder("chmod", "+x",
-						new File(launcherOut, "launcher.sh").getCanonicalPath());
-				try {
-					proc.start().waitFor();
-				} catch (InterruptedException e1) {
-				}
+		// Copy server info
+		log("Copying server information...");
+		File sOut = new File(launcherOut, "server.json");
+		if (sOut.exists())
+			sOut.delete();
+		Files.copy(new File("server.json").toPath(), sOut.toPath());
+
+		// Copy runtime
+		log("Copying java runtime...");
+		if (progressBar != null) {
+			try {
+				int c = countDir(new File(os == 1 ? "win" : (os == 0 ? "osx" : "linux")));
+				SwingUtilities.invokeAndWait(() -> {
+					progressBar.setMaximum(c);
+					progressBar.setValue(0);
+					progressBar.repaint();
+				});
+			} catch (InvocationTargetException | InterruptedException e) {
+			}
+		}
+		copyDir(new File(os == 1 ? "win" : "linux"),
+				new File(launcherOut, os == 1 ? "win" : (os == 0 ? "osx" : "linux")), progressBar);
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				progressBar.setMaximum(100);
+				progressBar.setValue(100);
+				progressBar.repaint();
+			});
+		} catch (InvocationTargetException | InterruptedException e) {
+		}
+
+		// Set perms
+		if (os == 2) {
+			// Linux-only
+			log("Setting permissions...");
+			ProcessBuilder proc = new ProcessBuilder("chmod", "+x",
+					new File(launcherOut, "launcher.sh").getCanonicalPath());
+			try {
+				proc.start().waitFor();
+			} catch (InterruptedException e1) {
 			}
 		}
 

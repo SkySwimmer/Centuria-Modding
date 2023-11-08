@@ -46,6 +46,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
@@ -153,6 +154,11 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						launcherName = conf.get("launcherChannelName").getAsString();
 					strm.close();
 
+					// Channel
+					Bundle extras = activity.getIntent().getExtras();
+					if (extras != null && extras.containsKey("launcherChannelName"))
+						launcherName = extras.getString("launcherChannelName");
+
 					// Download data
 					strm = new URL(url).openStream();
 					String data = new String(IoUtil.readAllBytes(strm), "UTF-8");
@@ -193,11 +199,23 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 					// Assign platform
 					os = "android-";
-					if (android.os.Process.is64Bit())
+					String channel = "";
+					if (android.os.Process.is64Bit()) {
 						os += "arm64";
-					else
+						channel = "android-" + os;
+						if (androidLauncher.has("modloaderChannelArm64")) {
+							channel = androidLauncher.get("modloaderChannelArm64").getAsString();
+						}
+					} else {
 						os += "armeabi";
+						channel = "android-" + os;
+						if (androidLauncher.has("modloaderChannelArmeabi")) {
+							channel = androidLauncher.get("modloaderChannelArmeabi").getAsString();
+						}
+					}
 					feralPlat = os;
+
+					// Check
 					if (!loader.has(os)) {
 						error("Unsupported platform!\n\nThe launcher cannot load on your device due to there being no modloader for your platform in the server configuration. Please wait until your device is supported.\n\nOS Name: "
 								+ os, "Launcher Error");
@@ -205,7 +223,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					}
 
 					// Assign
-					modloader = loader.get(feralPlat).getAsJsonObject();
+					modloader = loader.get(channel).getAsJsonObject();
 					loaderDir = new File(activity.getExternalFilesDir(null), modloader.get("name").getAsString());
 					modPersistentDataDir.mkdirs();
 					loaderDir.mkdirs();
