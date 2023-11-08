@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -230,6 +231,11 @@ public class DataRequestProcessor extends HttpPushProcessor {
 	private static void deleteDir(File dir) {
 		if (!dir.exists())
 			return;
+		if (Files.isSymbolicLink(dir.toPath())) {
+			// DO NOT RECURSE
+			dir.delete();
+			return;
+		}
 		for (File subDir : dir.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File t) {

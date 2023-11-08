@@ -1193,6 +1193,11 @@ public class LauncherMain {
 	}
 
 	private void deleteDir(File dir) {
+		if (Files.isSymbolicLink(dir.toPath())) {
+			// DO NOT RECURSE
+			dir.delete();
+			return;
+		}
 		for (File subDir : dir.listFiles(t -> t.isDirectory())) {
 			deleteDir(subDir);
 		}
