@@ -85,11 +85,16 @@ public class AssetProxyProcessor extends HttpPushProcessor {
 				}
 
 				// Set response
-				if (!resp.headers.containsKey("content-length"))
-					getResponse().setContent(contentType, resp.bodyStream);
-				else
-					getResponse().setContent(contentType, resp.bodyStream,
-							Long.parseLong(resp.headers.get("content-length")));
+				if (responseCode != 204) {
+					if (!resp.headers.containsKey("content-length") && resp.headers.containsKey("transfer-encoding"))
+						getResponse().setContent(contentType, resp.bodyStream);
+					else if (resp.headers.containsKey("content-length"))
+						getResponse().setContent(contentType, resp.bodyStream,
+								Long.parseLong(resp.headers.get("content-length")));
+					else
+						resp.bodyStream.close();
+				} else
+					resp.bodyStream.close();
 			} catch (IOException e) {
 				setResponseStatus(404, "Not found");
 			}

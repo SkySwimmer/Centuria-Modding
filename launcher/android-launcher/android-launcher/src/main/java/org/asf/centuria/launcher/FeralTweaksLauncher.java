@@ -202,13 +202,13 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					String channel = "";
 					if (android.os.Process.is64Bit()) {
 						os += "arm64";
-						channel = "android-" + os;
+						channel = "android-arm64";
 						if (androidLauncher.has("modloaderChannelArm64")) {
 							channel = androidLauncher.get("modloaderChannelArm64").getAsString();
 						}
 					} else {
 						os += "armeabi";
-						channel = "android-" + os;
+						channel = "android-armeabi";
 						if (androidLauncher.has("modloaderChannelArmeabi")) {
 							channel = androidLauncher.get("modloaderChannelArmeabi").getAsString();
 						}
