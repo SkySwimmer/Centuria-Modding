@@ -134,6 +134,7 @@ namespace feraltweaks
             // Patch with harmony
             LogInfo("Applying patches...");
             ApplyPatch(typeof(BaseDefPatch));
+            ApplyPatch(typeof(UI_Window_AvatarActionWheelPatch));
             ApplyPatch(typeof(CoreChartDataManagerPatch));
             ApplyPatch(typeof(UI_Window_AccountCreationPatch));
             ApplyPatch(typeof(UI_Window_ChangeDisplayNamePatch));
@@ -393,7 +394,24 @@ namespace feraltweaks
         /// </summary>
         public static void WriteDefaultConfig()
         {
-            File.WriteAllText(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/settings.props", "DisableUpdraftAudioSuppressor=false\nAllowNonEmailUsernames=false\nFlexibleDisplayNames=false\nUserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\nDisplayNameRegex=^[0-9A-Za-z\\-_. ]+\nUserNameMaxLength=320\nDisplayNameMaxLength=16\nTradeItemLimit=99\nVersionLabel=${global:7358}\\n${game:version} (${game:build})\nEnableGroupChatTab=false\nJiggleResourceInteractions=false\nCityFeraMovingRocks=false\nCityFeraTeleporterSFX=false\nGameAssetsProd=https://emuferal.ddns.net/feralassets/\nGameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\nGameAssetsDev=https://emuferal.ddns.net/feralassetsdev/\n");
+            File.WriteAllText(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/settings.props",
+                  "DisableUpdraftAudioSuppressor=false\n"
+                + "AllowNonEmailUsernames=false\n"
+                + "FlexibleDisplayNames=false\n"
+                + "UserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\n"
+                + "DisplayNameRegex=^[0-9A-Za-z\\-_. ]+\n"
+                + "UserNameMaxLength=320\n"
+                + "DisplayNameMaxLength=16\n"
+                + "TradeItemLimit=99\n"
+                + "VersionLabel=${global:7358}\\n${game:version} (${game:build})\n"
+                + "EnableGroupChatTab=false\n"
+                + "JiggleResourceInteractions=false\n"
+                + "CityFeraMovingRocks=false\n"
+                + "CityFeraTeleporterSFX=false\n"
+                + "GameAssetsProd=https://emuferal.ddns.net/feralassets/\n"
+                + "GameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\n"
+                + "GameAssetsDev=https://emuferal.ddns.net/feralassetsdev/\n"
+                + "DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]\n");
         }
 
         /// <summary>
