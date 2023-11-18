@@ -9,6 +9,7 @@ import org.asf.centuria.modules.ModuleManager;
 import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.chat.ChatMessageBroadcastEvent;
+import org.asf.centuria.networking.chatserver.rooms.ChatRoomTypes;
 
 public class ChatMessageHandler implements IEventReceiver {
 
@@ -17,8 +18,8 @@ public class ChatMessageHandler implements IEventReceiver {
 		FeralTweaksModule ftModule = ((FeralTweaksModule) ModuleManager.getInstance().getModule("feraltweaks"));
 
 		// Check room
-		if (event.getClient().isInRoom(event.getConversationId())
-				&& event.getClient().isRoomPrivate(event.getConversationId())) {
+		if (event.getClient().isInRoom(event.getConversationId()) && event.getClient()
+				.getRoom(event.getConversationId()).getType().equalsIgnoreCase(ChatRoomTypes.ROOM_CHAT)) {
 			// Find dm participants
 			if (DMManager.getInstance().dmExists(event.getConversationId())) {
 				String[] participants = DMManager.getInstance().getDMParticipants(event.getConversationId());

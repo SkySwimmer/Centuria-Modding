@@ -22,7 +22,7 @@ namespace feraltweaks
 {
     public class FeralTweaks : FeralTweaksMod
     {
-        public static int ProtocolVersion = 2;
+        public static int ProtocolVersion = 3;
 
         protected override void Define()
         {

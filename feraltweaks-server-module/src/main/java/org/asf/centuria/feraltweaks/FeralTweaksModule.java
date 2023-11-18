@@ -34,7 +34,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	/**
 	 * FeralTweaks Protocol Version
 	 */
-	public static int FT_VERSION = 2;
+	public static int FT_VERSION = 3;
 
 	public boolean enableByDefault;
 	public boolean requireManagedSaveData;
@@ -57,7 +57,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 	@Override
 	public String version() {
-		return "beta-1.0.0-b3";
+		return "beta-1.0.0-b4";
 	}
 
 	@Override
