@@ -542,6 +542,7 @@ namespace FeralTweaks
                 LogDebug("Loading mod assembly: " + mod.FullName);
                 Assembly asm = Assembly.Load(mod.Name.Remove(mod.Name.LastIndexOf(".dll")));
 
+
                 // Find mod types
                 LoadModsFrom(asm, structuredMod, modBaseDir);
             }
@@ -587,7 +588,7 @@ namespace FeralTweaks
                                 inst._loadBefore.AddRange(structuredMod.loadBefore);
                                 inst._dependencyVersions = new Dictionary<string, string>(structuredMod.dependencyVersions);
                             }
-                            inst.Initialize(modBaseDir);
+                            inst.Initialize(modBaseDir, asm);
 
                             // Find existing mod
                             LogDebug("Verifying mod ID...");

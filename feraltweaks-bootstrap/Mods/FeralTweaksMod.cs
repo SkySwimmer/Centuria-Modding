@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace FeralTweaks.Mods
         internal List<string> _conflicts = new List<string>();
         internal List<string> _loadBefore = new List<string>();
         internal Dictionary<string, string> _dependencyVersions = new Dictionary<string, string>();
+        private static List<Assembly> modAssemblies = new List<Assembly>();
         private bool locked;
         private string baseFolder;
 
@@ -36,10 +38,11 @@ namespace FeralTweaks.Mods
             }
         }
         
-        internal void Initialize(string baseFolder)
+        internal void Initialize(string baseFolder, Assembly assembly)
         {
             if (!Regex.Match(ID, "^[0-9A-Za-z._,]+$").Success)
                 throw new ArgumentException("Invalid mod ID: " + ID);
+            modAssemblies.Add(assembly);
             Define();
             this.baseFolder = baseFolder;
             locked = true;
@@ -119,6 +122,17 @@ namespace FeralTweaks.Mods
             get
             {
                 return _version;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all mod assemblies
+        /// </summary>
+        public Assembly[] Assemblies
+        {
+            get
+            {
+                return modAssemblies.ToArray();
             }
         }
 

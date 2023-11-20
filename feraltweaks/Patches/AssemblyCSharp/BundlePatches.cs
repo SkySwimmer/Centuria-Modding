@@ -3,26 +3,27 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using WW.Waiters;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
     public static class BundlePatches
     {
         public static Dictionary<string, string> AssetBundlePaths = new Dictionary<string, string>();
+        public static Dictionary<string, ManifestDef> AddedManifestDefs = new Dictionary<string, ManifestDef>();
         private static bool patched = false;
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(ManifestDef), "BundleCacheFilePath", MethodType.Getter)]
-        public static bool PatchBundleFilePath(ManifestDef __instance, ref string __result)
+        
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(WaitController), "Update")]
+        public static void Update()
         {
-            // Find bundle
-            if (AssetBundlePaths.ContainsKey(__instance.defID))
+            // Prevent cached charts from removing
+            ManifestChartData chart = CoreChartDataManager.coreInstance.manifestChartData;
+            foreach (ManifestDef def in AddedManifestDefs.Values)
             {
-                // Found it
-                __result = AssetBundlePaths[__instance.defID];
-                return false;
+                if (!chart._parsedDefsByID.ContainsKey(def.defID))
+                    chart._parsedDefsByID.Add(def.defID, def);
             }
-            return true;
         }
 
         [HarmonyPostfix]
@@ -57,6 +58,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Creating bundle def: " + asset + "...");
                     def = new ManifestDef();
                     chart.defList.Add(def);
+                    chart._parsedDefsByID.Add(asset, def);
+                    AddedManifestDefs[asset]=def;
                 }
                 else
                     FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Patching bundle def: " + asset + "...");
@@ -64,6 +67,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Update def
                 def.fileName = asset;
                 def.defID = asset;
+                def._downloadURL = new Uri(AssetBundlePaths[asset]).AbsoluteUri;
                 def.hash = new DateTimeOffset(File.GetLastWriteTimeUtc(AssetBundlePaths[asset])).ToUnixTimeMilliseconds().ToString();
                 def.defName = CoreBundleManager.GetBundleIDFromFileName(asset);
                 def.lowerDefName = CoreBundleManager.GetBundleIDFromFileName(asset);

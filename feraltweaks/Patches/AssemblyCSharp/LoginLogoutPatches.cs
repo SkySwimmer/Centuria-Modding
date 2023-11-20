@@ -204,6 +204,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
                 FeralTweaks.AutoLoginToken = null;
             }
+            if (FeralTweaks.AutoLoginUsername != null && FeralTweaks.AutoLoginPassword != null)
+            {
+                NetworkManager.AutoLogin = NetworkManager.AutoLoginState.DoAutoLogin;
+                NetworkManager.autoLoginEmailUsername = FeralTweaks.AutoLoginUsername;
+                NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginPassword;
+                FeralTweaks.AutoLoginUsername = null;
+                FeralTweaks.AutoLoginPassword = null;
+            }
 
             // Reset
             serverSoftwareName = "fer.al";

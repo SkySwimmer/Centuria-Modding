@@ -622,7 +622,11 @@ namespace FeralTweaksBootstrap
             if (showConsole && File.Exists("GameAssembly.dll"))
             {
                 WindowsConsoleTools.Attach();
-                Console.Title = "FTL " + VERSION + " loading...";
+                try
+                {
+                    Console.Title = "FTL " + VERSION + " loading...";
+                }
+                catch { }
             }
 
             // Log load

@@ -1,5 +1,12 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Reflection;
+using FeralTweaks.Mods;
+using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem.Collections.Generic;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -32,5 +39,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             return true;
         }
+
     }
 }

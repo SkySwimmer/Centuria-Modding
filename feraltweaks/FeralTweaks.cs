@@ -17,6 +17,7 @@ using LitJson;
 using FeralTweaks.Mods;
 using FeralTweaks;
 using FeralTweaks.Networking;
+using Il2CppInterop.Runtime.Injection;
 
 namespace feraltweaks
 {
@@ -54,6 +55,8 @@ namespace feraltweaks
         public static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
 
         public static string AutoLoginToken = null;
+        public static string AutoLoginUsername = null;
+        public static string AutoLoginPassword = null;
 
         public static bool ShowWorldJoinChatUnreadPopup;
 
@@ -98,6 +101,11 @@ namespace feraltweaks
             th.Start();
         }
 
+        public override void PostInit()
+        {
+            ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
+        }
+
         public override void Init()
         {
             // Load config
@@ -123,6 +131,15 @@ namespace feraltweaks
             LogInfo("Configuration loaded.");
             if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
                 ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
+            if (PatchConfig.ContainsKey("AutoLoginUsername"))
+                AutoLoginUsername = PatchConfig["AutoLoginUsername"];
+            if (PatchConfig.ContainsKey("AutoLoginPassword"))
+                AutoLoginPassword = PatchConfig["AutoLoginPassword"];
+            if (PatchConfig.ContainsKey("AutoLoginToken"))
+                AutoLoginPassword = PatchConfig["AutoLoginToken"];
+            PatchConfig.Remove("AutoLoginToken");
+            PatchConfig.Remove("AutoLoginUsername");
+            PatchConfig.Remove("AutoLoginPassword");
 
             // Load environment
             if (PatchConfig.ContainsKey("ServerEnvironment"))
@@ -153,6 +170,7 @@ namespace feraltweaks
             ApplyPatch(typeof(GlobalSettingsManagerPatch));
             ApplyPatch(typeof(BundlePatches));
             ApplyPatch(typeof(InitialLoadingPatches));
+            ApplyPatch(typeof(DecreePatches));
 
             // Scan mods for assets
             LogInfo("Scanning for mod assets...");
@@ -170,7 +188,7 @@ namespace feraltweaks
                         foreach (FileInfo file in dir.GetFiles("*.unity3d", SearchOption.AllDirectories))
                         {
                             // Get path
-                            string filePath = Path.GetRelativePath(dir.FullName, file.FullName).Replace(Path.DirectorySeparatorChar, '/');
+                            string filePath = Path.GetRelativePath(dir.FullName, file.FullName).Replace(Path.DirectorySeparatorChar, '/').ToLower();
                             string bundleId = filePath.Replace("/", "_").Remove(filePath.LastIndexOf(".unity3d"));
 
                             // Log
@@ -185,29 +203,29 @@ namespace feraltweaks
             LogInfo("Processing command line arguments...");
             int handoffPort = 0;
             int i = 0;
-            if (!Environment.GetEnvironmentVariables().Contains("DOORSTOP_EXECUTABLE_ARGS"))
+            foreach (string arg in Environment.GetCommandLineArgs())
             {
-                foreach (string arg in Environment.GetCommandLineArgs())
+                if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
                 {
-                    if (arg == "--launcher-handoff" && i + 1 < Environment.GetCommandLineArgs().Length)
-                    {
-                        handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
-                    }
-                    i++;
+                    handoffPort = int.Parse(Environment.GetCommandLineArgs()[i + 1]);
                 }
-            }
-            else
-            {
-                // MacOS workaround
-                string[] args = Environment.GetEnvironmentVariables()["DOORSTOP_EXECUTABLE_ARGS"].ToString().Split(" ");
-                foreach (string arg in args)
+                else if (arg == "--login-token" && i + 1 < Environment.GetCommandLineArgs().Length)
                 {
-                    if (arg == "--launcher-handoff" && i + 1 < args.Length)
-                    {
-                        handoffPort = int.Parse(args[i + 1]);
-                    }
-                    i++;
+                    AutoLoginToken = Environment.GetCommandLineArgs()[i + 1];
+                    AutoLoginUsername = null;
+                    AutoLoginPassword = null;
                 }
+                else if (arg == "--login-username" && i + 1 < Environment.GetCommandLineArgs().Length)
+                {
+                    AutoLoginUsername = Environment.GetCommandLineArgs()[i + 1];
+                    AutoLoginToken = null;
+                }
+                else if (arg == "--login-password" && i + 1 < Environment.GetCommandLineArgs().Length)
+                {
+                    AutoLoginPassword = Environment.GetCommandLineArgs()[i + 1];
+                    AutoLoginToken = null;
+                }
+                i++;
             }
             if (handoffPort != 0)
             {
@@ -383,9 +401,9 @@ namespace feraltweaks
             }
         }
 
-        private void ApplyPatch(Type type)
+        public static void ApplyPatch(Type type)
         {
-            LogInfo("Applying patch: " + type.FullName);
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying patch: " + type.FullName);
             Harmony.CreateAndPatchAll(type);
         }
 

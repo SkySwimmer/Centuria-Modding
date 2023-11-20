@@ -8,6 +8,7 @@ using Server;
 using Services.Chat;
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
@@ -362,6 +363,85 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_ChatPanel), "PrepareChatForSubmission")]
+        public static bool PrepareChatForSubmission(string inChatText, ref string __result)
+        {
+            if (inChatText.ToLower().Contains("<noparse>") || inChatText.ToLower().Contains("</noparse>"))
+            {
+                inChatText = UI_ChatPanel.ReplaceCaseInsensitive(inChatText, "<noparse>", "");
+                inChatText = UI_ChatPanel.ReplaceCaseInsensitive(inChatText, "</noparse>", "");   
+            }
+            __result = inChatText;
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CoreMessageManager), "SendMessageToRegisteredListeners")]
+        public static void SendMessageToRegisteredListeners(CoreMessageManager __instance, string tag, IMessage inMessage)
+        {
+            // Handle message by type
+            ChatConversationMessage chMsg = inMessage.TryCast<ChatConversationMessage>();
+            if (chMsg != null)
+                OnChatMessage(chMsg);
+            ChatConversationHistoryResponse chHMsg = inMessage.TryCast<ChatConversationHistoryResponse>();
+            if (chHMsg != null)
+                OnChatHistory(chHMsg);
+            ChatConversationListResponse chCLsg = inMessage.TryCast<ChatConversationListResponse>();
+            if (chCLsg != null)
+                OnChatConvos(chCLsg);
+            ChatConversationGetResponse chCMsg = inMessage.TryCast<ChatConversationGetResponse>();
+            if (chCMsg != null)
+                OnChatConvo(chCMsg);
+        }
+
+        public static void OnChatMessage(ChatConversationMessage msg)
+        {
+            if (msg.ChatEntry._message != null)
+                msg.ChatEntry._message = ChatFormatter.Format(msg.ChatEntry._message, true);
+            if (msg.ChatEntry._filteredMessage != null)
+                msg.ChatEntry._filteredMessage = ChatFormatter.Format(msg.ChatEntry._filteredMessage, true);
+            msg.ChatEntry.RefreshDisplayData().GetAwaiter().GetResult();
+        }
+
+        public static void OnChatHistory(ChatConversationHistoryResponse msg)
+        {
+            foreach (ChatEntry entry in msg.Messages)
+            {
+                if (entry._message != null)
+                    entry._message = ChatFormatter.Format(entry._message, true);
+                if (entry._filteredMessage != null)
+                    entry._filteredMessage = ChatFormatter.Format(entry._filteredMessage, true);
+                entry.RefreshDisplayData().GetAwaiter().GetResult();
+            }
+        }
+        
+        public static void OnChatConvo(ChatConversationGetResponse msg)
+        {
+            foreach (ChatEntry entry in msg.Conversation.messages)
+            {
+                if (entry._message != null)
+                    entry._message = ChatFormatter.Format(entry._message, true);
+                if (entry._filteredMessage != null)
+                    entry._filteredMessage = ChatFormatter.Format(entry._filteredMessage, true);
+                entry.RefreshDisplayData().GetAwaiter().GetResult();
+            }
+        }
+        public static void OnChatConvos(ChatConversationListResponse msg)
+        {
+            foreach (ChatConversationData convo in msg.Conversations)
+            {
+                foreach (ChatEntry entry in convo.messages)
+                {
+                    if (entry._message != null)
+                        entry._message = ChatFormatter.Format(entry._message, true);
+                    if (entry._filteredMessage != null)
+                        entry._filteredMessage = ChatFormatter.Format(entry._filteredMessage, true);
+                    entry.RefreshDisplayData().GetAwaiter().GetResult();
+                }
+            }
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(ChatConnectMessage))]
         [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(bool), typeof(string) })]
         public static bool OnConnection(bool success, string message)
@@ -391,6 +471,105 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return false;
             }
             return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentServiceClient), "WriteToSocket")]
+        public static bool WriteToSocket(string msg, PersistentServiceClient __instance)
+        {
+            // Check connection
+            if (!__instance.connected)
+                return false;
+
+            try
+            {
+                // Send packet
+                byte[] data = System.Text.Encoding.UTF8.GetBytes(msg);
+                __instance._networkStream.Write(data, 0, data.Length);
+                __instance._networkStream.Flush();
+            }
+            catch (NullReferenceException ex)
+            {
+                __instance.HandleIOError(ex.Message);
+            }
+            catch (SocketException ex)
+            {
+                __instance.HandleIOError(ex.Message);
+            }
+
+            // Return
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(WWTcpClient), "HandleSocketData")]
+        public static bool HandleSocketData(WWTcpClient __instance)
+        {
+            // Check connection
+            if (!__instance.connected)
+                return false;
+
+            try
+            {
+                // Prepare buffer
+                string messageBuffer = "";
+
+                // Read packets
+                while (true)
+                {
+                    // Read bytes
+                    byte[] buffer = new byte[20480];
+                    int read = __instance._networkStream.Read(buffer, 0, buffer.Length);
+                    if (read <= -1)
+                    {
+                        // Wrap up
+                        if (messageBuffer.Contains('\0'))
+                        {
+                            // Pending message found
+                            string message = messageBuffer.Substring(0, messageBuffer.IndexOf("\0"));
+
+                            // Handle
+                            __instance.HandleMessage(message);
+                        }
+
+                        // Close
+                        __instance.DebugMessage("Disconnect due to lost socket connection");
+                        __instance.Disconnect();
+                        break;
+                    }
+                    byte[] newBuf = new byte[read];
+                    Array.Copy(buffer, newBuf, read);
+                    buffer = newBuf;
+                    newBuf = null;
+
+                    // Read received messages
+                    string messages = messageBuffer + Encoding.UTF8.GetString(newBuf);
+
+                    // Check
+                    while (messages.Contains('\0'))
+                    {
+                        // Pending message found
+                        string message = messages.Substring(0, messages.IndexOf("\0"));
+
+                        // Push remaining bytes to the next message
+                        messages = messages.Substring(messages.IndexOf("\0") + 1);
+
+                        // Handle
+                        __instance.HandleMessage(message);
+                    }
+
+                    // Update buffer
+                    messageBuffer = messages;
+                }
+            }
+            catch (Exception ex)
+            {
+                __instance.DebugMessage("Disconnect due to exception: " + ex.Message + "\n" + ex.StackTrace);
+                __instance.Disconnect();
+            }
+
+            // Return
+            return false;
         }
 
         private static GameObject GetChild(GameObject parent, string name)
