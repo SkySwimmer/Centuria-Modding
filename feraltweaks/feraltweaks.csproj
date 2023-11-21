@@ -74,6 +74,10 @@
       <HintPath>lib\feral\Il2CppSystem.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ACTk.Runtime">
+      <HintPath>lib\feral\ACTk.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

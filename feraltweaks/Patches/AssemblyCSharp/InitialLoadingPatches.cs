@@ -15,6 +15,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
     {
         private static bool _doneLoadingPatch;
         private static long _timeInitialFadeStart;
+        private static long _timeLastFrame;
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_ProgressScreen), "Update")]
@@ -22,6 +23,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             if (_doneLoadingPatch)
                 return;
+            long timeBetweenFrames = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _timeLastFrame;
             if (_timeInitialFadeStart == 0)
             {
                 UI_ProgressScreen.instance._backgroundImage.color = UI_ProgressScreen.instance._transparent;
@@ -29,6 +31,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
             else
             {
+                // Handle lag spikes
+                if (timeBetweenFrames >= 200)
+                    _timeInitialFadeStart += timeBetweenFrames;
+
+                // Process fade
                 long currentTimeSpent = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _timeInitialFadeStart;
                 if (currentTimeSpent < 0)
                     currentTimeSpent = 0;
@@ -46,6 +53,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         (1f / 750) * (float)currentTimeSpent);
                 }
             }
+            _timeLastFrame = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
     }

@@ -18,6 +18,7 @@ using FeralTweaks.Mods;
 using FeralTweaks;
 using FeralTweaks.Networking;
 using Il2CppInterop.Runtime.Injection;
+using Newtonsoft.Json;
 
 namespace feraltweaks
 {
@@ -59,6 +60,8 @@ namespace feraltweaks
         public static string AutoLoginPassword = null;
 
         public static bool ShowWorldJoinChatUnreadPopup;
+        public static bool ChatPostInit;
+        public static bool ChatHandshakeDone;
 
         public static string DirectorAddress = null;
         public static string APIAddress = null;
@@ -70,6 +73,7 @@ namespace feraltweaks
         public static int BlueboxPort = -1;
         public static int EncryptedGame = -1; // -1 = unset, 0 = false, 1 = true
         public static int EncryptedChat = -1; // -1 = unset, 0 = false, 1 = true
+        public static int EncryptedVoiceChat = -1;
 
         // Error message container for when login fails and the server includes a feraltweaks message field in the response
         public static string LoginErrorMessage = null;
@@ -103,6 +107,7 @@ namespace feraltweaks
 
         public override void PostInit()
         {
+            ClassInjector.RegisterTypeInIl2Cpp<FeralTweaksChartDefComponent>();
             ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
         }
 
@@ -393,6 +398,11 @@ namespace feraltweaks
                 {
                     EncryptedChat = payload[9].ToLower() == "true" ? 1 : 0;
                     LogInfo("Encryped chat server: " + (EncryptedChat == 1));
+                }
+                if (payload.Length >= 10)
+                {
+                    EncryptedVoiceChat = payload[10].ToLower() == "true" ? 1 : 0;
+                    LogInfo("Encryped voice chat server: " + (EncryptedVoiceChat == 1));
                 }
             }
             catch
@@ -793,6 +803,12 @@ namespace feraltweaks
                 string id = evt.Substring("feraltweaks.".Length);
                 switch (id)
                 {
+                    case "fthandshake":
+                        ChatHandshakeDone = true;
+                        break;
+                    case "postinit":
+                        ChatPostInit = true;
+                        break;
                     case "unreadconversations":
                         {
                             // Add unreads
@@ -802,6 +818,33 @@ namespace feraltweaks
                             foreach (string convo in convos)
                                 ChatManager.instance._unreadConversations.Add(convo);
                             ShowWorldJoinChatUnreadPopup = true;
+
+                            // Schedule reload of
+                            FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                            {
+                                if (NetworkManager.ChatServiceConnection == null || NetworkManager.ChatServiceConnection._client == null || !NetworkManager.ChatServiceConnection._client.connected)
+                                    return true;
+                                if (!FeralTweaks.ChatPostInit)
+                                    return false;
+
+                                // Schedule
+                                FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                                {
+                                    // Check unreads
+                                    if (FeralTweaks.ShowWorldJoinChatUnreadPopup && !UI_ProgressScreen.instance.IsVisibleOrFading)
+                                    {
+                                        FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
+                                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0 && !ChatPatches.DisplayedUnreads)
+                                        {
+                                            NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
+                                            ChatPatches.DisplayedUnreads = true;
+                                        }
+                                    }
+                                });
+
+                                // Return
+                                return true;
+                            });
                             break;
                         }
                     default:

@@ -28,6 +28,11 @@ public class DisconnectHandler implements IEventReceiver {
 			pkt.title = "Disconnected";
 			switch (event.getType()) {
 
+			case DUPLICATE_LOGIN:
+				pkt.title = "Disconnected";
+				pkt.message = "Your account was logged into from another location.";
+				break;
+
 			case BANNED:
 				pkt.title = "Banned";
 				pkt.message = "Your account was suspended and has been disconnected.";

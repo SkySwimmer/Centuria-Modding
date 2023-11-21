@@ -61,7 +61,7 @@ dependencies {
 	implementation name: "Centuria"
 	implementation name: "ConnectiveHTTP"
 
-	implementation name: "feraltweaks-server-module", version: '1.0.0-b3'
+	implementation name: "feraltweaks-server-module", version: '1.0.0-b4'
 }
 
 createEclipseLaunches {

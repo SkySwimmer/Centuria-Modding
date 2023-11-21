@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.dms.DMManager;
 import org.asf.centuria.networking.chatserver.ChatClient;
+import org.asf.centuria.networking.gameserver.GameServer;
+import org.asf.centuria.social.SocialManager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -16,11 +18,26 @@ public class UnreadMessageManager {
 	 * this method will mark the conversation as unread
 	 * 
 	 * @param conversationId Conversation where a new message was received
+	 * @param sender         Account instance that sent the message
 	 * @param receiver       Account instance that received the message
 	 */
-	public static void receivedMessageInConverstaion(String conversationId, CenturiaAccount receiver) {
+	public static void receivedMessageInConverstaion(String conversationId, CenturiaAccount sender,
+			CenturiaAccount receiver) {
 		// Check if online
 		if (receiver.getOnlinePlayerInstance() == null) {
+			// Check blocked and if the sender is not a moderator
+			String permLevel = "member";
+			if (sender.getSaveSharedInventory().containsItem("permissions")) {
+				permLevel = sender.getSaveSharedInventory().getItem("permissions").getAsJsonObject()
+						.get("permissionLevel").getAsString();
+			}
+			if (!GameServer.hasPerm(permLevel, "moderator")) {
+				SocialManager socialManager = SocialManager.getInstance();
+				if (socialManager.socialListExists(receiver.getAccountID())
+						&& socialManager.getPlayerIsBlocked(receiver.getAccountID(), sender.getAccountID()))
+					return; // Skip
+			}
+
 			// Add to unread history
 			JsonArray arr = new JsonArray();
 

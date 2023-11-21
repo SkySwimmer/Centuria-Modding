@@ -1,16 +1,13 @@
 ﻿using FeralTweaks;
 using FeralTweaks.Mods;
 using HarmonyLib;
-using Il2CppInterop.Runtime;
 using LitJson;
 using Newtonsoft.Json;
 using Server;
 using Services.Chat;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -279,20 +276,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
-        public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
-        {
-            if (__instance.ToString() == "ChatServiceConnection")
-            {
-                // Override encryption if needed
-                if (FeralTweaks.EncryptedChat != -1)
-                {
-                    isSecured = FeralTweaks.EncryptedChat == 1;
-                }
-            }
-        }
-
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_LazyListItem_ChatConversation), "RefreshReadState")]
         public static void RefreshReadState(ref UI_LazyListItem_ChatConversation __instance, bool inIsRead)
@@ -310,22 +293,67 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        private static bool ChatInitializing = false;
+        private static bool ChatLoadingScreenWantedToHide = false;
+
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
-        public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
+        [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
+        public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
         {
-            if (inData == null || inFromSetup)
-                return;
-            ChatConversationData inConv = inData;
-            if (ChatManager.instance._unreadConversations.Contains(inConv.id))
+            if (__instance.ToString() == "ChatServiceConnection")
             {
-                // Send packet
-                Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
-                pkt["cmd"] = "feraltweaks.markread";
-                pkt["conversation"] = inConv.id;
-                string msg = JsonMapper.ToJson(pkt);
-                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+                // Override encryption if needed
+                if (FeralTweaks.EncryptedChat != -1)
+                {
+                    isSecured = FeralTweaks.EncryptedChat == 1;
+                }
             }
+            else if (__instance.ToString() == "VoiceChatServiceConnection")
+            {
+                // Override encryption if needed
+                if (FeralTweaks.EncryptedVoiceChat != -1)
+                {
+                    isSecured = FeralTweaks.EncryptedVoiceChat == 1;
+                }
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentServiceConnection), "OnConnectionLost")]
+        public static void OnDisconnect(ref PersistentServiceConnection __instance)
+        {
+            if (__instance.TryCast<ChatServiceConnection>() != null)
+            {
+                // On client disconnect
+                if (ChatInitializing)
+                {
+                    // Stop initializing
+                    ChatInitializing = false;
+
+                    // Close loading sceen if needed
+                    if (ChatLoadingScreenWantedToHide)
+                        UI_ProgressScreen.instance.Hide();
+                    ChatLoadingScreenWantedToHide = false;
+                }
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
+        public static bool HideProg()
+        {
+            // Check chat initializing
+            if (ChatInitializing)
+            {
+                // Mark as wanting to hide
+                ChatLoadingScreenWantedToHide = true;
+
+                // Prevent hide
+                return false;
+            }
+
+            // Allow hide
+            return true;
         }
 
         [HarmonyPostfix]
@@ -342,9 +370,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (FeralTweaks.ShowWorldJoinChatUnreadPopup)
                     {
                         FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
-                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0)
+                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0 && !DisplayedUnreads)
                         {
                             NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
+                            DisplayedUnreads = true;
                         }
                     }
                 });
@@ -392,6 +421,59 @@ namespace feraltweaks.Patches.AssemblyCSharp
             ChatConversationGetResponse chCMsg = inMessage.TryCast<ChatConversationGetResponse>();
             if (chCMsg != null)
                 OnChatConvo(chCMsg);
+            ChatSessionStartMessage chSt = inMessage.TryCast<ChatSessionStartMessage>();
+            if (chSt != null)
+                OnChatStart(chSt);
+        }
+
+        public static void OnChatStart(ChatSessionStartMessage sMsg)
+        {
+            // Send FT handshake if game server supports FeralTweaks
+            if (FeralTweaksServer.IsModLoaded("feraltweaks"))
+            {
+                // Create FT handshake
+                Dictionary<string, object> pkt = new Dictionary<string, object>();
+                pkt["cmd"] = "feraltweaks.fthandshake";
+                pkt["feraltweaks_protocol"] = FeralTweaks.ProtocolVersion.ToString();
+                pkt["feraltweaks_version"] = FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version;
+
+                // Add mods
+                Dictionary<string, string> ftMods = new Dictionary<string, string>();
+                foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
+                {
+                    ftMods[mod.ID] = mod.Version;
+                }
+                pkt["feraltweaks_mods"] = ftMods;
+
+                // Create json
+                string msg = JsonConvert.SerializeObject(pkt);
+                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+
+                // Schedule post-init
+                FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                {
+                    if (NetworkManager.ChatServiceConnection == null || NetworkManager.ChatServiceConnection._client == null || !NetworkManager.ChatServiceConnection._client.connected)
+                        return true;
+                    if (!FeralTweaks.ChatHandshakeDone)
+                        return false;
+
+                    // Post-init
+                    if (NetworkManager.ChatServiceConnection != null && NetworkManager.ChatServiceConnection._client != null && NetworkManager.ChatServiceConnection._client.connected)
+                    {
+                        // Send post-init
+                        DisplayedUnreads = false;
+                        FeralTweaks.ChatPostInit = false;
+                        FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
+                        pkt = new Dictionary<string, object>();
+                        pkt["cmd"] = "feraltweaks.postinit";
+                        msg = JsonConvert.SerializeObject(pkt);
+                        NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+                    }
+
+                    // Return
+                    return true;
+                });
+            }
         }
 
         public static void OnChatMessage(ChatConversationMessage msg)
@@ -441,6 +523,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        public static bool DisplayedUnreads = false;
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ChatConnectMessage))]
         [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(bool), typeof(string) })]
@@ -448,22 +532,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             if (success)
             {
-                // Mention FeralTweaks support
+                // Send handshake
                 Dictionary<string, object> pkt = new Dictionary<string, object>();
                 pkt["cmd"] = "sessions.start";
                 pkt["uuid"] = UserManager.Me.UUID;
                 pkt["auth_token"] = NetworkManager.autoLoginAuthToken;
-                pkt["feraltweaks"] = "enabled";
-                pkt["feraltweaks_protocol"] = FeralTweaks.ProtocolVersion.ToString();
-                pkt["feraltweaks_version"] = FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version;
-
-                // Add mods
-                Dictionary<string, string> ftMods = new Dictionary<string, string>();
-                foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
-                {
-                    ftMods[mod.ID] = mod.Version;
-                }
-                pkt["feraltweaks_mods"] = ftMods;
+                pkt["ft"] = "enabled";
+                pkt["ft_prot"] = FeralTweaks.ProtocolVersion.ToString();
 
                 // Create json
                 string msg = JsonConvert.SerializeObject(pkt);
@@ -474,104 +549,26 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(PersistentServiceClient), "WriteToSocket")]
-        public static bool WriteToSocket(string msg, PersistentServiceClient __instance)
+        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
+        public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
         {
-            // Check connection
-            if (!__instance.connected)
-                return false;
-
-            try
+            if (inData == null || inFromSetup)
+                return;
+            ChatConversationData inConv = inData;
+            if (ChatManager.instance._unreadConversations.Contains(inConv.id) && NetworkManager.ChatServiceConnection != null && NetworkManager.ChatServiceConnection.IsConnected)
             {
-                // Send packet
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(msg);
-                __instance._networkStream.Write(data, 0, data.Length);
-                __instance._networkStream.Flush();
-            }
-            catch (NullReferenceException ex)
-            {
-                __instance.HandleIOError(ex.Message);
-            }
-            catch (SocketException ex)
-            {
-                __instance.HandleIOError(ex.Message);
-            }
-
-            // Return
-            return false;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(WWTcpClient), "HandleSocketData")]
-        public static bool HandleSocketData(WWTcpClient __instance)
-        {
-            // Check connection
-            if (!__instance.connected)
-                return false;
-
-            try
-            {
-                // Prepare buffer
-                string messageBuffer = "";
-
-                // Read packets
-                while (true)
+                if (FeralTweaksServer.IsModLoaded("feraltweaks"))
                 {
-                    // Read bytes
-                    byte[] buffer = new byte[20480];
-                    int read = __instance._networkStream.Read(buffer, 0, buffer.Length);
-                    if (read <= -1)
-                    {
-                        // Wrap up
-                        if (messageBuffer.Contains('\0'))
-                        {
-                            // Pending message found
-                            string message = messageBuffer.Substring(0, messageBuffer.IndexOf("\0"));
-
-                            // Handle
-                            __instance.HandleMessage(message);
-                        }
-
-                        // Close
-                        __instance.DebugMessage("Disconnect due to lost socket connection");
-                        __instance.Disconnect();
-                        break;
-                    }
-                    byte[] newBuf = new byte[read];
-                    Array.Copy(buffer, newBuf, read);
-                    buffer = newBuf;
-                    newBuf = null;
-
-                    // Read received messages
-                    string messages = messageBuffer + Encoding.UTF8.GetString(newBuf);
-
-                    // Check
-                    while (messages.Contains('\0'))
-                    {
-                        // Pending message found
-                        string message = messages.Substring(0, messages.IndexOf("\0"));
-
-                        // Push remaining bytes to the next message
-                        messages = messages.Substring(messages.IndexOf("\0") + 1);
-
-                        // Handle
-                        __instance.HandleMessage(message);
-                    }
-
-                    // Update buffer
-                    messageBuffer = messages;
+                    // Send packet
+                    Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
+                    pkt["cmd"] = "feraltweaks.markread";
+                    pkt["conversation"] = inConv.id;
+                    string msg = JsonMapper.ToJson(pkt);
+                    NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
                 }
             }
-            catch (Exception ex)
-            {
-                __instance.DebugMessage("Disconnect due to exception: " + ex.Message + "\n" + ex.StackTrace);
-                __instance.Disconnect();
-            }
-
-            // Return
-            return false;
         }
-
+        
         private static GameObject GetChild(GameObject parent, string name)
         {
             if (name.Contains("/"))

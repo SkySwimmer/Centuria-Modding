@@ -19,7 +19,7 @@ public class ChatMessageHandler implements IEventReceiver {
 
 		// Check room
 		if (event.getClient().isInRoom(event.getConversationId()) && event.getClient()
-				.getRoom(event.getConversationId()).getType().equalsIgnoreCase(ChatRoomTypes.ROOM_CHAT)) {
+				.getRoom(event.getConversationId()).getType().equalsIgnoreCase(ChatRoomTypes.PRIVATE_CHAT)) {
 			// Find dm participants
 			if (DMManager.getInstance().dmExists(event.getConversationId())) {
 				String[] participants = DMManager.getInstance().getDMParticipants(event.getConversationId());
@@ -33,7 +33,8 @@ public class ChatMessageHandler implements IEventReceiver {
 					if (ftModule.enableByDefault || acc.getSaveSharedInventory().containsItem("feraltweaks")
 							|| acc.getSaveSpecificInventory().containsItem("feraltweaks")) {
 						// Add unread if needed
-						UnreadMessageManager.receivedMessageInConverstaion(event.getConversationId(), acc);
+						UnreadMessageManager.receivedMessageInConverstaion(event.getConversationId(),
+								event.getAccount(), acc);
 					}
 				}
 			}

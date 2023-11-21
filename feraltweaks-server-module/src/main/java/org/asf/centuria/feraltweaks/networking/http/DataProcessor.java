@@ -171,10 +171,11 @@ public class DataProcessor extends HttpRequestProcessor {
 				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
 				ports.addProperty("game", Centuria.gameServer.getServerSocket().getLocalPort());
 				ports.addProperty("chat", Centuria.chatServer.getServerSocket().getLocalPort());
-				ports.addProperty("voiceChat", -1);
+				ports.addProperty("voiceChat", Centuria.voiceChatServer.getServerSocket().getLocalPort());
 				ports.addProperty("bluebox", -1);
 				serverBlock.addProperty("encryptedGame", Centuria.encryptGame);
 				serverBlock.addProperty("encryptedChat", Centuria.encryptChat);
+				serverBlock.addProperty("encryptedVoiceChat", Centuria.encryptVoiceChat);
 				serverBlock.addProperty("modVersion", module.modDataVersion);
 				serverBlock.addProperty("assetVersion", module.modDataVersion);
 

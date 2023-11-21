@@ -11,6 +11,7 @@ using FeralTweaks;
 using Newtonsoft.Json;
 using WW.Waiters;
 using StrayTech;
+using Il2CppInterop.Runtime;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -1005,6 +1006,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         {
                             // Found component
                             FeralTweaksChartDefComponent def = componentI.TryCast<FeralTweaksChartDefComponent>();
+                            if (def == null && componentI is FeralTweaksChartDefComponent)
+                                def = (FeralTweaksChartDefComponent)componentI;
                             if (def != null)
                             {
                                 // Deserialize
@@ -1057,18 +1060,34 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     try
                                     {
                                         // Create instance
-                                        FeralTweaksChartDefComponent inst = (FeralTweaksChartDefComponent)t.GetConstructor(new System.Type[0]).Invoke(new object[0]);
+                                        FeralTweaksChartDefComponent inst = Il2CppType.From(t).GetConstructor(new Type[0]).Invoke(new Il2CppSystem.Object[0]).Cast<FeralTweaksChartDefComponent>();
 
-                                        // Get il2cpp type
-                                        Il2CppSystem.Type tIl2Cpp = inst.GetIl2CppType();
+                                        // Find list
+                                        List<ComponentBase> typeLst = null;
+                                        foreach (Type tp in defObj._components._components.Keys)
+                                        {
+                                            if (tp.FullName == "DefComponent")
+                                            {
+                                                // Found
+                                                typeLst = defObj._components._components[tp];
+                                                break;
+                                            }
+                                        }
+                                        if (typeLst == null)
+                                        {
+                                            typeLst = new List<ComponentBase>();
+                                            defObj._components._components[Il2CppType.Of<DefComponent>()] = typeLst;
+                                        }
 
                                         // Add component
-                                        defObj._components.GetComponentListForType(tIl2Cpp).Add(inst);
+                                        typeLst.Add(inst);
+
                                         found = true;
                                         break;
                                     }
                                     catch
-                                    { }
+                                    {
+                                    }
                                 }
                             }
                             catch

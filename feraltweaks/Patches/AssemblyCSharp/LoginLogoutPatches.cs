@@ -109,11 +109,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool CoreReset(SplashError inSplashError, ErrorCode inErrorCode)
         {
             if ((NetworkManager.instance == null || NetworkManager.instance._serverConnection == null || !NetworkManager.instance._serverConnection.IsConnected) && !doLogout)
-                return true;
+                return HandleReset(inSplashError, inErrorCode);
             if (loggingOut)
                 return false;
             else if (inSplashError != SplashError.NONE)
-                return true;
+                return HandleReset(inSplashError, inErrorCode);
 
             loggingOut = true;
             doLogout = false;
@@ -121,14 +121,117 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return false;
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UI_Reset), "ResetInCallback")]
+        public static void ResetInCallback(UI_Reset __instance)
+        {
+            if (__instance._resetErrorCode != null && __instance.tmpLabelMessage != null && __instance._resetErrorCode._internalErrorText != null)
+            {
+                // Add description
+                __instance.tmpLabelMessage.text = __instance.tmpLabelMessage.text + "\nDescription: " + __instance._resetErrorCode._internalErrorText;
+            }
+        }
+
+        private static bool HandleReset(SplashError inSplashError, ErrorCode inErrorCode)
+        {
+            // Check code
+            switch (inErrorCode.Code)
+            {
+
+                case 9:
+                    // Server connection lost
+                    LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
+                    return false;
+
+                case 1008:
+                    // API error
+                    LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
+                    return false;
+
+                default:
+                    // Allow reset
+                    return true;
+
+            }
+        }
+
+        private static void LogoutWithError(string title, string errorMessage, ErrorCode inErrorCode)
+        {
+            // Schedule error
+            FeralTweaks.ScheduleDelayedActionForUnity(() =>
+            {
+                if (UI_ProgressScreen.instance.IsVisibleOrFading)
+                    return false;
+                FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                {
+                    // Show popup
+                    UI_Window_OkPopup.CloseWindow();
+                    UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + "-" + inErrorCode.Subcode + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
+                });
+                return true;
+            });
+
+            // Logout
+            Logout(null);
+        }
+
         private static void Logout(string msg)
         {
+            if (WindowManager.GetWindow<UI_Window_Login>() != null && WindowManager.GetWindow<UI_Window_Login>().IsOpen && !WindowManager.GetWindow<UI_Window_Login>().IsOpening)
+            {
+                RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
+                if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+                {
+                    NetworkManager.instance._serverConnection.Disconnect();
+                    if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                        NetworkManager.instance._chatServiceConnection.Disconnect();
+                    if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                        NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                    NetworkManager.instance._serverConnection = null;
+                    NetworkManager.instance._chatServiceConnection = null;
+                    NetworkManager.instance._voiceChatServiceConnection = null;
+                    NetworkManager.instance._jwt = null;
+                    NetworkManager.instance._uuid = null;
+                }
+                Avatar_Local.instance = null;
+                XPManager.instance.PlayerLevel = null;
+                NotificationManager.instance.loggedNotifications.Clear();
+                GlidingManager.instance.MStart();
+                reloadGlidingManager = true;
+                QuestManager.instance._linearQuestListData = null;
+                UserManager.Me = null;
+                UserManager.instance._users.ClearUsersByUUID();
+                serverSoftwareName = "fer.al";
+                serverSoftwareVersion = "unknown";
+                serverMods.Clear();
+                UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
+                if (chat != null)
+                    GameObject.Destroy(chat.gameObject);
+                UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
+                if (vchat != null)
+                    GameObject.Destroy(vchat.gameObject);
+                ChatManager.instance._cachedConversations = null;
+                ChatManager.instance._unreadConversations.Clear();
+                if (FeralVivoxManager.instance._vivoxEnabled.GetDecrypted())
+                {
+                    // Log out of rooms, channels, etc
+                    FeralVivoxManager.instance.LeaveVoiceChatGroup();
+                }
+                return;
+            }
+            if (!IsSafeToQuickLogout)
+            {
+                // Quick-logout unavailable
+                CoreLoadingManager.coreInstance.StartCoroutine(CoreLoadingManager.coreInstance.LoadLevel("58", new Il2CppSystem.Collections.Generic.List<string>()));
+                return;
+            }
             CoreWindowManager.CloseAllWindows();
             if (CoreManagerBase<CoreNotificationManager>.coreInstance != null)
                 CoreManagerBase<CoreNotificationManager>.coreInstance.ClearAndScheduleAllLocalNotifications();
             CoreBundleManager2.UnloadAllLevelAssetBundles();
             UI_ProgressScreen.instance.ClearLabels();
-            UI_ProgressScreen.instance.SetSpinnerLabelWithIndex(0, msg);
+            if (msg != null)
+                UI_ProgressScreen.instance.SetSpinnerLabelWithIndex(0, msg);
             RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
             RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("CityFera");
             UI_ProgressScreen.instance.UpdateLevel();
@@ -141,10 +244,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                     {
                         NetworkManager.instance._serverConnection.Disconnect();
-                        if (NetworkManager.instance._chatServiceConnection.IsConnected)
+                        if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                             NetworkManager.instance._chatServiceConnection.Disconnect();
+                        if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                            NetworkManager.instance._voiceChatServiceConnection.Disconnect();
                         NetworkManager.instance._serverConnection = null;
                         NetworkManager.instance._chatServiceConnection = null;
+                        NetworkManager.instance._voiceChatServiceConnection = null;
                         NetworkManager.instance._jwt = null;
                         NetworkManager.instance._uuid = null;
                     }
@@ -166,8 +272,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                         if (chat != null)
                             GameObject.Destroy(chat.gameObject);
+                        UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
+                        if (vchat != null)
+                            GameObject.Destroy(vchat.gameObject);
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
+                        if (FeralVivoxManager.instance._vivoxEnabled.GetDecrypted())
+                        {
+                            // Log out of rooms, channels, etc
+                            FeralVivoxManager.instance.LeaveVoiceChatGroup();
+                        }
                         CoreWindowManager.CloseAllWindows();
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
                         actionsToRun.Add(() =>
@@ -183,6 +297,53 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     });
                 }
             };
+        }
+
+        private static bool IsAutologin = false;
+        private static bool IsSafeToQuickLogout = false;
+        private static LoginData LoginResultData;
+        private static LoginStatus LoginResultStatus;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(NetworkManager), "OnServerConnectionLost")]
+        public static bool OnServerConnectionLost()
+        {
+            // Clear mod info
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
+            serverMods.Clear();
+
+            // Check autologin
+            if (IsAutologin)
+            {
+                // Show error and head to title screen
+                IsAutologin = false;
+                if (LoginResultData != null && LoginResultStatus != LoginStatus.Success)
+                {
+                    // Show window when loading closes
+                    UI_Window_OkPopup.CloseWindow();
+                    FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                    {
+                        if (UI_ProgressScreen.instance.IsVisibleOrFading)
+                            return false;
+                        FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                        {
+                            // Show popup
+                            UI_Window_OkErrorPopup.QueueWindow("Login Failed!", LoginHelper.GetLoginStatusErrorMessage(LoginResultStatus), "");
+                        });
+                        return true;
+                    });
+
+                    // Load title screen
+                    CoreLoadingManager.coreInstance.StartCoroutine(CoreLoadingManager.coreInstance.LoadLevel("58", new Il2CppSystem.Collections.Generic.List<string>()));
+
+                    // Prevent normal disconnect logic
+                    return false;
+                }
+            }
+
+            // Allow normal logic
+            return true;
         }
 
         [HarmonyPrefix]
@@ -203,6 +364,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginEmailUsername = "sys://fromtoken";
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
                 FeralTweaks.AutoLoginToken = null;
+                IsAutologin = true;
             }
             if (FeralTweaks.AutoLoginUsername != null && FeralTweaks.AutoLoginPassword != null)
             {
@@ -211,6 +373,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginPassword;
                 FeralTweaks.AutoLoginUsername = null;
                 FeralTweaks.AutoLoginPassword = null;
+                IsAutologin = true;
             }
 
             // Reset
@@ -265,8 +428,34 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_Login), "OnOpen")]
         public static void OnOpen(UI_Window_Login __instance)
         {
+            IsSafeToQuickLogout = true;
             RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetLevelDefWithUnityLevelName("Main_Menu");
             UI_Window_OkPopupPatch.SingleTimeOkButtonAction = null;
+
+            // Reset
+            if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+                NetworkManager.instance._serverConnection.Disconnect();
+            if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                NetworkManager.instance._chatServiceConnection.Disconnect();
+            if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+            NetworkManager.instance._serverConnection = null;
+            NetworkManager.instance._chatServiceConnection = null;
+            NetworkManager.instance._voiceChatServiceConnection = null;
+            NetworkManager.instance._jwt = null;
+            NetworkManager.instance._uuid = null;
+            Avatar_Local.instance = null;
+            XPManager.instance.PlayerLevel = null;
+            NotificationManager.instance.loggedNotifications.Clear();
+            GlidingManager.instance.MStart();
+            reloadGlidingManager = true;
+            QuestManager.instance._linearQuestListData = null;
+            CoreBundleManager2.UnloadAllLevelAssetBundles();
+            CoreLevelManager.LoadLevelSingle("Loading");
+            UserManager.Me = null;
+            UserManager.instance._users.ClearUsersByUUID();
+            serverSoftwareName = "fer.al";
+            serverSoftwareVersion = "unknown";
         }
 
         [HarmonyPrefix]
@@ -346,6 +535,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void Login(ref string name)
         {
             // Mention feraltweaks support
+            LoginResultData = null;
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
 
             if (!FeralTweaks.PatchConfig.ContainsKey("DebugOldServer") || FeralTweaks.PatchConfig["DebugOldServer"].ToLower() != "true")
@@ -391,6 +581,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Clean first
             FeralTweaks.LoginErrorMessage = null;
+
+            // Find error
+            LoginResultData = JsonUtility.FromJson<LoginData>(JsonMapper.ToJson(json["params"]));
+            LoginResultStatus = (LoginStatus)((int)json["statusId"]);
+            if (LoginResultStatus == LoginStatus.Success)
+            {
+                IsAutologin = false;
+                IsSafeToQuickLogout = true;
+            }
 
             // If present, set error message
             if (json["params"].Contains("errorMessage"))
@@ -444,16 +643,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Prevent loading screen from showing
             errorDisplayed = true;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(NetworkManager), "OnServerConnectionLost")]
-        public static void OnServerConnectionLost()
-        {
-            // Clear mod info
-            serverSoftwareName = "fer.al";
-            serverSoftwareVersion = "unknown";
-            serverMods.Clear();
         }
     }
 }

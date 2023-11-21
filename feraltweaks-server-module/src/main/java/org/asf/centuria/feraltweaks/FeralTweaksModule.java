@@ -11,6 +11,8 @@ import org.asf.centuria.feraltweaks.handlers.handshake.GameHandshakeHandler;
 import org.asf.centuria.feraltweaks.handlers.handshake.ChatHandshakeHandler;
 import org.asf.centuria.feraltweaks.managers.PlayerNameManager;
 import org.asf.centuria.feraltweaks.managers.ScheduledMaintenanceManager;
+import org.asf.centuria.feraltweaks.networking.chat.FeralTweaksHandshakePacket;
+import org.asf.centuria.feraltweaks.networking.chat.FeralTweaksPostInitPacket;
 import org.asf.centuria.feraltweaks.networking.chat.MarkConvoReadPacket;
 import org.asf.centuria.feraltweaks.networking.game.FtModPacket;
 import org.asf.centuria.feraltweaks.networking.game.YesNoPopupPacket;
@@ -158,5 +160,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public void chatStartup(ChatServerStartupEvent event) {
 		// Register custom chat packets
 		event.registerPacket(new MarkConvoReadPacket());
+		event.registerPacket(new FeralTweaksHandshakePacket());
+		event.registerPacket(new FeralTweaksPostInitPacket());
 	}
 }
