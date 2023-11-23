@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
-    public static class GlobalSettingsManagerPatch 
+    public static class AssetEndpointPatches 
     {
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GlobalSettingsManager), "ProdBaseURL", MethodType.Getter)]

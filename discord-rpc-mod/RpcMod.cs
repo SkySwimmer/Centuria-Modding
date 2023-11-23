@@ -81,6 +81,7 @@ namespace FeralDiscordRpcMod
                 File.WriteAllText(ConfigDir + "/config.json", "{\n"
                     + "    \"pipe\": -1,\n"
                     + "    \"joiningEnabled\": " + (Environment.GetEnvironmentVariable("CENTURIA_LAUNCHER_PATH") != null ? "true" : "false") + ",\n"
+                    + "    \"disableAskToJoin\": false,"
                     + "    \"joinExecutableWindows\": \"\",\n"
                     + "    \"joinExecutableLinux\": \"\",\n"
                     + "    \"joinExecutableOSX\": \"\",\n"
@@ -181,7 +182,7 @@ namespace FeralDiscordRpcMod
             {
                 if (!config.disableAskToJoin)
                 {
-                    feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                    feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                     {
                         // Show popup
                         try
@@ -190,11 +191,11 @@ namespace FeralDiscordRpcMod
                         }
                         catch { }
                         UI_Window_YesNoPopup.OpenWindow(e.User.Username + " wishes to join your game.", "Discord user " + e.User.Username + " requested to join your party and game, accept join request?", "Accept", "Deny");
-                        UI_Window_YesNoPopupPatch.SingleTimeNoButtonAction = () =>
+                        YesNoPopupHooks.SingleTimeNoButtonAction = () =>
                         {
                             client.Respond(e, false);
                         };
-                        UI_Window_YesNoPopupPatch.SingleTimeYesButtonAction = () =>
+                        YesNoPopupHooks.SingleTimeYesButtonAction = () =>
                         {
                             client.Respond(e, true);
                         };
@@ -281,7 +282,7 @@ namespace FeralDiscordRpcMod
                                 if (!wait)
                                 {
                                     // Run tp now
-                                    feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
+                                    feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
                                 }
                                 else
                                 {
@@ -359,7 +360,7 @@ namespace FeralDiscordRpcMod
             UI_Window_LoadingRegistrationWebApp.OpenWindow();
 
             // Wait
-            feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
+            feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
                 if (WindowManager.ExistsOrIsLoading("UI_Window_LoadingRegistrationWebApp"))
                     return false;
@@ -395,12 +396,12 @@ namespace FeralDiscordRpcMod
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
+            feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() =>
+                feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                 {
                     // Run action
                     if (pendingJoinRequest != null)

@@ -1,68 +1,37 @@
 ﻿using HarmonyLib;
-using HarmonyLib.Tools;
 using feraltweaks.Patches.AssemblyCSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Net.Sockets;
-using System.Net;
-using System.Diagnostics;
 using System.Text;
-using Server;
-using UnityEngine;
-using Random = System.Random;
-using LitJson;
 using FeralTweaks.Mods;
 using FeralTweaks;
-using FeralTweaks.Networking;
 using Il2CppInterop.Runtime.Injection;
-using Newtonsoft.Json;
+using FeralTweaks.Mods.Charts;
+using FeralTweaks.Actions;
 
 namespace feraltweaks
 {
     public class FeralTweaks : FeralTweaksMod
     {
+        // Protocol
         public static int ProtocolVersion = 3;
 
         protected override void Define()
         {
         }
 
-        internal static List<Func<bool>> threadActions = new List<Func<bool>>();
-        internal static List<Func<bool>> uiRepeatingActions = new List<Func<bool>>();
-        internal static List<Action> uiActions = new List<Action>();
-
-        internal static void ScheduleDelayedAction(Func<bool> act)
-        {
-            lock (threadActions)
-                threadActions.Add(act);
-        }
-
-        public static void ScheduleDelayedActionForUnity(Func<bool> act)
-        {
-            lock (uiRepeatingActions)
-                uiRepeatingActions.Add(act);
-        }
-
-        public static void ScheduleDelayedActionForUnity(Action act)
-        {
-            lock (uiActions)
-                uiActions.Add(act);
-        }
-
-        public static Dictionary<string, string> Patches = new Dictionary<string, string>();
+        // Patches
+        public static Dictionary<string, string> ChartPatches = new Dictionary<string, string>();
         public static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
 
-        public static string AutoLoginToken = null;
-        public static string AutoLoginUsername = null;
-        public static string AutoLoginPassword = null;
+        // Autologin
+        internal static string AutoLoginToken = null;
+        internal static string AutoLoginUsername = null;
+        internal static string AutoLoginPassword = null;
 
-        public static bool ShowWorldJoinChatUnreadPopup;
-        public static bool ChatPostInit;
-        public static bool ChatHandshakeDone;
-
+        // Configuration
         public static string DirectorAddress = null;
         public static string APIAddress = null;
         public static string ChatHost = null;
@@ -71,111 +40,22 @@ namespace feraltweaks
         public static int VoiceChatPort = -1;
         public static int ChatPort = -1;
         public static int BlueboxPort = -1;
+        public static bool VanillaEncryptionMode;
         public static int EncryptedGame = -1; // -1 = unset, 0 = false, 1 = true
         public static int EncryptedChat = -1; // -1 = unset, 0 = false, 1 = true
         public static int EncryptedVoiceChat = -1;
 
-        // Error message container for when login fails and the server includes a feraltweaks message field in the response
-        public static string LoginErrorMessage = null;
-
-        private static void StartActionThread()
-        {
-            // Start action thread
-            Thread th = new Thread(() =>
-            {
-                while (true)
-                {
-                    Func<bool>[] actions;
-                    lock (threadActions)
-                        actions = threadActions.ToArray();
-
-                    // Handle actions
-                    foreach (Func<bool> ac in actions)
-                    {
-                        if (ac == null || ac())
-                            lock (threadActions)
-                                threadActions.Remove(ac);
-                    }
-
-                    Thread.Sleep(10);
-                }
-            });
-            th.IsBackground = true;
-            th.Name = "FeralTweaks Action Thread";
-            th.Start();
-        }
-
-        public override void PostInit()
-        {
-            ClassInjector.RegisterTypeInIl2Cpp<FeralTweaksChartDefComponent>();
-            ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
-        }
-
         public override void Init()
         {
             // Load config
-            LogInfo("Loading configuration...");
-            Directory.CreateDirectory(ConfigDir);
-            if (!File.Exists(ConfigDir + "/settings.props"))
-            {
-                LogInfo("Writing defaults...");
-                FeralTweaks.WriteDefaultConfig();
-            }
-            else
-            {
-                LogInfo("Processing data...");
-                foreach (string line in File.ReadAllLines(ConfigDir + "/settings.props"))
-                {
-                    if (line == "" || line.StartsWith("#") || !line.Contains("="))
-                        continue;
-                    string key = line.Remove(line.IndexOf("="));
-                    string value = line.Substring(line.IndexOf("=") + 1);
-                    PatchConfig[key] = value;
-                }
-            }
-            LogInfo("Configuration loaded.");
-            if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
-                ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
-            if (PatchConfig.ContainsKey("AutoLoginUsername"))
-                AutoLoginUsername = PatchConfig["AutoLoginUsername"];
-            if (PatchConfig.ContainsKey("AutoLoginPassword"))
-                AutoLoginPassword = PatchConfig["AutoLoginPassword"];
-            if (PatchConfig.ContainsKey("AutoLoginToken"))
-                AutoLoginPassword = PatchConfig["AutoLoginToken"];
-            PatchConfig.Remove("AutoLoginToken");
-            PatchConfig.Remove("AutoLoginUsername");
-            PatchConfig.Remove("AutoLoginPassword");
-
-            // Load environment
-            if (PatchConfig.ContainsKey("ServerEnvironment"))
-                LoadServerEnvironment(PatchConfig["ServerEnvironment"]);
+            LoadConfig();
 
             // Start action thread
-            StartActionThread();
+            FeralTweaksActionManager.StartActionThread();
 
             // Patch with harmony
             LogInfo("Applying patches...");
-            ApplyPatch(typeof(BaseDefPatch));
-            ApplyPatch(typeof(UI_Window_AvatarActionWheelPatch));
-            ApplyPatch(typeof(CoreChartDataManagerPatch));
-            ApplyPatch(typeof(UI_Window_AccountCreationPatch));
-            ApplyPatch(typeof(UI_Window_ChangeDisplayNamePatch));
-            ApplyPatch(typeof(UI_Window_ResetPasswordPatch));
-            ApplyPatch(typeof(UI_Window_TradeItemQuantityPatch));
-            ApplyPatch(typeof(UI_Window_OkPopupPatch));
-            ApplyPatch(typeof(UI_Window_YesNoPopupPatch));
-            ApplyPatch(typeof(WindUpdraftPatch));
-            ApplyPatch(typeof(LoginLogoutPatches));
-            ApplyPatch(typeof(CoreBundleManager2Patch));
-            ApplyPatch(typeof(WorldObjectManagerPatch));
-            ApplyPatch(typeof(UI_VersionPatch));
-            ApplyPatch(typeof(MessageRouterPatch));
-            ApplyPatch(typeof(ChatPatches));
-            ApplyPatch(typeof(DOTweenAnimatorPatch));
-            ApplyPatch(typeof(GlobalSettingsManagerPatch));
-            ApplyPatch(typeof(BundlePatches));
-            ApplyPatch(typeof(InitialLoadingPatches));
-            ApplyPatch(typeof(DecreePatches));
+            ApplyPatches();
 
             // Scan mods for assets
             LogInfo("Scanning for mod assets...");
@@ -234,113 +114,141 @@ namespace feraltweaks
             }
             if (handoffPort != 0)
             {
-                LogInfo("Connecting to launcher...");
-                TcpClient client = null;
-                try
-                {
-                    client = new TcpClient("127.0.0.1", handoffPort);
-                }
-                catch
-                {
-                    LogError("Failed to connect to the launcher!");
-                }
-                if (client != null)
-                {
-                    LogInfo("Connected to the launcher, processing...");
-                    try
-                    {
-                        StreamReader rd = new StreamReader(client.GetStream());
-                        while (true)
-                        {
-                            string args = "";
-                            string command = rd.ReadLine();
-                            if (command == "end")
-                                break;
-                            if (command.Contains(" "))
-                            {
-                                args = command.Substring(command.IndexOf(" ") + 1);
-                                command = command.Remove(command.IndexOf(" "));
-                            }
-                            switch (command)
-                            {
-                                case "serverenvironment":
-                                    {
-                                        LoadServerEnvironment(args);
-                                        break;
-                                    }
-                                case "autologin":
-                                    {
-                                        if (args == "")
-                                            LogError("Error: missing argument for autologin: token");
-                                        else
-                                        {
-                                            AutoLoginToken = args;
-                                            LogInfo("Enabled autologin.");
-                                        }
-                                        break;
-                                    }
-                                case "chartpatch":
-                                    {
-                                        if (args == "")
-                                            LogError("Error: missing argument for patchchart: patch-data");
-                                        else
-                                        {
-                                            // Process data
-                                            try
-                                            {
-                                                string patch = Encoding.UTF8.GetString(Convert.FromBase64String(args));
-                                                string file = patch.Remove(patch.IndexOf("::"));
-                                                patch = patch.Substring(patch.IndexOf("::") + 2);
-                                                Patches[patch] = file;
-                                                LogInfo("Loaded chart patch: " + file);
-                                            }
-                                            catch
-                                            {
-                                                LogError("Error: invalid patch data for patchchart");
-                                            }
-                                        }
-                                        break;
-                                    }
-                                case "config":
-                                    {
-                                        if (args == "")
-                                            LogError("Error: missing argument for config: configuration-data");
-                                        else
-                                        {
-                                            try
-                                            {
-                                                // Process data
-                                                string config = Encoding.UTF8.GetString(Convert.FromBase64String(args)).Replace("\r", "");
-                                                foreach (string line in config.Split('\n'))
-                                                {
-                                                    if (line == "" || line.StartsWith("#") || !line.Contains("="))
-                                                        continue;
-                                                    string key = line.Remove(line.IndexOf("="));
-                                                    string value = line.Substring(line.IndexOf("=") + 1);
-                                                    PatchConfig[key] = value;
-
-                                                    LogInfo("Configuration updated: " + key + " = " + value);
-                                                }
-                                            }
-                                            catch
-                                            {
-                                                LogError("Error: invalid configuration data for config");
-                                            }
-                                        }
-                                        break;
-                                    }
-                            }
-                        }
-                    }
-                    catch { }
-                    client.Close();
-                }
-                LogInfo("Launcher disconnected, launching game...");
+                // Handle handoff
+                HandleHandoff(handoffPort);
             }
             else
                 LogInfo("No command line parameters received for launcher handoff, starting regularly...");
         }
 
+        public override void FinalizeLoad()
+        {
+            // Inject classes and late patches
+            ClassInjector.RegisterTypeInIl2Cpp<FeralTweaksChartDefComponent>();
+            ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
+            ApplyPatch(typeof(PlayerLoginLogoutAnimsPatch));
+        }
+
+        private void ApplyPatches()
+        {
+            // Patches
+            ApplyPatch(typeof(ActionWheelPatches));
+            ApplyPatch(typeof(ChartPatches));
+            ApplyPatch(typeof(UI_Window_AccountCreationPatch));
+            ApplyPatch(typeof(UI_Window_ChangeDisplayNamePatch));
+            ApplyPatch(typeof(UI_Window_ResetPasswordPatch));
+            ApplyPatch(typeof(TradeLimitPatches));
+            ApplyPatch(typeof(OkPopupHooks));
+            ApplyPatch(typeof(YesNoPopupHooks));
+            ApplyPatch(typeof(WindUpdraftPatch));
+            ApplyPatch(typeof(LoginLogoutPatches));
+            ApplyPatch(typeof(AssetBundleManagerPatches));
+            ApplyPatch(typeof(WorldObjectManagerPatch));
+            ApplyPatch(typeof(VersionLabelPatch));
+            ApplyPatch(typeof(ServerMessageHandlingPatches));
+            ApplyPatch(typeof(ChatPatches));
+            ApplyPatch(typeof(DOTweenAnimatorPatch));
+            ApplyPatch(typeof(AssetEndpointPatches));
+            ApplyPatch(typeof(BundlePatches));
+            ApplyPatch(typeof(InitialLoadScreenFadein));
+            ApplyPatch(typeof(DecreePatches));
+            ApplyPatch(typeof(GlidingManagerPatch));
+            ApplyPatch(typeof(PlayerJumpIncreasePatch));
+            ApplyPatch(typeof(DecalResolutionPatch));
+        }
+
+        public static void ApplyPatch(Type type)
+        {
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying patch: " + type.FullName);
+            Harmony.CreateAndPatchAll(type);
+        }
+
+        /// <summary>
+        /// Writes the default configuration
+        /// </summary>
+        public static void WriteDefaultConfig()
+        {
+            File.WriteAllText(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/settings.props",
+                  "DecalResolution=2048\n"
+                + "JumpIncreaseFactor=1.2\n"
+                + "DisableUpdraftAudioSuppressor=true\n"
+                + "\n"
+                + "AllowNonEmailUsernames=false\n"
+                + "FlexibleDisplayNames=false\n"
+                + "UserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\n"
+                + "DisplayNameRegex=^[0-9A-Za-z\\-_. ]+\n"
+                + "UserNameMaxLength=320\n"
+                + "DisplayNameMaxLength=16\n"
+                + "\n"
+                + "TradeItemLimit=99\n"
+                + "\n"
+                + "EnableGroupChatTab=true\n"
+                + "VersionLabel=${global:7358}\\n${game:version} (${game:build})\n"
+                + "DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]\n"
+                + "\n"
+                + "CityFeraMovingRocks=true\n"
+                + "CityFeraTeleporterSFX=true\n"
+                + "JiggleResourceInteractions=true\n"
+                + "\n"
+                + "GlidingTurnSpeed=0.1\n"
+                + "GlidingGravity=3\n"
+                + "GlidingRollAmount=12\n"
+                + "GlidingSpeedMultiplier=2\n"
+                + "GlidingAllowFlap=true\n"
+                + "GlidingFlapCooldown=200\n"
+                + "AllowDragonGlidingWithNoWings=true\n"
+                + "\n"
+                + "GameAssetsProd=https://emuferal.ddns.net/feralassets/\n"
+                + "GameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\n"
+                + "GameAssetsDev=https://emuferal.ddns.net/feralassetsdev/\n");
+        }
+
+        // Configuration parsing
+        private void LoadConfig()
+        {
+            // Load config
+            LogInfo("Loading configuration...");
+            Directory.CreateDirectory(ConfigDir);
+            if (!File.Exists(ConfigDir + "/settings.props"))
+            {
+                LogInfo("Writing defaults...");
+                WriteDefaultConfig();
+            }
+            else
+            {
+                LogInfo("Processing data...");
+                foreach (string line in File.ReadAllLines(ConfigDir + "/settings.props"))
+                {
+                    if (line == "" || line.StartsWith("#") || !line.Contains("="))
+                        continue;
+                    string key = line.Remove(line.IndexOf("="));
+                    string value = line.Substring(line.IndexOf("=") + 1);
+                    PatchConfig[key] = value;
+                }
+            }
+            LogInfo("Configuration loaded.");
+
+            // Raed internal fields
+            if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
+                ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
+            if (PatchConfig.ContainsKey("AutoLoginUsername"))
+                AutoLoginUsername = PatchConfig["AutoLoginUsername"];
+            if (PatchConfig.ContainsKey("AutoLoginPassword"))
+                AutoLoginPassword = PatchConfig["AutoLoginPassword"];
+            if (PatchConfig.ContainsKey("AutoLoginToken"))
+                AutoLoginPassword = PatchConfig["AutoLoginToken"];
+            if (PatchConfig.ContainsKey("VanillaEncryptionMode"))
+                VanillaEncryptionMode = PatchConfig["VanillaEncryptionMode"].ToLower() == "true";
+            PatchConfig.Remove("AutoLoginToken");
+            PatchConfig.Remove("AutoLoginUsername");
+            PatchConfig.Remove("AutoLoginPassword");
+
+            // Load environment
+            if (PatchConfig.ContainsKey("ServerEnvironment"))
+                LoadServerEnvironment(PatchConfig["ServerEnvironment"]);
+        }
+
+        // Server environment parsing
         private void LoadServerEnvironment(string args)
         {
             // Parse environment
@@ -411,482 +319,112 @@ namespace feraltweaks
             }
         }
 
-        public static void ApplyPatch(Type type)
+        // Launcher handoff
+        private void HandleHandoff(int handoffPort)
         {
-            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying patch: " + type.FullName);
-            Harmony.CreateAndPatchAll(type);
-        }
-
-        /// <summary>
-        /// Writes the default configuration
-        /// </summary>
-        public static void WriteDefaultConfig()
-        {
-            File.WriteAllText(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/settings.props",
-                  "DisableUpdraftAudioSuppressor=false\n"
-                + "AllowNonEmailUsernames=false\n"
-                + "FlexibleDisplayNames=false\n"
-                + "UserNameRegex=^[\\w%+\\.-]+@(?:[a-zA-Z0-9-]+[\\.{1}])+[a-zA-Z]{2,}$\n"
-                + "DisplayNameRegex=^[0-9A-Za-z\\-_. ]+\n"
-                + "UserNameMaxLength=320\n"
-                + "DisplayNameMaxLength=16\n"
-                + "TradeItemLimit=99\n"
-                + "VersionLabel=${global:7358}\\n${game:version} (${game:build})\n"
-                + "EnableGroupChatTab=false\n"
-                + "JiggleResourceInteractions=false\n"
-                + "CityFeraMovingRocks=false\n"
-                + "CityFeraTeleporterSFX=false\n"
-                + "GameAssetsProd=https://emuferal.ddns.net/feralassets/\n"
-                + "GameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\n"
-                + "GameAssetsDev=https://emuferal.ddns.net/feralassetsdev/\n"
-                + "DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]\n");
-        }
-
-        /// <summary>
-        /// Called when the client receives packet
-        /// </summary>
-        /// <param name="id">Packet ID</param>
-        /// <param name="reader">Packet reader</param>
-        /// <returns>True if handled by feraltweaks, false otherwise</returns>
-        public static bool HandlePacket(string id, INetMessageReader reader)
-        {
-            switch (id)
+            // Handle handoff
+            LogInfo("Connecting to launcher...");
+            TcpClient client = null;
+            try
             {
-                case "od":
+                client = new TcpClient("127.0.0.1", handoffPort);
+            }
+            catch
+            {
+                LogError("Failed to connect to the launcher!");
+            }
+            if (client != null)
+            {
+                LogInfo("Connected to the launcher, processing...");
+                try
+                {
+                    StreamReader rd = new StreamReader(client.GetStream());
+                    while (true)
                     {
-                        // Object delete
-                        WorldObjectDeleteMessage msg = new WorldObjectDeleteMessage(reader);
-                        msg.RouteInfo = NetworkManager.Router._table[id];
-
-                        // Check replication settings
-                        if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
+                        string args = "";
+                        string command = rd.ReadLine();
+                        if (command == "end")
+                            break;
+                        if (command.Contains(" "))
                         {
-                            // Remove manually
-                            ScheduleDelayedActionForUnity(() =>
-                            {
-                                global::FeralTweaks.FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Destroying object: " + msg.ObjectId);
-                                if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
-                                {
-                                    WorldObject obj = WorldObjectManager.instance._objects._objectsById[msg.ObjectId];
-                                    try
-                                    {
-                                        ActorNPCSpawner npcSpawner = GetNpcSpawnerFrom(obj);
-                                        if (npcSpawner != null && npcSpawner.ActorBase != null)
-                                            npcSpawner.ActorBase.Delete();
-                                    }
-                                    catch
-                                    {
-                                        // Either unity or il2cpp would have goofed
-                                    }
-                                    obj.Delete();
-                                    WorldObjectManager.instance._objects._objectsById.Remove(msg.ObjectId);
-                                }
-                            });
-                            return true;
+                            args = command.Substring(command.IndexOf(" ") + 1);
+                            command = command.Remove(command.IndexOf(" "));
                         }
-
-                        NetworkManager.Router.OnMessage(msg, NetworkManager.Router._queuedMessages);
-                        return true;
-                    }
-                case "ou":
-                    {
-                        // Object update
-                        WorldObjectMoveMessage msg = new WorldObjectMoveMessage(reader);
-                        msg.RouteInfo = NetworkManager.Router._table[id];
-
-                        // Check replication settings
-                        if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
+                        switch (command)
                         {
-                            // Move manually
-                            ScheduleDelayedActionForUnity(() =>
-                            {
-                                if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
+                            case "serverenvironment":
                                 {
-                                    WorldObject obj = WorldObjectManager.instance._objects._objectsById[msg.ObjectId];
-                                    try
-                                    {
-                                        ActorNPCSpawner npcSpawner = GetNpcSpawnerFrom(obj);
-                                        if (npcSpawner != null && npcSpawner.ActorBase != null)
-                                            npcSpawner.ActorBase.OnMoveMessage(msg);
-                                    }
-                                    catch
-                                    {
-                                        // Either unity or il2cpp would have goofed
-                                    }
-                                    obj.OnMoveMessage(msg);
+                                    LoadServerEnvironment(args);
+                                    break;
                                 }
-                            });
-                            return true;
-                        }
-
-                        NetworkManager.Router.OnMessage(msg, NetworkManager.Router._queuedMessages);
-                        return true;
-                    }
-                case "mod:ft":
-                    {
-                        // Feraltweaks packet
-                        id = reader.ReadString();
-                        switch (id)
-                        {
-                            case "disconnect":
+                            case "autologin":
                                 {
-                                    // Disconnect
-
-                                    // Read packet
-                                    string title = reader.ReadString();
-                                    string message = reader.ReadString();
-                                    string button = reader.ReadString();
-
-                                    // Disconnect
-                                    LoginLogoutPatches.loggingOut = true;
-                                    if (NetworkManager.instance._serverConnection.IsConnected)
+                                    if (args == "")
+                                        LogError("Error: missing argument for autologin: token");
+                                    else
                                     {
-                                        NetworkManager.instance._serverConnection.Disconnect();
-                                        if (NetworkManager.instance._chatServiceConnection.IsConnected)
-                                            NetworkManager.instance._chatServiceConnection.Disconnect();
-                                        NetworkManager.instance._serverConnection = null;
-                                        NetworkManager.instance._chatServiceConnection = null;
-                                        NetworkManager.instance._jwt = null;
+                                        AutoLoginToken = args;
+                                        LogInfo("Enabled autologin.");
                                     }
-
-                                    // Show window and log out
-                                    ScheduleDelayedAction(() =>
+                                    break;
+                                }
+                            case "chartpatch":
+                                {
+                                    if (args == "")
+                                        LogError("Error: missing argument for patchchart: patch-data");
+                                    else
                                     {
-                                        // Show window
-                                        ScheduleDelayedActionForUnity(() =>
+                                        // Process data
+                                        try
                                         {
-                                            if (UI_ProgressScreen.instance.IsVisible)
-                                                UI_ProgressScreen.instance.Hide();
-                                            UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message), ChartDataManager.instance.localizationChartData.Get(button, button));
-                                            UI_Window_OkPopupPatch.SingleTimeOkButtonAction = () =>
-                                            {
-                                                LoginLogoutPatches.loggingOut = false;
-                                                LoginLogoutPatches.doLogout = true;
-                                                CoreSharedUtils.CoreReset(SplashError.NONE, ErrorCode.None);
-                                            };
-                                        });
-
-                                        return true;
-                                    });
+                                            string patch = Encoding.UTF8.GetString(Convert.FromBase64String(args));
+                                            string file = patch.Remove(patch.IndexOf("::"));
+                                            patch = patch.Substring(patch.IndexOf("::") + 2);
+                                            ChartPatches[patch] = file;
+                                            LogInfo("Loaded chart patch: " + file);
+                                        }
+                                        catch
+                                        {
+                                            LogError("Error: invalid patch data for patchchart");
+                                        }
+                                    }
                                     break;
                                 }
-                            case "notification":
+                            case "config":
                                 {
-                                    // Notification
-
-                                    // Read packet
-                                    string message = reader.ReadString();
-                                    string icon = null;
-                                    if (reader.ReadBool())
-                                        icon = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        NotificationManager.instance.AddNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
-                                    });
-
-                                    break;
-                                }
-                            case "sysnotification":
-                                {
-                                    // Notification
-
-                                    // Read packet
-                                    string message = reader.ReadString();
-                                    string icon = null;
-                                    if (reader.ReadBool())
-                                        icon = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        NotificationManager.instance.AddSystemNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
-                                    });
-
-                                    break;
-                                }
-                            case "critnotification":
-                                {
-                                    // Notification
-
-                                    // Read packet
-                                    string message = reader.ReadString();
-                                    string icon = null;
-                                    if (reader.ReadBool())
-                                        icon = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        NotificationManager.instance.AddCriticalNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
-                                    });
-
-                                    break;
-                                }
-                            case "gpnotification":
-                                {
-                                    // Notification
-
-                                    // Read packet
-                                    string message = reader.ReadString();
-                                    string icon = null;
-                                    if (reader.ReadBool())
-                                        icon = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        NotificationManager.instance.AddGameplayNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
-                                    });
-
-                                    break;
-                                }
-                            case "errorpopup":
-                                {
-                                    // Error popup
-
-                                    // Read packet
-                                    string title = reader.ReadString();
-                                    string message = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
-                                    });
-                                    break;
-                                }
-                            case "okpopup":
-                                {
-                                    // Regular popup
-
-                                    // Read packet
-                                    string title = reader.ReadString();
-                                    string message = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
-                                    {
-                                        UI_Window_OkPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
-                                    });
-                                    break;
-                                }
-                            case "yesnopopup":
-                                {
-                                    // Yes/no popup
-
-                                    // Read packet
-                                    string popupID = reader.ReadString(); // ID for callbacks
-                                    string title = reader.ReadString();
-                                    string message = reader.ReadString();
-                                    string yesBtn = reader.ReadString();
-                                    string noBtn = reader.ReadString();
-
-                                    // Handle packet
-                                    ScheduleDelayedActionForUnity(() =>
+                                    if (args == "")
+                                        LogError("Error: missing argument for config: configuration-data");
+                                    else
                                     {
                                         try
                                         {
-                                            UI_Window_YesNoPopup.CloseWindow();
-                                        }
-                                        catch { }
-                                        UI_Window_YesNoPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message),
-                                            ChartDataManager.instance.localizationChartData.Get(yesBtn, yesBtn), ChartDataManager.instance.localizationChartData.Get(noBtn, noBtn));
-                                        UI_Window_YesNoPopupPatch.SingleTimeNoButtonAction = () =>
-                                        {
-                                            // Send response
-                                            XtWriter wr = new XtWriter(XtCmd.FacilitatorSetBusy);
-                                            wr.Cmd = "mod:ft";
-                                            wr.WriteString("yesnopopup");
-                                            wr.WriteString(popupID);
-                                            NetworkManager.instance._serverConnection.Send(wr.WriteBool(false));
-                                        };
-                                        UI_Window_YesNoPopupPatch.SingleTimeYesButtonAction = () =>
-                                        {
-                                            // Send response
-                                            XtWriter wr = new XtWriter(XtCmd.FacilitatorSetBusy);
-                                            wr.Cmd = "mod:ft";
-                                            wr.WriteString("yesnopopup");
-                                            wr.WriteString(popupID);
-                                            NetworkManager.instance._serverConnection.Send(wr.WriteBool(true));
-                                        };
-                                    });
-                                    break;
-                                }
-                            case "displaynameupdate":
-                                {
-                                    // Display name update
-
-                                    string userID = reader.ReadString();
-                                    string displayName = reader.ReadString();
-                                    if (UserManager.instance != null)
-                                    {
-                                        UserInfo i = UserManager.instance._users.GetByUUID(userID);
-                                        if (i != null)
-                                        {
-                                            i.Name = displayName;
-
-                                            // Update avatar
-                                            updateAvi(i);
-                                        }
-
-                                        // Update self if needed
-                                        if (UserManager.instance._me != null && UserManager.instance._me.UUID == userID)
-                                        {
-                                            UserManager.instance._me.Name = displayName;
-
-                                            // Update avatar
-                                            updateAvi(UserManager.instance._me);
-
-                                            // Update HUD
-                                            UI_Window_HUD hud = CoreWindowManager.GetWindow<UI_Window_HUD>();
-                                            if (hud != null)
+                                            // Process data
+                                            string config = Encoding.UTF8.GetString(Convert.FromBase64String(args)).Replace("\r", "");
+                                            foreach (string line in config.Split('\n'))
                                             {
-                                                foreach (UI_PlayerStats bar in hud.gameObject.GetComponentsInChildren<UI_PlayerStats>())
-                                                {
-                                                    bar.RefreshName();
-                                                }
+                                                if (line == "" || line.StartsWith("#") || !line.Contains("="))
+                                                    continue;
+                                                string key = line.Remove(line.IndexOf("="));
+                                                string value = line.Substring(line.IndexOf("=") + 1);
+                                                PatchConfig[key] = value;
+
+                                                LogInfo("Configuration updated: " + key + " = " + value);
                                             }
                                         }
-                                    }
-                                    break;
-                                }
-                            default:
-                                {
-                                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Unhandled FeralTweaks packet: " + id + ": " + reader);
-                                    break;
-                                }
-                        }
-                        return true;
-                    }
-            }
-
-            // Mod packets
-            if (id.StartsWith("mod:"))
-            {
-                // Find mod
-                string mod = id.Substring(4);
-                FeralTweaksMod md = FeralTweaksLoader.GetLoadedMod(mod);
-                if (md != null && md is IModNetworkHandler)
-                {
-                    IModNetworkHandler handler = (IModNetworkHandler)md;
-                    id = reader.ReadString();
-                    if (!handler.GetMessenger().HandlePacket(id, reader))
-                        FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Unhandled mod packet: " + id + ": " + reader);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static void updateAvi(UserInfo info)
-        {
-            AvatarBase av = info.Avatar;
-            if (av != null && av._bubble != null)
-            {
-                av._bubble._namebarText.text = info.Name;
-            }
-        }
-
-        /// <summary>
-        /// Handles chat packets
-        /// </summary>
-        /// <param name="evt">Packet ID</param>
-        /// <param name="packet">Packet payload</param>
-        /// <returns>True if handled by feraltweaks, false otherwise</returns>
-        public static bool HandleChatPacket(string evt, JsonData packet)
-        {
-            if (evt.StartsWith("feraltweaks."))
-            {
-                string id = evt.Substring("feraltweaks.".Length);
-                switch (id)
-                {
-                    case "fthandshake":
-                        ChatHandshakeDone = true;
-                        break;
-                    case "postinit":
-                        ChatPostInit = true;
-                        break;
-                    case "unreadconversations":
-                        {
-                            // Add unreads
-                            Il2CppSystem.Collections.Generic.List<string> convos = JsonMapper.ToObject<Il2CppSystem.Collections.Generic.List<string>>(JsonMapper.ToJson(packet["conversations"]));
-                            if (ChatManager.instance._unreadConversations == null)
-                                ChatManager.instance._unreadConversations = new Il2CppSystem.Collections.Generic.List<string>();
-                            foreach (string convo in convos)
-                                ChatManager.instance._unreadConversations.Add(convo);
-                            ShowWorldJoinChatUnreadPopup = true;
-
-                            // Schedule reload of
-                            FeralTweaks.ScheduleDelayedActionForUnity(() =>
-                            {
-                                if (NetworkManager.ChatServiceConnection == null || NetworkManager.ChatServiceConnection._client == null || !NetworkManager.ChatServiceConnection._client.connected)
-                                    return true;
-                                if (!FeralTweaks.ChatPostInit)
-                                    return false;
-
-                                // Schedule
-                                FeralTweaks.ScheduleDelayedActionForUnity(() =>
-                                {
-                                    // Check unreads
-                                    if (FeralTweaks.ShowWorldJoinChatUnreadPopup && !UI_ProgressScreen.instance.IsVisibleOrFading)
-                                    {
-                                        FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
-                                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0 && !ChatPatches.DisplayedUnreads)
+                                        catch
                                         {
-                                            NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
-                                            ChatPatches.DisplayedUnreads = true;
+                                            LogError("Error: invalid configuration data for config");
                                         }
                                     }
-                                });
-
-                                // Return
-                                return true;
-                            });
-                            break;
+                                    break;
+                                }
                         }
-                    default:
-                        {
-                            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Unhandled FeralTweaks chat packet: " + id + ": " + JsonMapper.ToJson(packet));
-                            break;
-                        }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Retrieves ActorNPCSpawner instances by world object
-        /// </summary>
-        /// <param name="obj">WorldObject of the NPC</param>
-        /// <returns>ActorBase instance or null</returns>
-        public static ActorNPCSpawner GetNpcSpawnerFrom(WorldObject obj)
-        {
-            NetworkedObjectInfo info = obj.gameObject.GetComponent<NetworkedObjectInfo>();
-            if (info.actorType == NetworkedObjectInfo.EActorType.npc)
-            {
-                // NPCS will not move by simply calling OnMoveMessage, we need to get the actual NPC object
-                GameObject current = obj.gameObject;
-                while (true)
-                {
-                    ActorNPCSpawner spawner = current.GetComponent<ActorNPCSpawner>();
-                    if (spawner != null)
-                    {
-                        // Found the npc spawner
-                        return spawner;
                     }
-                    if (current.transform.parent == null)
-                    {
-                        // No result, fallback to default behaviour
-                        break;
-                    }
-                    current = current.transform.parent.gameObject;
                 }
+                catch { }
+                client.Close();
             }
-            return null;
+            LogInfo("Launcher disconnected, launching game...");
         }
     }
 }

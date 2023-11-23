@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Il2CppInterop.Runtime.Attributes;
 
-namespace FeralTweaks.Mods
+namespace FeralTweaks.Mods.Charts
 {
     /// <summary>
     /// Abstract for making custom chart def components, automatically picked up by FTL
@@ -20,6 +21,7 @@ namespace FeralTweaks.Mods
         /// Called to deserialize the component
         /// </summary>
         /// <param name="componentJson">Component JSON data</param>
+        [HideFromIl2Cpp]
         public abstract void Deserialize(Dictionary<string, object> componentJson);
 
     }

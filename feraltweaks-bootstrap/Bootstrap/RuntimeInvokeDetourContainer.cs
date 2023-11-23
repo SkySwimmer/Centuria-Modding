@@ -49,6 +49,9 @@ namespace FeralTweaksBootstrap
                         Assembly.Load(file.Name.Replace(".dll", ""));
                     }
 
+                    // Final load
+                    FeralTweaksLoader.FinalLoad();
+
                     // Init logging
                     if (Bootstrap.logUnityToConsole || Bootstrap.logUnityToFile)
                     {

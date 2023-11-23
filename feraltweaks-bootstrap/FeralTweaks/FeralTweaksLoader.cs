@@ -189,6 +189,17 @@ namespace FeralTweaks
                 mod.PostInit();
             });
         }
+        
+        internal static void FinalLoad()
+        {
+            // Log
+            LogInfo("Finalizing loading mods...");
+            RunForMods(mod =>
+            {
+                LogInfo("Finalizing loading mod: " + mod.ID);
+                mod.FinalizeLoad();
+            });
+        }
 
         internal static void Start()
         {

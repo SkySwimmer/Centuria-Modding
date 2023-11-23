@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
-    public static class InitialLoadingPatches
+    public static class InitialLoadScreenFadein
     {
         private static bool _doneLoadingPatch;
         private static long _timeInitialFadeStart;

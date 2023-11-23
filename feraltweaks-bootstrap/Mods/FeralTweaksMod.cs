@@ -257,5 +257,10 @@ namespace FeralTweaks.Mods
         /// Post-initializes the mod
         /// </summary>
         public virtual void PostInit() { }
+
+        /// <summary>
+        /// Called at the very end of the mod loading process
+        /// </summary>
+        public virtual void FinalizeLoad() { }
     }
 }

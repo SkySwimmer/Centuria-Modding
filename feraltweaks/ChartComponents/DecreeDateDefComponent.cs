@@ -1,6 +1,6 @@
 using System;
 using Newtonsoft.Json;
-using FeralTweaks.Mods;
+using FeralTweaks.Mods.Charts;
 using System.Collections.Generic;
 
 public class DecreeDateDefComponent : FeralTweaksChartDefComponent

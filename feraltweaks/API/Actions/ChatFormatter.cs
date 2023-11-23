@@ -1,6 +1,6 @@
 using System;
 
-namespace feraltweaks.Patches.AssemblyCSharp
+namespace FeralTweaks.Formatters
 {
     public static class ChatFormatter
     {

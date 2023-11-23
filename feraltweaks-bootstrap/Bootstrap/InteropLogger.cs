@@ -54,6 +54,11 @@ namespace FeralTweaksBootstrap
             string msg = state.ToString();
             if (msg == null)
                 return;
+            if (exception != null)
+            {
+                // Add to message
+                msg += "\nException: " + exception + ":\n" + exception.StackTrace;
+            }
             switch (logLevel)
             {
                 case LogLevel.Information:

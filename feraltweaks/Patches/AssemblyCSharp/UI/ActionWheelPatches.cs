@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
-    public class UI_Window_AvatarActionWheelPatch
+    public class ActionWheelPatches
     {
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_Window_AvatarActionWheel), "OnOpen")]

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Server;
+using FeralTweaks.Actions;
 
 namespace FeralTweaks.Networking
 {
@@ -84,7 +85,7 @@ namespace FeralTweaks.Networking
             try
             {
                 // Send packet
-                feraltweaks.FeralTweaks.ScheduleDelayedActionForUnity(() => NetworkManager.instance._serverConnection.Send(wr));
+                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => NetworkManager.instance._serverConnection.Send(wr));
             }
             catch
             {

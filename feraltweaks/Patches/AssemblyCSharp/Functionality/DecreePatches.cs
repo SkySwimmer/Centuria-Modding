@@ -28,7 +28,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Find dynamic decrees
             System.Collections.Generic.List<DecreeData> dynDecrees = new System.Collections.Generic.List<DecreeData>();
-            foreach (BaseDef def in CoreChartDataManagerPatch.DefCache.Values)
+            foreach (BaseDef def in ChartPatches.DefCache.Values)
             {
                 DecreeDateDefComponent decreeDate = def.GetComponent<DecreeDateDefComponent>();
                 DecreeDefComponent decree = def.GetComponent<DecreeDefComponent>();
