@@ -73,6 +73,17 @@
                 "quoteArgs": true
             },
             "request": "attach"
+        },
+        {
+            "type": "java",
+            "name": "Centuria Server Environment (FeralTweaks)",
+            "request": "launch",
+            "mainClass": "org.asf.centuria.Centuria",
+            "cwd": "${workspaceFolder}/feraltweaks-server-module/server",
+            "classPaths": [    
+            ],
+            "vmArgs" : "-DdebugMode -DaddCpModules=org.asf.centuria.feraltweaks.FeralTweaksModule",
+            "projectName": "feraltweaks-server-module"
         }
     ]
 }

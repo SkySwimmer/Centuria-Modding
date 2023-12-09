@@ -44,9 +44,6 @@ namespace FeralDiscordRpcMod
 
         public override void Init()
         {
-            // Register handshake rules
-            AddModHandshakeRequirementForSelf(Version);
-
             // Register packets
             RegisterPacket(new RpcJoinPlayerRequestPacket());
             RegisterPacket(new RpcJoinPlayerResultPacket());
@@ -182,7 +179,7 @@ namespace FeralDiscordRpcMod
             {
                 if (!config.disableAskToJoin)
                 {
-                    feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                     {
                         // Show popup
                         try
@@ -190,15 +187,10 @@ namespace FeralDiscordRpcMod
                             UI_Window_YesNoPopup.CloseWindow();
                         }
                         catch { }
-                        UI_Window_YesNoPopup.OpenWindow(e.User.Username + " wishes to join your game.", "Discord user " + e.User.Username + " requested to join your party and game, accept join request?", "Accept", "Deny");
-                        YesNoPopupHooks.SingleTimeNoButtonAction = () =>
+                        UI_Window_YesNoPopup.OpenWindow(e.User.Username + " wishes to join your game.", "Discord user " + e.User.Username + " requested to join your party and game, accept join request?", "Accept", "Deny", (Il2CppSystem.Action<bool>)new System.Action<bool>(res =>
                         {
-                            client.Respond(e, false);
-                        };
-                        YesNoPopupHooks.SingleTimeYesButtonAction = () =>
-                        {
-                            client.Respond(e, true);
-                        };
+                            client.Respond(e, res);
+                        }));
                     });
                 }
             };
@@ -227,7 +219,7 @@ namespace FeralDiscordRpcMod
                                 if (UI_ProgressScreen.instance.IsVisible)
                                     wait = true; // Switching
                             }
-                            else if (feraltweaks.FeralTweaks.AutoLoginToken != null)
+                            else if (feraltweaks.FeralTweaks.IsAutoLogin)
                             {
                                 // Autologin
                                 valid = true;
@@ -237,36 +229,41 @@ namespace FeralDiscordRpcMod
                             // Perform teleport
                             if (valid)
                             {
-                                // Prepare to send packet
-                                while (pendingResults.ContainsKey(playerID))
-                                    Thread.Sleep(100);
-                                lock (pendingResults)
-                                    pendingResults[playerID] = null;
-
-                                // Verify secret, send packet to server
-                                RpcJoinPlayerRequestPacket pkt = new RpcJoinPlayerRequestPacket();
-                                pkt.playerID = playerID;
-                                pkt.partyID = partyID;
-                                pkt.secret = secret;
-                                GetMessenger().SendPacket(pkt);
-
-                                // Wait for response
-                                RpcJoinPlayerResultPacket res = null;
-                                for (int i = 0; i < 100; i++)
+                                // Check if server has RPC
+                                if (FeralTweaksServer.IsModLoaded("discordrpc"))
                                 {
+                                    // Prepare to send packet
+                                    while (pendingResults.ContainsKey(playerID))
+                                        Thread.Sleep(100);
                                     lock (pendingResults)
+                                        pendingResults[playerID] = null;
+
+                                    // Verify secret, send packet to server
+                                    RpcJoinPlayerRequestPacket pkt = new RpcJoinPlayerRequestPacket();
+                                    pkt.playerID = playerID;
+                                    pkt.partyID = partyID;
+                                    pkt.secret = secret;
+                                    GetMessenger().SendPacket(pkt);
+
+                                    // Wait for response
+                                    RpcJoinPlayerResultPacket res = null;
+                                    for (int i = 0; i < 100; i++)
                                     {
-                                        res = pendingResults[playerID];
-                                        if (res != null)
-                                            break;
+                                        lock (pendingResults)
+                                        {
+                                            res = pendingResults[playerID];
+                                            if (res != null)
+                                                break;
+                                        }
+                                        Thread.Sleep(100);
                                     }
-                                    Thread.Sleep(100);
-                                }
-                                lock (pendingResults)
-                                    pendingResults.Remove(playerID);
-                                string tpSecret = null;
-                                if (res != null && res.success)
-                                    tpSecret = res.secret;
+                                    lock (pendingResults)
+                                        pendingResults.Remove(playerID);
+                                    string tpSecret = null;
+                                    if (res != null && res.success)
+                                        tpSecret = res.secret;
+                                } else
+                                    tpSecret = null;
 
                                 // Set party
                                 RpcMod.partyID = partyID;
@@ -282,7 +279,7 @@ namespace FeralDiscordRpcMod
                                 if (!wait)
                                 {
                                     // Run tp now
-                                    feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
+                                    FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
                                 }
                                 else
                                 {
@@ -360,7 +357,7 @@ namespace FeralDiscordRpcMod
             UI_Window_LoadingRegistrationWebApp.OpenWindow();
 
             // Wait
-            feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
                 if (WindowManager.ExistsOrIsLoading("UI_Window_LoadingRegistrationWebApp"))
                     return false;
@@ -396,12 +393,12 @@ namespace FeralDiscordRpcMod
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                feraltweaks.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                 {
                     // Run action
                     if (pendingJoinRequest != null)

@@ -1,0 +1,26 @@
+setchart LocalizationChart
+
+def dynamiclocalization
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "{0}",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+			"componentClass": "OldLocalizationDefComponent",
+			"componentJSON":
+				{}
+			}
+		]
+	}
+enddef

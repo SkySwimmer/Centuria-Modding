@@ -1066,6 +1066,7 @@ namespace FeralTweaksBootstrap
                     Environment.Exit(1);
                     return;
                 }
+                
                 // Generate dlls
                 LogInfo("Generating dummy dlls...");
                 Il2CppExecutor exec = new Il2CppExecutor(md, bin);
@@ -1073,6 +1074,7 @@ namespace FeralTweaksBootstrap
                 DummyAssemblyGenerator dummy = new DummyAssemblyGenerator(exec, true);
                 foreach (var assembly in dummy.Assemblies)
                 {
+                    
                     LogInfo("Dumped " + assembly.MainModule.Name);
                     assembly.Write("FeralTweaks/cache/dummy/" + assembly.MainModule.Name);
                 }

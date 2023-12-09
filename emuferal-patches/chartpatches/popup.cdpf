@@ -1,0 +1,51 @@
+setchart LocalizationChart
+
+patch 7359
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "Welcome back to Fer.al!",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+			"componentClass": "OldLocalizationDefComponent",
+			"componentJSON":
+				{}
+			}
+		]
+	}
+endpatch
+
+patch 7360
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "EmuFeral has been successfully launched!\n\nYou are now on the MODIFIED Fer.al client used to play on EmuFeral servers. Please keep in mind that modding of the game is still very VERY experimental. Bugs may arise, things can break hard. When reporting bugs, please check if its already reported before submitting.\n\nVisit https://discord.gg/ferever for details on how to play on the emulator.\nWelcome back, and stay Fer.al! We missed you!\n\n\nPlease remember while playing: we are using the original client, and large portions of the original game. The content apart from our own additions remains owned by WildWorks, we do not claim any except our additional content as our own.\n\nWe are not associated with/or endorsed by WildWorks. This is a fan-run project.",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+			"componentClass": "OldLocalizationDefComponent",
+			"componentJSON":
+				{}
+			}
+		]
+	}
+endpatch

@@ -12,37 +12,64 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class DecalResolutionPatch
     {
-        public static class PlayerObjectPatches
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(ActorBase), "DecalResolution", MethodType.Getter)]
+        public static bool DecalResolution(ActorBase __instance, ref int __result)
         {
-            public static class PatchesLate
+            // Check quality
+            switch (GlobalSettingsManager.instance.quality)
             {
-                [HarmonyPrefix]
-                [HarmonyPatch(typeof(ActorBase), "DecalResolution", MethodType.Getter)]
-                public static bool DecalResolution(ActorBase __instance, ref int __result)
-                {
+                case DeviceQualityLevel.Default:
                     // Check config
-                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolution"))
-                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolution"]);
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionMid"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionMid"]);
+                    else
+                        __result = 1024;
+                    break;
+                case DeviceQualityLevel.Unsupported:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionLow"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionLow"]);
+                    else
+                        __result = 512;
+                    break;
+                case DeviceQualityLevel.Lowest:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionLow"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionLow"]);
+                    else
+                        __result = 512;
+                    break;
+                case DeviceQualityLevel.Low:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionLow"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionLow"]);
+                    else
+                        __result = 512;
+                    break;
+                case DeviceQualityLevel.Medium:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionMid"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionMid"]);
+                    else
+                        __result = 1024;
+                    break;
+                case DeviceQualityLevel.High:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionHigh"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionHigh"]);
                     else
                         __result = 2048;
-                    return false;
-                }
+                    break;
+                case DeviceQualityLevel.Highest:
+                    // Check config
+                    if (FeralTweaks.PatchConfig.ContainsKey("DecalResolutionHigh"))
+                        __result = int.Parse(FeralTweaks.PatchConfig["DecalResolutionHigh"]);
+                    else
+                        __result = 2048;
+                    break;
             }
+            return false;
         }
-
-        private static bool patched;
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
-        public static void SetChartObjectInstances()
-        {
-            if (patched)
-                return;
-            patched = true;
-
-            // PAtch
-            Harmony.CreateAndPatchAll(typeof(PlayerObjectPatches));
-        }
-        
     }
 }

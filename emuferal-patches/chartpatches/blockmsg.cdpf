@@ -1,0 +1,25 @@
+setchart LocalizationChart
+
+patch 8154
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "You have blocked {0}.\n\nYou will no longer see their messages and they will not see yours. Your avatar will not be visible to them and teleports are now blocked.\n\nTo unblock them, click on the unblock button on their player card.",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+endpatch

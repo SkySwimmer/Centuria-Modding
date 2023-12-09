@@ -14,8 +14,9 @@ namespace FeralTweaks.Formatters
             int skip = 0;
             bool escaped = false;
             bool lastEscaped = false;
+            bool escapeHandled = false;
             string newMessage = "";
-            // TODO: quick emoji
+            // TODO: better quick emoji
             foreach (char ch in message)
             {
                 if (skip > 0)
@@ -26,22 +27,23 @@ namespace FeralTweaks.Formatters
                 }
 
                 // Check escape
-                if (escaped && ch != '\\' && !lastEscaped)
-                    escaped = false;
-                if (ch == '\\' && !escaped)
+                escaped = false;
+                if (ch == '\\' && !lastEscaped)
                     escaped = true;
-                else
-                    lastEscaped = false;
 
                 // Add to message
+                escapeHandled = false;
                 if (ch != '\\' || lastEscaped)
                 {
+                    // Add and mark handled
                     newMessage += ch;
+                    escapeHandled = true;
                 }
-                if (escaped)
-                    lastEscaped = true;
+                lastEscaped = escaped;
                 i++;
             }
+            if (escaped && !escapeHandled)
+                newMessage += '\\';
 
             // Return
             return newMessage;

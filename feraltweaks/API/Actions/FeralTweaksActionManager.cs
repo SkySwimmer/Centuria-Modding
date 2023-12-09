@@ -21,7 +21,7 @@ namespace FeralTweaks.Actions
             foreach (Func<bool> ac in actionsUA)
             {
                 if (ac == null || ac())
-                    lock (uiActions)
+                    lock (uiRepeatingActions)
                         uiRepeatingActions.Remove(ac);
             }
 

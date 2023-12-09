@@ -1,0 +1,1082 @@
+#
+# List expansion, add all other eye types and pupil types
+#
+
+setchart ListChart
+
+merge 696 ListDefComponent
+	{
+		"mode": "add",
+		"defIDs": [
+			"3489",
+			"3490",
+			"3491"
+		]
+	}
+endmerge
+
+merge 695 ListDefComponent
+	{
+		"mode": "add",
+		"defIDs": [
+			"3405",
+			"3406",
+			"4079",
+			"8358",
+			"3459",
+			"3460",
+			"3461",
+			"4078",
+			"4080",
+			"4081",
+			"4082",
+			"4083",
+			"2644",
+			"2645",
+			"2646",
+			"2647",
+			"3401",
+			"3402",
+			"3403",
+			"3404",
+			"3452"
+		]
+	}
+endmerge
+
+
+#
+# Eye names
+#
+
+setchart CraftableItemChart
+
+patch 3489
+	{
+		"templateClass": "ActorEyePupilTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.pupils:feral:unnamed.3489.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.pupils:feral:unnamed.3489.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Pupil 11",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3490
+	{
+		"templateClass": "ActorEyePupilTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.pupils:feral:unnamed.3490.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.pupils:feral:unnamed.3490.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Pupil 12",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3491
+	{
+		"templateClass": "ActorEyePupilTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.pupils:feral:unnamed.3491.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.pupils:feral:unnamed.3491.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Pupil 13",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3405
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3405.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3405.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 8",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3406
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3406.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3406.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 9",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4079
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4079.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4079.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 10",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 8358
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.8358.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.8358.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 11",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3459
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3459.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3459.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 12",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3460
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3460.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3460.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 13",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3461
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3461.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3461.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 14",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4078
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4078.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4078.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 15",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4080
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4080.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4080.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 16",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4081
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4081.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4081.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 17",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4082
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4082.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4082.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 18",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 4083
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.4083.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.4083.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 19",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 2644
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.2644.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.2644.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 20",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 2645
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.2645.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.2645.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 21",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 2646
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.2646.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.2646.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 22",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 2647
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.2647.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.2647.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 23",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3401
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3401.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3401.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 24",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3402
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3402.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3402.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 25",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3403
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3403.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3403.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 26",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3404
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3404.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3404.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 27",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+setchart CraftableItemChart
+
+patch 3452
+	{
+		"templateClass": "ActorEyeShapeTemplate",
+		"templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+		"components": [
+			{
+				"componentClass": "LocalizedNameDefComponent",
+				"componentJSON": {
+					"localizedDefID": "decals.eyes.shapes:feral:unnamed.3452.text"
+				}
+			}
+		]
+	}
+endpatch
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:feral:unnamed.3452.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Eye 28",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef

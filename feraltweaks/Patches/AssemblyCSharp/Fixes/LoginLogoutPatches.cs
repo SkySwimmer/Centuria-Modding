@@ -20,53 +20,38 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class LoginLogoutPatches
     {
-        private static bool patched;
         private static string LoginErrorMessage = null;
+        private static bool waitingUserInputQuit = false;
+        
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(WWTcpClient), "Connect")]
+        public static void Connect(WWTcpClient __instance)
+        {
+            if (__instance.ToString() == "Iss.IssClient")
+            {
+                // Override encryption if needed
+                if (FeralTweaks.EncryptedGame != -1)
+                {
+                    __instance._isSecured = FeralTweaks.EncryptedGame == 1;
+                }
+            }
+        }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
-        public static void SetChartObjectInstances()
+        [HarmonyPatch(typeof(RoomManager), "OnRoomJoinSuccessResponse")]
+        public static void OnRoomJoinSuccessResponse()
         {
-            if (patched)
-                return;
-            patched = true;
-            Harmony.CreateAndPatchAll(typeof(LatePatches));
+            // Check initial world join
+            if (pendingInitialWorldJoin)
+            {
+                // Initial world join!
+                pendingInitialWorldJoin = false;
+                initialWorldJoin = true;
+            }
+            else
+                initialWorldJoin = false;
         }
 
-        public static class LatePatches
-        {
-                
-            [HarmonyPrefix]
-            [HarmonyPatch(typeof(WWTcpClient), "Connect")]
-            public static void Connect(WWTcpClient __instance)
-            {
-                if (__instance.ToString() == "Iss.IssClient")
-                {
-                    // Override encryption if needed
-                    if (FeralTweaks.EncryptedGame != -1)
-                    {
-                        __instance._isSecured = FeralTweaks.EncryptedGame == 1;
-                    }
-                }
-            }
-            
-            [HarmonyPostfix]
-            [HarmonyPatch(typeof(RoomManager), "OnRoomJoinSuccessResponse")]
-            public static void OnRoomJoinSuccessResponse()
-            {
-                // Check initial world join
-                if (pendingInitialWorldJoin)
-                {
-                    // Initial world join!
-                    pendingInitialWorldJoin = false;
-                    initialWorldJoin = true;
-                }
-                else
-                    initialWorldJoin = false;
-            }
-
-        }
-    
         public static string serverSoftwareName = "fer.al";
         public static string serverSoftwareVersion = "unknown";
         public static Dictionary<string, string> serverMods = new Dictionary<string, string>();
@@ -96,6 +81,89 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return false;
             CoreReset(SplashError.NONE, ErrorCode.None);
             return false;
+        }
+
+        public static bool WantsToQuit;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Application), "Quit", new Type[] {})]
+        public static bool QuitApp()
+        {
+            // Check window and bundle manager and progress screen
+            if (WindowManager.instance == null || CoreBundleManager.coreInstance == null || CoreBundleManager2.coreInstance == null || !CoreBundleManager.coreInstance.Inited || !CoreBundleManager2.coreInstance.Inited || UI_ProgressScreen.instance == null || UI_ProgressScreen.instance.IsVisible || Avatar_Local.instance == null)
+            {
+                // Clean and exit
+                CleanConnection();
+                return true;
+            }
+
+            // Check quitting
+            if (WantsToQuit)
+            {
+                // Clean and exit
+                CleanConnection();
+                return true;
+            }
+            if (waitingUserInputQuit)
+            {
+                // Smoothly log out
+                QuitAppSmooth();
+                return false;
+            }
+
+            // Smooth quit
+            QuitAppSmooth();
+            return false;
+        }
+
+        public static void CleanConnection()
+        {
+            if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+            {
+                NetworkManager.instance._serverConnection.Disconnect();
+                if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                    NetworkManager.instance._chatServiceConnection.Disconnect();
+                if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                    NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                NetworkManager.instance._serverConnection = null;
+                NetworkManager.instance._chatServiceConnection = null;
+                NetworkManager.instance._voiceChatServiceConnection = null;
+                NetworkManager.instance._jwt = null;
+                NetworkManager.instance._uuid = null;
+            }
+        }
+
+        public static void QuitAppSmooth()
+        {
+            // Check ingame
+            if (NetworkManager.instance == null || NetworkManager.instance._serverConnection == null || !NetworkManager.instance._serverConnection.IsConnected)
+            {
+                WantsToQuit = true;
+                Application.Quit();
+                return;
+            }
+
+            // Check override
+            if (WantsToQuit)
+            {
+                Application.Quit();
+                return;
+            }
+            WantsToQuit = true;
+
+            // Close settings
+            try
+            {
+                UI_Window_Settings.CloseWindow();
+            }
+            catch { }
+
+            // Hide reset
+            if (UI_Reset.instance != null)
+                UI_Reset.instance.Hide();
+
+            // Logout
+            Logout("Exiting...");
         }
 
         [HarmonyPrefix]
@@ -137,6 +205,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
                     return false;
 
+                case 28:
+                    // Server connection lost
+                    LogoutWithError("Connection lost", "You were gone for too long and were disconnected!\nYou have been logged out", inErrorCode);
+                    return false;
+
                 case 1008:
                     // API error
                     LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
@@ -144,6 +217,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 default:
                     // Allow reset
+                    WantsToQuit = true;
                     return true;
 
             }
@@ -153,15 +227,26 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Schedule error
             FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
-            {
-                if (UI_ProgressScreen.instance.IsVisibleOrFading)
+            { 
+                // Wait for loading screen
+                if (Avatar_Local.instance != null && !UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
+
+                // Schedule error
                 FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                 {
-                    // Show popup
-                    UI_Window_OkPopup.CloseWindow();
-                    UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + "-" + inErrorCode.Subcode + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
+                    if (UI_ProgressScreen.instance.IsVisibleOrFading)
+                        return false;
+                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    {
+                        // Show popup
+                        UI_Window_OkPopup.CloseWindow();
+                        UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + "-" + inErrorCode.Subcode + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
+                    });
+                    return true;
                 });
+
+                // Return
                 return true;
             });
 
@@ -206,6 +291,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     GameObject.Destroy(vchat.gameObject);
                 ChatManager.instance._cachedConversations = null;
                 ChatManager.instance._unreadConversations.Clear();
+                ChatPatches.unreadMessagesPerConversation.Clear();
+                ChatPatches.ChatPostInit = false;
+                ChatPatches.ChatHandshakeDone = false;
+                ChatPatches.ChatInitializing = false;
+                lock (ChatPatches.typingStatusDisplayNames)
+                {
+                    ChatPatches.typingStatusDisplayNames.Clear();
+                }
+                lock (ChatPatches.typingStatuses)
+                {
+                    ChatPatches.typingStatuses.Clear();
+                }
                 if (FeralVivoxManager.instance._vivoxEnabled.GetDecrypted())
                 {
                     // Log out of rooms, channels, etc
@@ -213,9 +310,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
                 return;
             }
+
+            // Check quick-logout
             if (!IsSafeToQuickLogout)
             {
-                // Quick-logout unavailable
+                // Quick logout unavailable
                 CoreLoadingManager.coreInstance.StartCoroutine(CoreLoadingManager.coreInstance.LoadLevel("58", new Il2CppSystem.Collections.Generic.List<string>()));
                 return;
             }
@@ -223,7 +322,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             // Check if avatar can be transitioned
             Avatar_Local avatar = Avatar_Local.instance;
             if (avatar != null && !UI_ProgressScreen.instance.IsVisibleOrFading)
-            {                
+            {
                 // Clear action
                 avatar._nextActionType = ActorActionType.None;
                 avatar._nextActionBreakLoop = true;
@@ -279,6 +378,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Schedule
             bool faded = false;
+            long start2 = 0;
             long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
@@ -301,6 +401,17 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     faded = true;
                 }
 
+                // Wait for a few extra seconds
+                if (start2 == 0)
+                    start2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start2 < 3000)
+                    return false;
+
+                // Quit if needed
+                if (WantsToQuit)
+                    Application.Quit();
+
+                // Mark as on loading screen
                 RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
                 if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                 {
@@ -338,6 +449,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         GameObject.Destroy(vchat.gameObject);
                     ChatManager.instance._cachedConversations = null;
                     ChatManager.instance._unreadConversations.Clear();
+                    ChatPatches.unreadMessagesPerConversation.Clear();
+                    ChatPatches.ChatPostInit = false;
+                    ChatPatches.ChatHandshakeDone = false;
+                    ChatPatches.ChatInitializing = false;
+                    lock (ChatPatches.typingStatusDisplayNames)
+                    {
+                        ChatPatches.typingStatusDisplayNames.Clear();
+                    }
+                    lock (ChatPatches.typingStatuses)
+                    {
+                        ChatPatches.typingStatuses.Clear();
+                    }
                     if (FeralVivoxManager.instance._vivoxEnabled.GetDecrypted())
                     {
                         // Log out of rooms, channels, etc
@@ -427,6 +550,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginEmailUsername = "sys://fromtoken";
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginToken;
                 FeralTweaks.AutoLoginToken = null;
+                FeralTweaks.IsAutoLogin = false;
                 IsAutologin = true;
             }
             if (FeralTweaks.AutoLoginUsername != null && FeralTweaks.AutoLoginPassword != null)
@@ -436,6 +560,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.autoLoginPassword = FeralTweaks.AutoLoginPassword;
                 FeralTweaks.AutoLoginUsername = null;
                 FeralTweaks.AutoLoginPassword = null;
+                FeralTweaks.IsAutoLogin = false;
                 IsAutologin = true;
             }
 
@@ -515,7 +640,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             IsSafeToQuickLogout = true;
             RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
-            OkPopupHooks.SingleTimeOkButtonAction = null;
 
             // Reset
             if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
@@ -559,7 +683,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_Login), "BtnClicked_Login")]
         public static void BtnClicked_Login(UI_Window_Login __instance)
         {
-            OkPopupHooks.SingleTimeOkButtonAction = null;
             serverSoftwareName = "fer.al";
             serverSoftwareVersion = "unknown";
             serverMods.Clear();
@@ -567,7 +690,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             loggingOut = false;
             doLogout = false;
             ignoreUpdateLevel = false;
-            long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
             {
                 if (errorDisplayed)
@@ -723,7 +845,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 pendingInitialWorldJoin = true;
             }
             else
-            {               
+            {
                 // Prevent loading screen from showing
                 errorDisplayed = true;
             }

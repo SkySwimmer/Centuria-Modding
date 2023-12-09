@@ -157,7 +157,7 @@ public class RelationshipJumpToPlayerOverridePacket implements IXtPacket<Relatio
 					// Same room, sync player
 					ObjectUpdatePacket pkt = new ObjectUpdatePacket();
 					pkt.action = 0;
-					pkt.mode = 2;
+					pkt.mode = 0; // InitPosition triggers teleport amims for FT clients, for vanilla it just moves
 					pkt.targetUUID = player.account.getAccountID();
 					pkt.position = otherPlayer.lastPos;
 					pkt.rotation = otherPlayer.lastRot;

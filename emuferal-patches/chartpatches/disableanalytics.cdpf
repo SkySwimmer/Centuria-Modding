@@ -1,0 +1,31 @@
+setchart GlobalChart
+
+patch 29095
+	{
+		"templateClass": "GlobalTemplate",
+		"templateFormatHash": "d92f06f1add7ee72be3bec2451e9a13b",
+		"components": [
+			{
+				"componentClass": "GlobalDefComponent",
+				"componentJSON": {
+					"boolValue": false
+				}
+			}
+		]
+	}
+endpatch
+
+patch 29096
+	{
+		"templateClass": "GlobalTemplate",
+		"templateFormatHash": "d92f06f1add7ee72be3bec2451e9a13b",
+		"components": [
+			{
+				"componentClass": "GlobalDefComponent",
+				"componentJSON": {
+					"boolValue": false
+				}
+			}
+		]
+	}
+endpatch

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using feraltweaks.Patches.AssemblyCSharp;
+using feraltweaks.Patches.Bundles;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,9 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 using FeralTweaks.Mods;
 using FeralTweaks;
-using Il2CppInterop.Runtime.Injection;
-using FeralTweaks.Mods.Charts;
 using FeralTweaks.Actions;
+using FeralTweaks.BundleInjection;
 
 namespace feraltweaks
 {
@@ -27,6 +27,7 @@ namespace feraltweaks
         public static Dictionary<string, string> PatchConfig = new Dictionary<string, string>();
 
         // Autologin
+        public static bool IsAutoLogin = false;
         internal static string AutoLoginToken = null;
         internal static string AutoLoginUsername = null;
         internal static string AutoLoginPassword = null;
@@ -57,6 +58,15 @@ namespace feraltweaks
             LogInfo("Applying patches...");
             ApplyPatches();
 
+            // Hook bundle patches
+            HookBundlePatches();
+
+            // Attach quitting
+            UnityEngine.Application.quitting += new Action(() => { 
+                // Clean and exit
+                LoginLogoutPatches.CleanConnection();
+            });
+
             // Scan mods for assets
             LogInfo("Scanning for mod assets...");
             foreach (FeralTweaksMod mod in FeralTweaksLoader.GetLoadedMods())
@@ -79,6 +89,7 @@ namespace feraltweaks
                             // Log
                             LogInfo("Found asset for '" + bundleId + "', file path: " + file.FullName);
                             BundlePatches.AssetBundlePaths[bundleId] = file.FullName;
+                            BundlePatches.AssetBundleRelativePaths[bundleId] = filePath.Remove(filePath.LastIndexOf(".unity3d"));
                         }
                     }
                 }
@@ -96,17 +107,20 @@ namespace feraltweaks
                 }
                 else if (arg == "--login-token" && i + 1 < Environment.GetCommandLineArgs().Length)
                 {
+                    IsAutoLogin = true;
                     AutoLoginToken = Environment.GetCommandLineArgs()[i + 1];
                     AutoLoginUsername = null;
                     AutoLoginPassword = null;
                 }
                 else if (arg == "--login-username" && i + 1 < Environment.GetCommandLineArgs().Length)
                 {
+                    IsAutoLogin = true;
                     AutoLoginUsername = Environment.GetCommandLineArgs()[i + 1];
                     AutoLoginToken = null;
                 }
                 else if (arg == "--login-password" && i + 1 < Environment.GetCommandLineArgs().Length)
                 {
+                    IsAutoLogin = true;
                     AutoLoginPassword = Environment.GetCommandLineArgs()[i + 1];
                     AutoLoginToken = null;
                 }
@@ -121,12 +135,10 @@ namespace feraltweaks
                 LogInfo("No command line parameters received for launcher handoff, starting regularly...");
         }
 
-        public override void FinalizeLoad()
+        private void HookBundlePatches()
         {
-            // Inject classes and late patches
-            ClassInjector.RegisterTypeInIl2Cpp<FeralTweaksChartDefComponent>();
-            ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
-            ApplyPatch(typeof(PlayerLoginLogoutAnimsPatch));
+            // Bundle patches
+            BundleHook.RegisterBundleHook(new AnimationEventsBundleHook());
         }
 
         private void ApplyPatches()
@@ -134,12 +146,11 @@ namespace feraltweaks
             // Patches
             ApplyPatch(typeof(ActionWheelPatches));
             ApplyPatch(typeof(ChartPatches));
+            ApplyPatch(typeof(InventoryPatches));
             ApplyPatch(typeof(UI_Window_AccountCreationPatch));
             ApplyPatch(typeof(UI_Window_ChangeDisplayNamePatch));
             ApplyPatch(typeof(UI_Window_ResetPasswordPatch));
             ApplyPatch(typeof(TradeLimitPatches));
-            ApplyPatch(typeof(OkPopupHooks));
-            ApplyPatch(typeof(YesNoPopupHooks));
             ApplyPatch(typeof(WindUpdraftPatch));
             ApplyPatch(typeof(LoginLogoutPatches));
             ApplyPatch(typeof(AssetBundleManagerPatches));
@@ -155,6 +166,13 @@ namespace feraltweaks
             ApplyPatch(typeof(GlidingManagerPatch));
             ApplyPatch(typeof(PlayerJumpIncreasePatch));
             ApplyPatch(typeof(DecalResolutionPatch));
+            ApplyPatch(typeof(EyeBlinkingPatch));
+            ApplyPatch(typeof(MultiClothingPerAttachPatch));
+            ApplyPatch(typeof(PlayerLoginLogoutAnimsPatch));
+            ApplyPatch(typeof(ActorScalingPatch));
+            ApplyPatch(typeof(DragonSparkSkeletonPatch));
+            ApplyPatch(typeof(NpcHeadRotationPatch));
+            ApplyPatch(typeof(PlayerJoinNotifPatch));
         }
 
         public static void ApplyPatch(Type type)
@@ -169,8 +187,13 @@ namespace feraltweaks
         public static void WriteDefaultConfig()
         {
             File.WriteAllText(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/settings.props",
-                  "DecalResolution=2048\n"
+                  "DecalResolutionLow=512\n"
+                + "DecalResolutionMid=1024\n"
+                + "DecalResolutionHigh=2048\n"
+                + "\n"
                 + "JumpIncreaseFactor=1.2\n"
+                + "ActorScaleMultiplier=1\n"
+                + "ActorScaleMultiplierLowerMost=0.5\n"
                 + "DisableUpdraftAudioSuppressor=true\n"
                 + "\n"
                 + "AllowNonEmailUsernames=false\n"
@@ -181,6 +204,7 @@ namespace feraltweaks
                 + "DisplayNameMaxLength=16\n"
                 + "\n"
                 + "TradeItemLimit=99\n"
+                + "AllowMultipleClothingItemsOfSameType=false\n"
                 + "\n"
                 + "EnableGroupChatTab=true\n"
                 + "VersionLabel=${global:7358}\\n${game:version} (${game:build})\n"
@@ -197,6 +221,7 @@ namespace feraltweaks
                 + "GlidingAllowFlap=true\n"
                 + "GlidingFlapCooldown=200\n"
                 + "AllowDragonGlidingWithNoWings=true\n"
+                + "AllowShinigamiGlidingWithNoWings=true\n"
                 + "\n"
                 + "GameAssetsProd=https://emuferal.ddns.net/feralassets/\n"
                 + "GameAssetsStage=https://emuferal.ddns.net/feralassetsstage/\n"
@@ -232,11 +257,20 @@ namespace feraltweaks
             if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
                 ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
             if (PatchConfig.ContainsKey("AutoLoginUsername"))
+            {
                 AutoLoginUsername = PatchConfig["AutoLoginUsername"];
+                IsAutoLogin = true;
+            }
             if (PatchConfig.ContainsKey("AutoLoginPassword"))
+            {
+                IsAutoLogin = true;
                 AutoLoginPassword = PatchConfig["AutoLoginPassword"];
+            }
             if (PatchConfig.ContainsKey("AutoLoginToken"))
+            {
+                IsAutoLogin = true;
                 AutoLoginPassword = PatchConfig["AutoLoginToken"];
+            }
             if (PatchConfig.ContainsKey("VanillaEncryptionMode"))
                 VanillaEncryptionMode = PatchConfig["VanillaEncryptionMode"].ToLower() == "true";
             PatchConfig.Remove("AutoLoginToken");
@@ -364,6 +398,7 @@ namespace feraltweaks
                                     else
                                     {
                                         AutoLoginToken = args;
+                                        IsAutoLogin = true;
                                         LogInfo("Enabled autologin.");
                                     }
                                     break;

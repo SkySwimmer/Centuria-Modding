@@ -14,6 +14,8 @@ import org.asf.centuria.feraltweaks.managers.ScheduledMaintenanceManager;
 import org.asf.centuria.feraltweaks.networking.chat.FeralTweaksHandshakePacket;
 import org.asf.centuria.feraltweaks.networking.chat.FeralTweaksPostInitPacket;
 import org.asf.centuria.feraltweaks.networking.chat.MarkConvoReadPacket;
+import org.asf.centuria.feraltweaks.networking.chat.SubscribeTypingStatusPacket;
+import org.asf.centuria.feraltweaks.networking.chat.TypingStatusPacket;
 import org.asf.centuria.feraltweaks.networking.game.FtModPacket;
 import org.asf.centuria.feraltweaks.networking.game.YesNoPopupPacket;
 import org.asf.centuria.feraltweaks.networking.http.DataProcessor;
@@ -137,11 +139,11 @@ public class FeralTweaksModule implements ICenturiaModule {
 		PlayerNameManager.initPlayerNameManager();
 
 		// Bind events
-		EventBus.getInstance().addEventReceiver(new CommandHandlers());
-		EventBus.getInstance().addEventReceiver(new ChatMessageHandler());
-		EventBus.getInstance().addEventReceiver(new DisconnectHandler());
-		EventBus.getInstance().addEventReceiver(new ChatHandshakeHandler());
-		EventBus.getInstance().addEventReceiver(new GameHandshakeHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new CommandHandlers());
+		EventBus.getInstance().addAllEventsFromReceiver(new ChatMessageHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new DisconnectHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new ChatHandshakeHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new GameHandshakeHandler());
 	}
 
 	@EventListener
@@ -162,5 +164,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 		event.registerPacket(new MarkConvoReadPacket());
 		event.registerPacket(new FeralTweaksHandshakePacket());
 		event.registerPacket(new FeralTweaksPostInitPacket());
+		event.registerPacket(new TypingStatusPacket());
+		event.registerPacket(new SubscribeTypingStatusPacket());
 	}
 }

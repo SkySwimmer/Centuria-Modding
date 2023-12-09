@@ -63,7 +63,7 @@ public class FeralTweaksHandshakePacket extends AbstractChatPacket {
 		pkt.addProperty("serverSoftwareVersion", Centuria.SERVER_UPDATE_VERSION);
 		pkt.add("serverMods", modsJ);
 
-		// SEnd
+		// Send
 		client.sendPacket(pkt);
 
 		// Handshake success

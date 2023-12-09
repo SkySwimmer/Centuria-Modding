@@ -12,7 +12,7 @@ public class DisconnectHandler implements IEventReceiver {
 
 	@EventListener
 	public void updateServer(ServerUpdateEvent event) {
-		if (!event.hasTimer())
+		if (event.hasVersionInfo())
 			updateShutdown = true;
 	}
 
@@ -48,7 +48,8 @@ public class DisconnectHandler implements IEventReceiver {
 
 			case MAINTENANCE:
 				pkt.title = "Server Closed";
-				pkt.message = "The server has been placed under maintenance, hope to be back soon!";
+				pkt.message = "The server has been placed under maintenance, hope to be back soon!"
+						+ event.getReason() == null ? "" : "\n\nReason: " + event.getReason();
 				break;
 
 			case SERVER_SHUTDOWN:
@@ -56,7 +57,8 @@ public class DisconnectHandler implements IEventReceiver {
 				if (updateShutdown)
 					pkt.message = "The server has been shut down for a update, will be back soon!";
 				else
-					pkt.message = "The server has been temporarily shut down, hope to be back soon!";
+					pkt.message = "The server has been temporarily shut down, hope to be back soon!"
+							+ event.getReason() == null ? "" : "\n\nReason: " + event.getReason();
 				break;
 
 			case UNKNOWN:

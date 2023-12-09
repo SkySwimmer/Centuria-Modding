@@ -10,8 +10,33 @@ import org.asf.centuria.social.SocialManager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class UnreadMessageManager {
+
+	private static JsonObject loadUnreads(CenturiaAccount account)
+	{
+		JsonObject unreads = new JsonObject();
+
+		// Load unreads
+		if (account.getSaveSharedInventory().containsItem("unreadconversations")) {
+			// Read unread info
+			JsonElement unreadsRaw = account.getSaveSharedInventory().getItem("unreadconversations");
+			if (unreadsRaw.isJsonObject()) {
+				// Read with 1.8 format
+				unreads = unreadsRaw.getAsJsonObject();
+			} else {
+				// Convert 1.7 to 1.8
+				JsonArray arr = unreadsRaw.getAsJsonArray();
+				for (JsonElement ele : arr) {
+					unreads.addProperty(ele.getAsString(), 1);
+				}
+			}
+		}
+
+		// Return
+		return unreads;
+	}
 
 	/**
 	 * Called to handle unreads, when a message is received and a player is offline,
@@ -39,68 +64,57 @@ public class UnreadMessageManager {
 			}
 
 			// Add to unread history
-			JsonArray arr = new JsonArray();
 
 			// Load unreads
-			if (receiver.getSaveSharedInventory().containsItem("unreadconversations"))
-				arr = receiver.getSaveSharedInventory().getItem("unreadconversations").getAsJsonArray();
+			JsonObject unreads = loadUnreads(receiver);
 
-			// Check if present
-			boolean found = false;
-			for (JsonElement ele : arr) {
-				if (ele.getAsString().equals(conversationId)) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				// Add unread
-				arr.add(conversationId);
+			// Update
+			unreads.addProperty(conversationId, unreads.has(conversationId) ? unreads.get(conversationId).getAsInt() + 1 : 1);
 
-				// Save
-				receiver.getSaveSharedInventory().setItem("unreadconversations", arr);
-			}
+			// Save
+			receiver.getSaveSharedInventory().setItem("unreadconversations", unreads);
 		}
 	}
 
 	/**
-	 * Retrieves unread conversations of a player
+	 * Retrieves unread messages of a player
 	 * 
-	 * @param account Account to retrieve the conversations of
-	 * @param client  Chat client instance used to remove rooms the client is no
-	 *                longer in
-	 * @return JsonArray instance containing all unread conversation IDs
+	 * @param account Account to retrieve the unreads of
+	 * @param client  Chat client instance used to remove rooms the client is no longer in
+	 * @return JsonObject instance containing all unreads, structured by strings as conversation IDs with integers for the unread counts
 	 */
-	public static JsonElement getUnreadConversations(CenturiaAccount account, ChatClient client) {
-		JsonArray arr = new JsonArray();
+	public static JsonObject getUnreadMessageCounts(CenturiaAccount account, ChatClient client) {
+		JsonObject unreads = new JsonObject();
 
 		// Load unreads
 		if (account.getSaveSharedInventory().containsItem("unreadconversations")) {
-			// Load
-			arr = account.getSaveSharedInventory().getItem("unreadconversations").getAsJsonArray();
+			// Load unreads
+			unreads = loadUnreads(account);
+
+			// Check client
 			if (client != null) {
 				// Remove nonexistent items and rooms the player is no longer in
 				// Dms are joined by now, so would gcs as this event is bound later than any
 				// module normally binds, meaning the other modules are fired before this one
-				ArrayList<JsonElement> toRemove = new ArrayList<JsonElement>();
-				for (JsonElement ele : arr) {
-					if (!DMManager.getInstance().dmExists(ele.getAsString()) || !client.isInRoom(ele.getAsString()))
-						toRemove.add(ele);
+				ArrayList<String> toRemove = new ArrayList<String>();
+				for (String convoID : unreads.keySet()) {
+					if (!DMManager.getInstance().dmExists(convoID) || !client.isInRoom(convoID))
+						toRemove.add(convoID);
 				}
-				for (JsonElement id : toRemove)
-					arr.remove(id);
+				for (String id : toRemove)
+					unreads.remove(id);
 
 				// Save if needed
 				if (toRemove.size() != 0)
-					account.getSaveSharedInventory().setItem("unreadconversations", arr);
+					account.getSaveSharedInventory().setItem("unreadconversations", unreads);
 			}
 		} else {
 			// Save
-			account.getSaveSharedInventory().setItem("unreadconversations", arr);
+			account.getSaveSharedInventory().setItem("unreadconversations", unreads);
 		}
 
 		// Return
-		return arr;
+		return unreads;
 	}
 
 	/**
@@ -112,13 +126,12 @@ public class UnreadMessageManager {
 	public static void markConversationAsRead(String conversation, ChatClient client) {
 		// Find unread convo map
 		if (client.getPlayer().getSaveSharedInventory().containsItem("unreadconversations")) {
-			JsonArray convos = client.getPlayer().getSaveSharedInventory().getItem("unreadconversations")
-					.getAsJsonArray();
-			for (JsonElement ele : convos) {
-				if (ele.getAsString().equals(conversation)) {
+			JsonObject unreads = loadUnreads(client.getPlayer());
+			for (String convoID : unreads.keySet()) {
+				if (convoID.equals(conversation)) {
 					// Found it
-					convos.remove(ele);
-					client.getPlayer().getSaveSharedInventory().setItem("unreadconversations", convos);
+					unreads.remove(convoID);
+					client.getPlayer().getSaveSharedInventory().setItem("unreadconversations", unreads);
 					break;
 				}
 			}

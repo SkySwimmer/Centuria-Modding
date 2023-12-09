@@ -1,0 +1,1185 @@
+
+#
+# DevTest 7
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_devtest7.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_devtest7.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_devtest7.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/09/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Final Closed DevTest Build Released",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_devtest7.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "The Beta 1.8 Testing Build 7 is here! This is the final closed dev test build before we go into the application-based Early Access period of Beta 1.8!\n\nChanges in this dev test build:\n - Fixed chat formatting incorrectly rendering backslashes\n - Fixed the broken scale slider, it should no longer jump from min to max.\n - Fixed teleport animations randomly failing when players join the game\n - Fixed the Discord RPC mod crashing the game on DevTest.\n - Fixed incorrect placement of dragon head spark\n - Fixed asset bundles sometimes loading before FTL injects into them\n - Implemented closin of eyes during sleep animation\n - Reimplemented NPC head rotation\n - Added a 'no legs' option for dragons\n - Fixed camera zoom and center axis for creatures larger than OG max\n - Fixed offline unread counter not working\n - Added a public chat unread counter\n - Corrected the unread message count of the unread labels in chat buttons\n - Fixed chat window resizing glitching group message contents\n - Fixed scrolling of inactive chat tabs\n - Implemented a 'typing' status in chat\n - Improved chat bubble logic, it scrolls messages now\n - Fixed the favorite 'Player has joined you' spam bug\n - Added the Eat, Scared, Yes and No emotes for 1.8 clients\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# DevTest 6
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_devtest6
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_devtest6.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_devtest6.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_devtest6.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/08/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_devtest6.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_devtest6.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Test Build 6",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_devtest6.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Testing Build 6 is out! This update addresses some bugs and adds legless dragons and gliding for shinigami without wings.\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# DevTest 5
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_devtest5
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_devtest5.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_devtest5.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_devtest5.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/07/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_devtest5.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_devtest5.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Test Build 5",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_devtest5.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Testing Build 5 is out! This minor update triages some issues in the previous build such as decal rendering and attempts to fix the cache failure bug, hopefully improves general stability.\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# DevTest 4
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_devtest4
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_devtest4.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_devtest4.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_devtest4.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/06/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_devtest4.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_devtest4.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Closed Live Testing! (TB4)",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_devtest4.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 is going into LIVE TESTING! Some players are receiving a WIP version of the huge upcoming Beta 1.8 update! There are many changes and many overhauls coming in the major update, some of which are available for testing already! Please do note that the Beta 1.8 Dev Client is still very buggy and can have many issues, please keep an eye out for updates in the group chat of the Dev Test Programme. Stay Fer.al!\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Decal limit increase
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171_decalincrease.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171_decalincrease.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b171_decalincrease.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 1
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/04/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Decal limit increased!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b171_decalincrease.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "For EmuFeral Desktop, the decal limit has been increased to 350! Enjoy detailing your avatars with this new higher limit!\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Installer bug announcement
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b171_installerbugalert
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171_installerbugalert.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171_installerbugalert.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b171_installerbugalert.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/05/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+#						"bundlePath": "EmuFeral/Images/Decrees/EmuFeral_B171/InstallerBugAlertImage"
+def decreeboard:emuferal:emuferal_b171_installerbugalert.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b171_installerbugalert.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "CRITICAL ANNOUNCEMENT",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b171_installerbugalert.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "We have recently discovered a potentially dangerous bug in the <u>unininstallation process</u> of the Project Edge and EmuFeral installers (only applies to installers downloaded before 11/08/2023) that can cause damage to user profiles on Linux and MacOS clients.\n\n\nThe issue has been resolved however please note that any installers from before this announcement <b>WILL STILL HAVE THE BUG</b>, it is highly recommended to delete any EmuFeral and Project Edge installer you may have saved on your device.\n\n<b>When removing old installers or uninstalling the game, MAKE SURE YOU HAVE THE LATEST INSTALLER or else the bug will be triggered.</b> If you are uncertain of your installer version, simply delete the installer file.\n\nFor more details please head to our Discord Server: <color=\"blue\">https://discord.gg/ferever</color>",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# EmuFeral Android
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b171_androidupdate
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171_androidupdate.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171_androidupdate.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b171_androidupdate.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "11/05/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b171_androidupdate.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b171_androidupdate.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Android Support Beta!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b171_androidupdate.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "<size=120%><b>Android Support has Returned!</b></size>\nThanks to Joey for providing an edited global-metadata.bin file setting our asset servers instead of the dead og asset servers, we are happy to re-introduce <u><b>EXPERIMENTAL</b></u> android support!\n\n\n<size=120%><b>How to download and install:</b></size>\nFirst you want to download the modified client APK file. (which includes the client) After downloading, uninstall the original game (and if you have it, the old EmuFeral launcher) and then install the new APK file.\n\nOr... if you want to build the modified APK file yourself, download our preconfigured Lightray pack, this includes LightrayInjector and patches needed to get onto the game as well as java runtimes for running lightray and the base game.\n\n\n\n<size=120%><b>Download links:</b></size>\nLauncher + client APK file: (easiest)\n<color=\"blue\">https://emuferal.ddns.net/emuferal-android.apk</color>\n\nLightray method: (more advanced)\n<color=\"blue\">https://emuferal.ddns.net/emuferal-android-lightray.zip</color>\n\nNote that you will need to open the links in your browser, clicking this link wont work due limitations with the game.\n\n\n<size=120%><b>Things to keep in mind</b></size>\nAndroid support is HIGHLY EXPERIMENTAL, right now, the modloader does not work yet on Android so we don't have any modifications aside from server code, meaning that the shutdown message would be visible and that new UI features such as group chats will also be missing (GCs are available on android but will be listed under DMs instead), this build is VERY unstable at the moment and could break. We do already have the FeralTweaks updater included, so things can be fixed without reinstalling the app.\n\n<b>When on mobile, please be aware of decal limits!</b> Without the FTL modloader, they are on the OG limit! This will hopefully change in the near-future, but until then, avoid avatars with too many decals as loading them in the editor might soft-lock you until you switch looks from desktop EmuFeral.",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Beta 1.7.1
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b171
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b171.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "10/03/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b171.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b171.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "EmuFeral Beta 1.7.1",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b171.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "EmuFeral Beta 1.7.1 has been Released!\n\nThis is a minor update to patch some issues:\n - Fixed the discord bot failing to find centuria accounts\n - Fixed colors in usernames breaking chat partially\n - Removed the 'stafflist' command since it breaks the game with large amounts of saved players",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Beta 1.7
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b17
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b17.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b17.message.text",
+					"imageDefID": "-1",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "09/30/2023 00:00"
+				}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b17_banner
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "-1",
+					"localizedMessageDefId": "-1",
+					"imageDefID": "decreeboard:emuferal:emuferal_b17.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 4
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "09/30/2023 00:01"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b17.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "EmuFeral/Images/Decrees/EmuFeral_B17/Beta17"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b17.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "EmuFeral Beta 1.7 is Here!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b17.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "<size=120%><b>The Beta 1.7 Cindernoct Update has been Released!</b></size>\nEmuFeral Beta 1.7 is a huge update that overhauls the internal workings of the modloader and the server, implements more minigames and fixes a lot of bugs, you can find the full set of changes in our GitHub repository.\n\n\n<size=120%><b>Name colors!</b></size>\nAs for new features, this update introduces name colors, you will be able to see ingame what role a staff member has, and creative and experience mode players will also have name colors too! (creative will be yellow, experience will be green)\n\n\n<size=120%><b>Reimplemented some Minigames!</b></size>\nBoth <u>DizzyWing Dispatch</u> and the <u>Parlor Minigames</u> have been reimplemented by <b><color=#7f5391>animal animalson</color></b>, please note that these minigames are still work-in-progress and still have bugs.\n\n\n<size=120%><b>Cindernoct!</b></size>\nThe second Cindernoct event will start with this update too! This is the second-ever Cindernoct on EmuFeral, however we don't have many new things yet, we had hoped to introduce a custom season pass however that is not fully in place yet, hopefully next Cindernoct will have its own season challenges. However, Cindernoct will run until the Forstfete event starts!\n\nPlease note that we have not made any changes to the game to start this event, its the same event as the last Cindernoct before shutdown.\n\n\n<size=120%><b>Modding!</b></size>\nAlongside those changes, we are also introducing a much needed overhaul update for the FTL modloader, making it now possible to create mods for Fer.al and Centuria-based servers, we dont have a easy way to self-host servers yet but it is being worked on. Note that right now we dont have a easy-to-use development kit yet and expanding content is still very early in development, however we do have an example mod adding rich-presence support to the game in our Modding GitHub repository.\n\n\n\n- The EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef

@@ -1,0 +1,25 @@
+setchart LocalizationChart
+
+patch 4280
+	{
+		"templateClass":"LocalizationTemplate",
+		"templateFormatHash":"392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "##seraphs-karen-evillaughter##Other than the fact that it's made by a conniving witch with a black heart that's crispier than the crust of her curs'ed pie?",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+endpatch

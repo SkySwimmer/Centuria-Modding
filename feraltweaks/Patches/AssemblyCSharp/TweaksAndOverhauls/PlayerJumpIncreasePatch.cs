@@ -16,38 +16,30 @@ namespace feraltweaks.Patches.AssemblyCSharp
     {
 
         public static float JumpForceFactor = 1.0f;
-        private static bool patched;
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CoreChartDataManager), "SetChartObjectInstances")]
-        public static void SetChartObjectInstances()
+        private static bool inited;
+        public static void Init()
         {
-            if (patched)
+            if (inited)
                 return;
-            patched = true;
+            inited = true;
 
             // Load factor
             if (FeralTweaks.PatchConfig.ContainsKey("JumpIncreaseFactor"))
                 JumpForceFactor = float.Parse(FeralTweaks.PatchConfig["JumpIncreaseFactor"], NumberFormatInfo.InvariantInfo);
-
-            // Add patches
-            Harmony.CreateAndPatchAll(typeof(PlayerJumpIncreasePatchesLate));
         }
 
-        public static class PlayerJumpIncreasePatchesLate
-        {
-            private static float lastJumpForce;
+        private static float lastJumpForce;
 
-            [HarmonyPostfix]
-            [HarmonyPatch(typeof(Avatar_Local), "MUpdate")]
-            public static void MUpdate(ref Avatar_Local __instance)
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Avatar_Local), "MUpdate")]
+        public static void MUpdate(ref Avatar_Local __instance)
+        {
+            Init();
+            if (lastJumpForce != __instance.MoverJumpForce)
             {
-                if (lastJumpForce != __instance.MoverJumpForce)
-                {
-                    // Update force
-                    lastJumpForce = __instance.MoverJumpForce * JumpForceFactor;
-                    __instance._moverJumpForce = lastJumpForce;
-                }
+                // Update force
+                lastJumpForce = __instance.MoverJumpForce * JumpForceFactor;
+                __instance._moverJumpForce = lastJumpForce;
             }
         }
 

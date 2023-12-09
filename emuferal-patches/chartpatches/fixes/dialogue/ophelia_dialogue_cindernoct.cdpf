@@ -1,0 +1,29 @@
+setchart DialogChart
+
+cleardef 32499
+patch 32499
+	{
+		"templateClass":"DialogTemplate",
+		"templateFormatHash":"f60e3c281605554a278189ef8dd558b9",
+		"components": [
+			{
+				"componentClass": "DialogDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundleMetaGUID": "4a6700b19e11dac4fb8661f85b1a2387",
+						"bundlePath": "Dialog/NPC/Citizen/009_Rosemary/Generic"
+					},
+					"availability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "8/19/2019",
+				        "_dateEnd": ""
+				    },
+				    "calendarRefs": [
+				        "32232"
+				    ]
+				}
+			}
+		]
+	}
+endpatch

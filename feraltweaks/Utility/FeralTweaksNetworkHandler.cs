@@ -6,6 +6,9 @@ using FeralTweaks;
 using FeralTweaks.Networking;
 using FeralTweaks.Actions;
 using feraltweaks.Patches.AssemblyCSharp;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using System;
 
 namespace feraltweaks
 {
@@ -126,13 +129,12 @@ namespace feraltweaks
                                         {
                                             if (UI_ProgressScreen.instance.IsVisible)
                                                 UI_ProgressScreen.instance.Hide();
-                                            UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message), ChartDataManager.instance.localizationChartData.Get(button, button));
-                                            OkPopupHooks.SingleTimeOkButtonAction = () =>
+                                            UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message), ChartDataManager.instance.localizationChartData.Get(button, button), (Il2CppSystem.Action)new System.Action(() =>
                                             {
                                                 LoginLogoutPatches.loggingOut = false;
                                                 LoginLogoutPatches.doLogout = true;
                                                 CoreSharedUtils.CoreReset(SplashError.NONE, ErrorCode.None);
-                                            };
+                                            }));
                                         });
 
                                         return true;
@@ -261,25 +263,15 @@ namespace feraltweaks
                                         }
                                         catch { }
                                         UI_Window_YesNoPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message),
-                                            ChartDataManager.instance.localizationChartData.Get(yesBtn, yesBtn), ChartDataManager.instance.localizationChartData.Get(noBtn, noBtn));
-                                        YesNoPopupHooks.SingleTimeNoButtonAction = () =>
-                                        {
-                                            // Send response
-                                            XtWriter wr = new XtWriter(XtCmd.FacilitatorSetBusy);
-                                            wr.Cmd = "mod:ft";
-                                            wr.WriteString("yesnopopup");
-                                            wr.WriteString(popupID);
-                                            NetworkManager.instance._serverConnection.Send(wr.WriteBool(false));
-                                        };
-                                        YesNoPopupHooks.SingleTimeYesButtonAction = () =>
-                                        {
-                                            // Send response
-                                            XtWriter wr = new XtWriter(XtCmd.FacilitatorSetBusy);
-                                            wr.Cmd = "mod:ft";
-                                            wr.WriteString("yesnopopup");
-                                            wr.WriteString(popupID);
-                                            NetworkManager.instance._serverConnection.Send(wr.WriteBool(true));
-                                        };
+                                            ChartDataManager.instance.localizationChartData.Get(yesBtn, yesBtn), ChartDataManager.instance.localizationChartData.Get(noBtn, noBtn), (Il2CppSystem.Action<bool>)new System.Action<bool>(res =>
+                                            {
+                                                // Send response
+                                                XtWriter wr = new XtWriter(XtCmd.FacilitatorSetBusy);
+                                                wr.Cmd = "mod:ft";
+                                                wr.WriteString("yesnopopup");
+                                                wr.WriteString(popupID);
+                                                NetworkManager.instance._serverConnection.Send(wr.WriteBool(res));
+                                            }));
                                     });
                                     break;
                                 }
@@ -373,11 +365,42 @@ namespace feraltweaks
                 switch (id)
                 {
                     case "fthandshake":
+                        // Handshake done
                         ChatPatches.ChatHandshakeDone = true;
                         break;
+                    case "typing":
+                        // Update display name
+                        lock (ChatPatches.typingStatusDisplayNames)
+                        {
+                            ChatPatches.typingStatusDisplayNames[(string)packet["uuid"]] = (string)packet["displayName"];
+                        }
+
+                        // Typing status
+                        lock (ChatPatches.typingStatuses)
+                        {
+                            if (!ChatPatches.typingStatuses.ContainsKey((string)packet["conversationId"]))
+                                ChatPatches.typingStatuses[(string)packet["conversationId"]] = new Dictionary<string, long>();
+                            ChatPatches.typingStatuses[(string)packet["conversationId"]][(string)packet["uuid"]] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        break;
                     case "postinit":
+                        // Postinit
                         ChatPatches.ChatPostInit = true;
                         ChatPatches.ChatReadyForConnFixer = true;
+                        lock (ChatPatches.typingStatusDisplayNames)
+                        {
+                            ChatPatches.typingStatusDisplayNames.Clear();
+                        }
+                        lock (ChatPatches.typingStatuses)
+                        {
+                            ChatPatches.typingStatuses.Clear();
+                        }
+
+                        // Send typing status init    
+                        Dictionary<string, object> pkt = new Dictionary<string, object>();
+                        pkt["cmd"] = "feraltweaks.typingstatus.subscribe";
+                        string msg = JsonConvert.SerializeObject(pkt);
+                        NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
                         break;
                     case "unreadconversations":
                         {
@@ -386,7 +409,28 @@ namespace feraltweaks
                             if (ChatManager.instance._unreadConversations == null)
                                 ChatManager.instance._unreadConversations = new Il2CppSystem.Collections.Generic.List<string>();
                             foreach (string convo in convos)
-                                ChatManager.instance._unreadConversations.Add(convo);
+                                if (!ChatManager.instance._unreadConversations.Contains(convo))
+                                    ChatManager.instance._unreadConversations.Add(convo);
+
+                            // Add unread message counts for each conversation
+                            if (packet.Contains("messageCounts"))
+                            {
+                                // Read counts
+                                Il2CppSystem.Collections.Generic.Dictionary<string, int> messageCounts = JsonMapper.ToObject<Il2CppSystem.Collections.Generic.Dictionary<string, int>>(JsonMapper.ToJson(packet["messageCounts"]));
+
+                                // Add all
+                                foreach (string convo in convos)
+                                {
+                                    // Check
+                                    if (messageCounts.ContainsKey(convo))
+                                    {
+                                        // Add to list
+                                        ChatPatches.unreadMessagesPerConversation[convo] = messageCounts[convo];
+                                    }
+                                }
+                            }
+
+                            // Schedule popup
                             ChatPatches.ShowWorldJoinChatUnreadPopup = true;
 
                             // Schedule reload of
@@ -406,8 +450,19 @@ namespace feraltweaks
                                         ChatPatches.ShowWorldJoinChatUnreadPopup = false;
                                         if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0 && !ChatPatches.DisplayedUnreads)
                                         {
-                                            NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
-                                            ChatPatches.DisplayedUnreads = true;
+                                            int unreads = 0;
+                                            foreach (string convo in ChatManager.instance._unreadConversations)
+                                            {
+                                                // Check if room
+                                                if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == convo)
+                                                    continue;
+                                                unreads += ChatPatches.unreadMessagesPerConversation.GetValueOrDefault(convo, 1);
+                                            }
+                                            if (unreads != 0)
+                                            {
+                                                NotificationManager.instance.AddNotification(new Notification("You have " + unreads + " unread message(s)"));
+                                                ChatPatches.DisplayedUnreads = true;
+                                            }
                                         }
                                     }
                                 });

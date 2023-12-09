@@ -13,6 +13,7 @@ using WW.Waiters;
 using StrayTech;
 using Il2CppInterop.Runtime;
 using FeralTweaks.Mods.Charts;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -126,13 +127,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 MergerJsons.BundlePackDefComponentMerger data = JsonConvert.DeserializeObject<MergerJsons.BundlePackDefComponentMerger>(patch);
                 if (data.mode == null)
                 {
-                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either ADD, REMOVE or REPLACE");
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either INSERTBEFORE,ADD, REMOVE or REPLACE");
                     return;
                 }
                 data.mode = data.mode.ToLower();
-                if (data.mode != "add" && data.mode != "replace" && data.mode != "remove")
+                if (data.mode != "insertbefore" && data.mode != "add" && data.mode != "replace" && data.mode != "remove")
                 {
-                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either ADD, REMOVE or REPLACE");
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
                     return;
                 }
                 if (data.items == null)
@@ -144,6 +145,23 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Handle
                 switch (data.mode)
                 {
+                    // Insert
+                    case "insertbefore":
+                        {
+                            BundlePackDefComponent.CraftableItemsEntry[] entries = comp._craftableItems.ToArray();
+                            comp._craftableItems.Clear();
+                            foreach (string id in data.items.Keys)
+                            {
+                                BundlePackDefComponent.CraftableItemsEntry e = new BundlePackDefComponent.CraftableItemsEntry();
+                                e.itemDefID = id;
+                                e.count = data.items[id];
+                                comp._craftableItems.Add(e);
+                            }
+                            comp._craftableItems.AddRange(new Il2CppReferenceArray<BundlePackDefComponent.CraftableItemsEntry>(entries));
+                            break;
+                        }
+
+
                     // Add
                     case "add":
                         {
@@ -202,13 +220,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 MergerJsons.MergerActorAttachNodeGroupChart data = JsonConvert.DeserializeObject<MergerJsons.MergerActorAttachNodeGroupChart>(patch);
                 if (data.mode == null)
                 {
-                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either ADD, REMOVE or REPLACE");
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
                     return;
                 }
                 data.mode = data.mode.ToLower();
-                if (data.mode != "add" && data.mode != "replace" && data.mode != "remove")
+                if (data.mode != "insertbefore" && data.mode != "add" && data.mode != "replace" && data.mode != "remove")
                 {
-                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either ADD, REMOVE or REPLACE");
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
                     return;
                 }
                 if (data.defIDs == null)
@@ -220,6 +238,20 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Handle
                 switch (data.mode)
                 {
+                    // Insert
+                    case "insertbefore":
+                        {
+                            string[] oldDefs = comp.attachNodes._defIDs.ToArray();
+                            comp.attachNodes._defIDs.Clear();
+                            foreach (string id in data.defIDs)
+                            {
+                                comp.attachNodes._defIDs.Add(id);
+                            }
+                            foreach (string id in oldDefs)
+                                comp.attachNodes._defIDs.Add(id);
+                            break;
+                        }
+
                     // Add
                     case "add":
                         {
@@ -252,6 +284,82 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         }
                 }
                 comp.attachNodes._defs = BaseDef.GetDefs(comp.attachNodes._defIDs, false);
+            },
+            
+            // ListDefComponent merger
+            ["ListDefComponent"] = (def, component, patch) =>
+            {
+                ListDefComponent comp = component.Cast<ListDefComponent>();
+
+                // Parse
+                MergerJsons.ListDefComponentMerger data = JsonConvert.DeserializeObject<MergerJsons.ListDefComponentMerger>(patch);
+                if (data.mode == null)
+                {
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
+                    return;
+                }
+                data.mode = data.mode.ToLower();
+                if (data.mode != "insertbefore" && data.mode != "add" && data.mode != "replace" && data.mode != "remove")
+                {
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
+                    return;
+                }
+                if (data.defIDs == null)
+                {
+                    FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: defIDs");
+                    return;
+                }
+
+                // Handle
+                switch (data.mode)
+                {
+                    
+                    // Insert
+                    case "insertbefore":
+                        {
+                            string[] oldDefs = comp.list._defIDs.ToArray();
+                            comp.list._defIDs.Clear();
+                            foreach (string id in data.defIDs)
+                            {
+                                comp.list._defIDs.Add(id);
+                            }
+                            foreach (string id in oldDefs)
+                                comp.list._defIDs.Add(id);
+                            break;
+                        }
+
+                    // Add
+                    case "add":
+                        {
+                            foreach (string id in data.defIDs)
+                            {
+                                comp.list._defIDs.Add(id);
+                            }
+                            break;
+                        }
+
+                    // Remove
+                    case "remove":
+                        {
+                            foreach (string id in data.defIDs)
+                            {
+                                comp.list._defIDs.Remove(id);
+                            }
+                            break;
+                        }
+
+                    // Remove
+                    case "replace":
+                        {
+                            comp.list._defIDs.Clear();
+                            foreach (string id in data.defIDs)
+                            {
+                                comp.list._defIDs.Add(id);
+                            }
+                            break;
+                        }
+                }
+                comp.list._defs = BaseDef.GetDefs(comp.list._defIDs, false);
             }
         };
 
@@ -315,6 +423,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Okay time to load over the original game
             ClassInjector.RegisterTypeInIl2Cpp<MirrorDict>();
+            ClassInjector.RegisterTypeInIl2Cpp<FeralTweaksChartDefComponent>();
+            ClassInjector.RegisterTypeInIl2Cpp<DecreeDateDefComponent>();
+            ClassInjector.RegisterTypeInIl2Cpp<AlwaysInClientInventoryDefComponent>();
             FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Loading chart patches...");
 
             // Check
@@ -472,6 +583,21 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                                     }
                                                     defs = ChartDataManager.instance.actorAttachNodeChartData.defList;
                                                     defByIds = ChartDataManager.instance.actorAttachNodeChartData._parsedDefsByID;
+                                                    break;
+                                                }
+                                            case "ListChart":
+                                                {
+                                                    chart = ChartDataManager.instance.listChartData;
+
+                                                    // Let it load
+                                                    while (chart == null)
+                                                    {
+                                                        chart = ChartDataManager.instance.listChartData;
+                                                        Thread.Sleep(100);
+                                                    }
+                                                    defs = new MirrorList<BaseDef, ListDef>(ChartDataManager.instance.listChartData.defList);
+                                                    defByIds = new MirrorDict(ChartDataManager.instance.listChartData._parsedDefsByID.Cast<Il2CppSystem.Collections.IDictionary>()).Populate<ListDef>();
+                                                    defCreator = () => new ListDef();
                                                     break;
                                                 }
                                             case "CalendarChart":
@@ -944,6 +1070,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     }
                                 }
                                 PostPatch(def, chartPatch);
+                                BaseDef.DefIDToChart[def.defID] = chart;
                                 DefCacheIdLists[def.defID] = defByIds;
                                 DefCache[defID] = def;
                                 defs.Add(def);
@@ -951,7 +1078,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             }
                             continue;
                         }
-                        else if (l == "endmerge" && inNewDefBlock)
+                        else if (l == "endmerge" && inMergeDefBlock)
                         {
                             // Prepare
                             inMergeDefBlock = false;
@@ -966,8 +1093,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             if (def == null)
                             {
                                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Definition not found!");
-                                return;
+                                continue;
                             }
+                            DefCacheIdLists[def.defID] = defByIds;
+                            DefCache[defID] = def;
                             if (def._components != null && def._components._components != null)
                             {
                                 foreach (List<ComponentBase> componentL in def._components._components.Values)
@@ -987,7 +1116,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             if (comp == null)
                             {
                                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Component not found!");
-                                return;
+                                continue;
                             }
 
                             // Find merger
@@ -995,7 +1124,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             if (merger == null)
                             {
                                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! The requested component is not supported by this merger!");
-                                return;
+                                continue;
                             }
 
                             // Run merger
@@ -1042,6 +1171,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 // Deserialize
                                 def.Deserialize(comp.componentJSON);
                             }
+
+                            // Init def component
+                            DefComponent component = componentI.TryCast<DefComponent>();
+                            if (component != null)
+                                component.LoadEntry();
+
+                            // Break
                             break;
                         }
                     }
@@ -1147,6 +1283,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
             def.LoadDataJSON(chartPatch);
             AddCustomComponents(def, chartPatch);
+            foreach (List<ComponentBase> componentL in def._components._components.Values)
+            {
+                foreach (ComponentBase componentI in componentL)
+                {
+                    DefComponent comp = componentI.TryCast<DefComponent>();
+                    if (comp != null)
+                        comp.def = def;
+                }
+            }
             PostPatch(def, chartPatch);
 
             if (def._components != null && def._components._components != null)
@@ -1190,6 +1335,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 public string mode;
                 public Dictionary<string, int> items = new Dictionary<string, int>();
+            }
+
+            public class ListDefComponentMerger
+            {
+                public string mode;
+                public string[] defIDs;
             }
         }
 
