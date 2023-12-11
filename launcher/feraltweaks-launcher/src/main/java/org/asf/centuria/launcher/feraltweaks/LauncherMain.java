@@ -439,6 +439,13 @@ public class LauncherMain {
 				String api = hosts.get("api").getAsString();
 				if (!api.endsWith("/"))
 					api += "/";
+				String apiData = api + "data/";
+				if (hosts.has("launcherDataSource"))
+				{
+					apiData = hosts.get("launcherDataSource").getAsString();
+					if (!apiData.endsWith("/"))
+						apiData += "/";
+				}
 				HttpURLConnection conn = (HttpURLConnection) new URL(api + "centuria/getuser").openConnection();
 				conn.addRequestProperty("Authorization", "Bearer " + lastToken);
 				conn.setDoOutput(true);
@@ -451,7 +458,7 @@ public class LauncherMain {
 
 				// Check client modding
 				try {
-					conn = (HttpURLConnection) new URL(api + "data/clientmods/testendpoint").openConnection();
+					conn = (HttpURLConnection) new URL(apiData + "clientmods/testendpoint").openConnection();
 					conn.addRequestProperty("Authorization", "Bearer " + authToken);
 					InputStream strm;
 					if (conn.getResponseCode() < 400)
@@ -467,6 +474,12 @@ public class LauncherMain {
 							JOptionPane.showMessageDialog(frmCenturiaLauncher,
 									"Client modding is not enabled on your account, unable to launch the game.",
 									"Launcher Error", JOptionPane.ERROR_MESSAGE);
+							System.exit(1);
+							return;
+						} else if (resp.has("errorMessage")) {
+							JOptionPane.showMessageDialog(frmCenturiaLauncher,
+									resp.get("errorMessage").getAsString(), "Launcher Error",
+									JOptionPane.ERROR_MESSAGE);
 							System.exit(1);
 							return;
 						}
@@ -753,7 +766,7 @@ public class LauncherMain {
 					});
 
 					// Download manifest
-					updateMods("assemblies/index.json", modloader.get("assemblyBaseDir").getAsString(), hosts,
+					updateMods("assemblies/index.json", apiData, modloader.get("assemblyBaseDir").getAsString(), hosts,
 							authToken, progressBar, panel_1);
 
 					// Save version
@@ -779,7 +792,7 @@ public class LauncherMain {
 					});
 
 					// Download manifest
-					updateMods("assets/index.json", modloader.get("assetBaseDir").getAsString(), hosts, authToken,
+					updateMods("assets/index.json", apiData, modloader.get("assetBaseDir").getAsString(), hosts, authToken,
 							progressBar, panel_1);
 
 					// Save version
@@ -1036,6 +1049,7 @@ public class LauncherMain {
 
 					// Accept client
 					final String authTokenF = authToken;
+					final String apiDataF = apiData;
 					Thread clT = new Thread(() -> {
 						Socket cl;
 						try {
@@ -1051,7 +1065,7 @@ public class LauncherMain {
 								progressBar.setValue(0);
 								panel_1.repaint();
 							});
-							launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), serverInfo, hosts, ports,
+							launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), apiDataF, serverInfo, hosts, ports,
 									completedTutorial);
 							cl.close();
 							SwingUtilities.invokeAndWait(() -> {
@@ -1121,24 +1135,26 @@ public class LauncherMain {
 		th.start();
 	}
 
-	private void launcherHandoff(Socket cl, String authToken, String api, JsonObject serverInfo, JsonObject hosts,
+	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo, JsonObject hosts,
 			JsonObject ports, boolean completedTutorial) throws Exception {
 		if (!api.endsWith("/"))
 			api += "/";
+		if (!apiData.endsWith("/"))
+			apiData += "/";
 
 		// Send options
 		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading and sending configuration...");
 		sendCommand(cl, "config",
 				Base64.getEncoder()
-						.encodeToString(downloadProtectedString(api + "data/feraltweaks/settings.props", authToken)
+						.encodeToString(downloadProtectedString(apiData + "feraltweaks/settings.props", authToken)
 								.replace("\t", "    ").replace("\r", "").getBytes("UTF-8")));
 
 		// Download chart patches
 		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading chart patches...");
-		String manifest = downloadProtectedString(api + "data/feraltweaks/chartpatches/index.json", authToken);
+		String manifest = downloadProtectedString(apiData + "feraltweaks/chartpatches/index.json", authToken);
 		JsonArray patches = JsonParser.parseString(manifest).getAsJsonArray();
 		for (JsonElement ele : patches) {
-			String url = api + "data";
+			String url = apiData;
 			if (!ele.getAsString().startsWith("/"))
 				url += "/";
 			url += ele.getAsString();
@@ -1215,12 +1231,12 @@ public class LauncherMain {
 		dir.delete();
 	}
 
-	private void updateMods(String pth, String baseOut, JsonObject hosts, String authToken, JProgressBar progressBar,
+	private void updateMods(String pth, String apiData, String baseOut, JsonObject hosts, String authToken, JProgressBar progressBar,
 			JPanel panel_1) throws Exception {
 		String api = hosts.get("api").getAsString();
 		if (!api.endsWith("/"))
 			api += "/";
-		HttpURLConnection conn = (HttpURLConnection) new URL(api + "data/clientmods/" + pth).openConnection();
+		HttpURLConnection conn = (HttpURLConnection) new URL(apiData + "clientmods/" + pth).openConnection();
 		conn.addRequestProperty("Authorization", "Bearer " + authToken);
 		InputStream strm;
 		if (conn.getResponseCode() < 400)
@@ -1244,6 +1260,14 @@ public class LauncherMain {
 				return;
 			}
 			default: {
+				if (resp.has("errorMessage"))
+				{
+					JOptionPane.showMessageDialog(frmCenturiaLauncher,
+							resp.get("errorMessage").getAsString(), "Launcher Error",
+							JOptionPane.ERROR_MESSAGE);
+					System.exit(1);
+					return;
+				}
 				throw new Exception("Unknown server error: " + err);
 			}
 			}
@@ -1262,13 +1286,8 @@ public class LauncherMain {
 			if (path.startsWith("/"))
 				path = path.substring(1);
 
-			api = hosts.get("api").getAsString();
-			if (!api.endsWith("/"))
-				api += "/";
-			api += "data/";
-
 			// Download mod
-			conn = (HttpURLConnection) new URL(api + path).openConnection();
+			conn = (HttpURLConnection) new URL(api + "data/" + path).openConnection();
 			conn.addRequestProperty("Authorization", "Bearer " + authToken);
 			File outputFile = new File(output);
 			outputFile.getParentFile().mkdirs();

@@ -173,6 +173,7 @@ namespace feraltweaks
             ApplyPatch(typeof(DragonSparkSkeletonPatch));
             ApplyPatch(typeof(NpcHeadRotationPatch));
             ApplyPatch(typeof(PlayerJoinNotifPatch));
+            ApplyPatch(typeof(NotificationPatches));
         }
 
         public static void ApplyPatch(Type type)

@@ -669,7 +669,7 @@ public class LauncherUpdaterMain {
 			} catch (InvocationTargetException | InterruptedException e) {
 			}
 		}
-		copyDir(new File(os == 1 ? "win" : "linux"),
+		copyDir(new File(os == 1 ? "win" : (os == 0 ? "osx" : "linux")),
 				new File(launcherOut, os == 1 ? "win" : (os == 0 ? "Contents/Resources/osx" : "linux")), progressBar);
 		try {
 			SwingUtilities.invokeAndWait(() -> {

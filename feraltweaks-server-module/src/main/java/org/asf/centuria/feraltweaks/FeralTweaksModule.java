@@ -22,6 +22,7 @@ import org.asf.centuria.feraltweaks.networking.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
 import org.asf.centuria.modules.eventbus.EventBus;
 import org.asf.centuria.modules.eventbus.EventListener;
+import org.asf.centuria.modules.events.accounts.MiscModerationEvent;
 import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
 import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
@@ -166,5 +167,15 @@ public class FeralTweaksModule implements ICenturiaModule {
 		event.registerPacket(new FeralTweaksPostInitPacket());
 		event.registerPacket(new TypingStatusPacket());
 		event.registerPacket(new SubscribeTypingStatusPacket());
+	}
+
+	@EventListener
+	public void miscModeration(MiscModerationEvent event) {
+		// Check type
+		if (event.getModerationEventID() == "permissions.update" && event.getTarget() != null)
+		{
+			// Update target's display
+			PlayerNameManager.updatePlayer(event.getTarget());
+		}
 	}
 }

@@ -52,7 +52,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static long timeLastTypingStatusCheck;
         private static string lastChatInputText;
 
-        private static long timeLastTypingStatusTick;
         private static string typingStatusString = ".";
 
         [HarmonyPrefix]
@@ -348,29 +347,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(UI_Window_Chat), "OnTabSelected")]
-        public static void OnTabSelected(ref UI_Window_Chat __instance, int inTabIndex)
-        {
-            // Check tab
-            if (inTabIndex == 0)
-            { 
-                // Mark read
-                ChatConversationData room = ChatManager.instance._roomConversation;
-                if (room != null)
-                {
-                    // Remove unreads
-                    if (unreadMessagesPerConversation.ContainsKey(room.id))
-                        unreadMessagesPerConversation.Remove(room.id);
-                    if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Contains(room.id))
-                        ChatManager.instance._unreadConversations.Remove(room.id);
-
-                    // Refresh
-                    CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(room.id, false, ChatManager.instance._unreadConversations != null ? ChatManager.instance._unreadConversations.Count : 0));
-                }                
-            }
-        }
-
-        [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_Window_Chat), "RecalculateLayouts")]
         public static void RecalculateLayouts(ref UI_Window_Chat __instance)
         {
@@ -400,17 +376,27 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(ChatManager.instance._roomConversation.id, 1);
                     }
                 }
-                if (ChatManager.instance._cachedConversations != null)
+                if (ChatManager.instance._unreadConversations != null)
                 {
-                    foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                    foreach (string convoI in ChatManager.instance._unreadConversations)
                     {
-                        if (!convo.IsRoomChat && ChatManager.instance._unreadConversations.Contains(convo.id))
+                        bool isRoom = false;
+                        if (ChatManager.instance._cachedConversations != null)
                         {
-                            inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(convo.id, 1);
+                            foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                            {
+                                if (convo.IsRoomChat && convo.id == convoI)
+                                {
+                                    isRoom = true;
+                                    break;
+                                }
+                            }
                         }
+                        if (!isRoom)
+                            inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(convoI, 1);
                     }
                 }
-            } 
+            }
             else if (obj.name == "Tab_Private" || __instance.gameObject.name == "NotificationCount_GC")
             {
                 if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
@@ -1077,9 +1063,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 ChatReadyForConnFixer = false;
             }
 
-            // Status tick
-            if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timeLastTypingStatusTick >= 160)
+            // Check time since last typing status list update
+            if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timeLastTypingStatusCheck >= 200)
             {
+                // Status tick
                 switch(typingStatusString)
                 {
                     case ".":
@@ -1092,12 +1079,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         typingStatusString = ".";
                         break;
                 }
-                timeLastTypingStatusTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            }
 
-            // Check time since last typing status list update
-            if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timeLastTypingStatusCheck >= 200)
-            {
                 // Chat input box update handling
                 // Check if the chat window is open
                 GameObject root = GameObject.Find("CanvasRoot");
@@ -1117,8 +1099,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             if (index == 0)
                             {
                                 // Room chat
-                                panel = chat._publicChatPanel;
-                                convoId = chat._publicChatPanel._conversationData.id;
+                                if (chat._publicChatPanel != null && chat._publicChatPanel._conversationData != null)
+                                {
+                                    panel = chat._publicChatPanel;
+                                    convoId = chat._publicChatPanel._conversationData.id;
+                                }
                             }
                             else
                             {
@@ -1170,7 +1155,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         foreach (string userID in statuses[convoID].Keys)
                         {
                             // Verify
-                            if (statuses[convoID][userID] + 10000 < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
+                            if (statuses[convoID][userID] + 5000 < DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
                             {
                                 // Remove
                                 lock (typingStatuses)
@@ -1213,8 +1198,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (index == 0)
                     {
                         // Room chat
-                        panel = chat._publicChatPanel;
-                        convoId = chat._publicChatPanel._conversationData.id;
+                        if (chat._publicChatPanel != null && chat._publicChatPanel._conversationData != null)
+                        {
+                            panel = chat._publicChatPanel;
+                            convoId = chat._publicChatPanel._conversationData.id;
+                        }
                     }
                     else
                     {
@@ -1229,7 +1217,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                     // Check result
                     if (panel != null)
-                    {   
+                    {
                         // Get typing status
                         GameObject typingStatusObj = GetChild(panel.gameObject, "Typing_Status");
                         RectTransform transChatPanel = panel._scrollRect.gameObject.transform.Cast<RectTransform>();
@@ -1305,7 +1293,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 {
                                     // Two to four players
                                     msg = "";
-                                    for (int i = 0; i < typingPlayers.Count  - 1; i++)
+                                    for (int i = 0; i < typingPlayers.Count - 1; i++)
                                     {
                                         if (msg != "")
                                             msg += ", ";
@@ -1314,26 +1302,35 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     msg += " and " + typingPlayers[typingPlayers.Count - 1] + " are thinking" + typingStatusString;
                                 }
 
-                                // Assign UI text
-                                bool wasAtBottom = panel.IsAtBottom;
-                                typingStatusLbl.text = msg;
-                                typingStatusLbl.ForceMeshUpdate();
-
-                                // Calculate height
-                                float height = typingStatusLbl.textBounds.size.y;
-                                height += 7;
-                                transChatPanel.offsetMin = new Vector2(0.0001f, height);
-                                
-                                // Scroll if needed
-                                if (wasAtBottom)
+                                // Assign UI text if needed
+                                if (typingStatusLbl.text != msg)
                                 {
-                                    // Schedule
-                                    long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    bool wasAtBottom = panel.IsAtBottom;
+                                    typingStatusLbl.text = msg;
+                                    typingStatusLbl.ForceMeshUpdate();
+
+                                    // Calculate height
+                                    float height = typingStatusLbl.textBounds.size.y;
+                                    height += 7;
+
+                                    // Verify how much off it is
+                                    if (transChatPanel.offsetMin.y < height - 0.01f || transChatPanel.offsetMin.y > height + 0.01f)
                                     {
-                                        // Scroll
-                                        panel.SnapToBottom(true);
-                                    });
+                                        // Adjust size
+                                        transChatPanel.offsetMin = new Vector2(0.0001f, height);
+
+                                        // Scroll if needed
+                                        if (wasAtBottom)
+                                        {
+                                            // Schedule
+                                            long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                            {
+                                                // Scroll
+                                                panel.SnapToBottom(true);
+                                            });
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1383,7 +1380,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
 
                 // Remove messages past max
-                for (int i = currentMessageCount + 1; i > __instance._maxLines && __instance._currentChats.Count > 0; i--)
+                for (int i = currentMessageCount + 1; i > __instance._maxLines && __instance._currentChats.Count > 0 && __instance._currentChats.Count > 3; i--)
                 {
                     // Remove
                     __instance._currentChats.RemoveAt(0);
@@ -1393,9 +1390,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 __instance._currentChats.Add(inChatEntry.DisplayData.DisplayMessage);
 
                 // Create message
+                __instance._chatStringBuilder.AppendLine("</noparse><size=10> </size><noparse>"); // Spacing between messages
                 foreach (string message in __instance._currentChats)
                 {
                     __instance._chatStringBuilder.AppendLine(message);
+                    __instance._chatStringBuilder.AppendLine("</noparse><size=6> </size><noparse>"); // Spacing between messages
                 }
 
                 // Show message
@@ -1571,8 +1570,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 trans.pivot = new Vector2(1, 1);
                 trans.anchorMax = new Vector2(1, 0);
                 trans.anchorMin = new Vector2(0, 0);
-                trans.offsetMax = new Vector2(-20, 20);
+                trans.offsetMax = new Vector2(0, 0);
                 trans.offsetMin = new Vector2(5, 2);
+                trans.localScale = new Vector3(1, 1, 1);
+                trans.anchoredPosition3D = new Vector3(trans.anchoredPosition3D.x, trans.anchoredPosition3D.y, 0);
 
                 // Create label
                 WWTextMeshProUGUI label = typingStatus.AddComponent<WWTextMeshProUGUI>();
@@ -1583,11 +1584,25 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Update transform of panel
                 RectTransform transChatPanel = __instance._scrollRect.gameObject.transform.Cast<RectTransform>();
-                transChatPanel.pivot = new Vector2(0.5f, 0.5f);
-                transChatPanel.anchorMax = new Vector2(1, 1);
-                transChatPanel.anchorMin = new Vector2(0, 0);
-                transChatPanel.offsetMax = new Vector2(0.0001f, 0);
                 transChatPanel.offsetMin = new Vector2(0.0001f, 0);
+            }
+
+            // Check tab
+            if (__instance.TryCast<UI_ChatPanel_Room>() != null)
+            { 
+                // Mark read
+                ChatConversationData room = ChatManager.instance._roomConversation;
+                if (room != null)
+                {
+                    // Remove unreads
+                    if (unreadMessagesPerConversation.ContainsKey(room.id))
+                        unreadMessagesPerConversation.Remove(room.id);
+                    if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Contains(room.id))
+                        ChatManager.instance._unreadConversations.Remove(room.id);
+
+                    // Refresh
+                    CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(room.id, false, ChatManager.instance._unreadConversations != null ? ChatManager.instance._unreadConversations.Count : 0));
+                }                
             }
         }
 

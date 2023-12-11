@@ -6,9 +6,14 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Base64;
+
 import org.asf.centuria.Centuria;
+import org.asf.centuria.accounts.AccountManager;
+import org.asf.centuria.accounts.CenturiaAccount;
 import org.asf.centuria.feraltweaks.FeralTweaksModule;
 import org.asf.centuria.modules.ModuleManager;
+import org.asf.centuria.networking.gameserver.GameServer;
 import org.asf.connective.NetworkedConnectiveHttpServer;
 import org.asf.connective.RemoteClient;
 import org.asf.connective.TlsSecuredHttpServer;
@@ -16,6 +21,7 @@ import org.asf.connective.processors.HttpRequestProcessor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -53,13 +59,345 @@ public class DataProcessor extends HttpRequestProcessor {
 				this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
 				return;
 			}
+
+			// Verify security
+
+			// Load account
+			CenturiaAccount account = null;
+			if (getRequest().hasHeader("Authorization")) {
+				// Parse JWT payload
+				String token = this.getHeader("Authorization").substring("Bearer ".length());
+				if (!token.isBlank()) {
+					// Verify signature
+					String verifyD = token.split("\\.")[0] + "." + token.split("\\.")[1];
+					String sig = token.split("\\.")[2];
+					if (!Centuria.verify(verifyD.getBytes("UTF-8"), Base64.getUrlDecoder().decode(sig))) {
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Verify expiry
+					JsonObject jwtPl = JsonParser
+							.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
+							.getAsJsonObject();
+					if (jwtPl.has("exp") && jwtPl.get("exp").getAsLong() >= System.currentTimeMillis() / 1000) {
+						JsonObject payload = JsonParser
+								.parseString(new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]), "UTF-8"))
+								.getAsJsonObject();
+
+						// Find account
+						String accId = payload.get("uuid").getAsString();
+						account = AccountManager.getInstance().getAccount(accId);
+					}
+				}
+			}
+
+			// First, check if modding requires to be enabled per account
+			if (!module.enableByDefault) {
+				// Require authorization
+				if (account == null) {
+					this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+					this.setResponseStatus(401, "Unauthorized");
+					return;
+				}
+
+				// Check enabled
+				if (!account.getSaveSharedInventory().containsItem("feraltweaks")
+						&& !account.getSaveSpecificInventory().containsItem("feraltweaks")) {
+					// Error
+					this.setResponseContent("text/json", "{\"error\":\"feraltweaks_not_enabled\"}");
+					this.setResponseStatus(401, "Unauthorized");
+					return;
+				}
+			}
+
+			// Find secure root
+			File moduleFileRoot = new File(module.ftDataPath);
+			File secureRoot = reqFile.getParentFile();
+			while (true) {
+				// Check if at module root
+				if (secureRoot.getCanonicalPath().equals(moduleFileRoot.getCanonicalPath()))
+					break;
+
+				// Check file
+				if (new File(secureRoot, "ftserverdocsecurity.json").exists())
+					break;
+
+				// Get parent
+				secureRoot = secureRoot.getParentFile();
+			}
+
+			// Check security
+			if (new File(secureRoot, "ftserverdocsecurity.json").exists()) {
+				// Make sure its not a request for this document
+				if (reqFile.getCanonicalPath()
+						.equals(new File(secureRoot, "ftserverdocsecurity.json").getCanonicalPath())) {
+					// 404 it
+					this.setResponseStatus(404, "Not found");
+					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
+					return;
+				}
+
+				// Read
+				JsonObject security = JsonParser
+						.parseString(Files.readString(new File(secureRoot, "ftserverdocsecurity.json").toPath()))
+						.getAsJsonObject();
+
+				// Whitelist
+				if (security.has("whitelistedUsers")) {
+					JsonArray whitelist = security.get("whitelistedUsers").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Verify whitelist
+					boolean found = false;
+					for (JsonElement ele : whitelist) {
+						if (ele.getAsString().equals(account.getAccountID())) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("whitelistErrorMessage")
+										? security.get("whitelistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Blacklist
+				if (security.has("blacklistedUsers")) {
+					JsonArray blacklist = security.get("blacklistedUsers").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Verify blacklist
+					boolean found = false;
+					for (JsonElement ele : blacklist) {
+						if (ele.getAsString().equals(account.getAccountID())) {
+							found = true;
+							break;
+						}
+					}
+					if (found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("blacklistErrorMessage")
+										? security.get("blacklistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Permission whitelist
+				if (security.has("allowedPermissionLevels")) {
+					JsonArray permissionLevelsWhitelist = security.get("allowedPermissionLevels").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Get permission level
+					String permLevel = "member";
+					if (account.getSaveSharedInventory().containsItem("permissions")) {
+						permLevel = account.getSaveSharedInventory().getItem("permissions").getAsJsonObject()
+								.get("permissionLevel").getAsString();
+					}
+
+					// Verify permission level
+					boolean found = false;
+					for (JsonElement ele : permissionLevelsWhitelist) {
+						if (ele.getAsString().equals(permLevel)) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("permissionWhitelistErrorMessage")
+										? security.get("permissionWhitelistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Permission blacklist
+				if (security.has("deniedPermissionLevels")) {
+					JsonArray permissionLevelsBlacklist = security.get("deniedPermissionLevels").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Get permission level
+					String permLevel = "member";
+					if (account.getSaveSharedInventory().containsItem("permissions")) {
+						permLevel = account.getSaveSharedInventory().getItem("permissions").getAsJsonObject()
+								.get("permissionLevel").getAsString();
+					}
+
+					// Verify permission level
+					boolean found = false;
+					for (JsonElement ele : permissionLevelsBlacklist) {
+						if (ele.getAsString().equals(permLevel)) {
+							found = true;
+							break;
+						}
+					}
+					if (found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("permissionBlacklistErrorMessage")
+										? security.get("permissionBlacklistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Permission level
+				if (security.has("requiredPermissionLevel")) {
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Get permission level
+					String permLevel = "member";
+					if (account.getSaveSharedInventory().containsItem("permissions")) {
+						permLevel = account.getSaveSharedInventory().getItem("permissions").getAsJsonObject()
+								.get("permissionLevel").getAsString();
+					}
+
+					// Verify permission level
+					if (!GameServer.hasPerm(permLevel, security.get("requiredPermissionLevel").getAsString())) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("permissionLevelErrorMessage")
+										? security.get("permissionLevelErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Tag whitelist
+				if (security.has("allowedTags")) {
+					JsonArray tagWhitelist = security.get("allowedTags").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Verify tags
+					boolean found = false;
+					for (JsonElement ele : tagWhitelist) {
+						if (account.getSaveSharedInventory().containsItem("tag-" + ele.getAsString())) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("tagWhitelistErrorMessage")
+										? security.get("tagWhitelistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+
+				// Permission blacklist
+				if (security.has("deniedTags")) {
+					JsonArray tagBlacklist = security.get("deniedTags").getAsJsonArray();
+					if (account == null) {
+						// Authorization missing
+						this.setResponseContent("text/json", "{\"error\":\"server_requires_authorization\"}");
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+
+					// Verify tags
+					boolean found = false;
+					for (JsonElement ele : tagBlacklist) {
+						if (account.getSaveSharedInventory().containsItem("tag-" + ele.getAsString())) {
+							found = true;
+							break;
+						}
+					}
+					if (found) {
+						// Authorization missing
+						JsonObject res = new JsonObject();
+						res.addProperty("error", "not_authorized");
+						res.addProperty("errorMessage",
+								security.has("tagBlacklistErrorMessage")
+										? security.get("tagBlacklistErrorMessage").getAsString()
+										: "You are not authorized to use this launcher.\n\nUnable to start the game.");
+						this.setResponseContent("text/json", res.toString());
+						this.setResponseStatus(401, "Unauthorized");
+						return;
+					}
+				}
+			}
+
+			// Check test endpoint
+			if (path.endsWith("/clientmods/testendpoint")) {
+				this.setResponseStatus(200, "OK");
+				this.setResponseContent("text/json", "{\"status\":\"ok\"}");
+				return;
+			}
+
+			// Check result
 			if ((!reqFile.exists() || (!reqFile.getParentFile().getCanonicalPath()
 					.equalsIgnoreCase(new File(module.ftDataPath).getCanonicalPath())
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
 							.startsWith(new File(module.ftDataPath).getCanonicalPath().toLowerCase() + File.separator)))
-					&& !path.equals("/feraltweaks/chartpatches/index.json")
-					&& !path.equals("/feraltweaks/settings.props") && !path.equals("/clientmods/assemblies/index.json")
-					&& !path.equals("/clientmods/assets/index.json") && !path.equals("/server.json")) {
+					&& !path.endsWith("/feraltweaks/chartpatches/index.json")
+					&& !path.endsWith("/feraltweaks/settings.props")
+					&& !path.endsWith("/clientmods/assemblies/index.json")
+					&& !path.endsWith("/clientmods/assets/index.json")
+					&& !path.equals("/server.json")) {
 
 				// Check if its a index json request of a different folder
 				if (path.endsWith("/index.json")) {
@@ -81,7 +419,13 @@ public class DataProcessor extends HttpRequestProcessor {
 			}
 
 			// Check feraltweaks requests
-			if (path.equals("/feraltweaks/settings.props")) {
+			if (path.endsWith("/feraltweaks/settings.props")) {
+				if (!reqFile.getParentFile().exists()) {
+					this.setResponseStatus(404, "Not found");
+					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
+					return;
+				}
+
 				// Append to the settings properties file
 				String res = "";
 				if (reqFile.exists())
@@ -98,24 +442,45 @@ public class DataProcessor extends HttpRequestProcessor {
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/plain", res);
 				return;
-			} else if (path.equals("/feraltweaks/chartpatches/index.json")) {
+			} else if (path.endsWith("/feraltweaks/chartpatches/index.json")) {
+				if (!reqFile.getParentFile().exists()) {
+					this.setResponseStatus(404, "Not found");
+					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
+					return;
+				}
+
 				// Index json
 				JsonArray res = new JsonArray();
-				scan(new File(module.ftDataPath, "feraltweaks/chartpatches"), res, "/feraltweaks/chartpatches/");
+				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+						path.substring(0, path.lastIndexOf("/index.json")) + "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
-			} else if (path.equals("/clientmods/assemblies/index.json")) {
+			} else if (path.endsWith("/clientmods/assemblies/index.json")) {
+				if (!reqFile.getParentFile().exists()) {
+					this.setResponseStatus(404, "Not found");
+					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
+					return;
+				}
+
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftDataPath, "clientmods/assemblies"), res, "/clientmods/assemblies/", "/");
+				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+						path.substring(0, path.lastIndexOf("/index.json")) + "/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
-			} else if (path.equals("/clientmods/assets/index.json")) {
+			} else if (path.endsWith("/clientmods/assets/index.json")) {
+				if (!reqFile.getParentFile().exists()) {
+					this.setResponseStatus(404, "Not found");
+					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
+					return;
+				}
+
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftDataPath, "clientmods/assets"), res, "/clientmods/assets/", "/");
+				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+						path.substring(0, path.lastIndexOf("/index.json")) + "/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
@@ -229,18 +594,20 @@ public class DataProcessor extends HttpRequestProcessor {
 
 	private void scan(File source, JsonArray res, String prefix) {
 		for (File f : source.listFiles()) {
-			if (f.isDirectory())
+			if (f.isDirectory()) {
+				// Scan
 				scan(f, res, prefix + f.getName() + "/");
-			else
+			} else
 				res.add(prefix + f.getName());
 		}
 	}
 
 	private void scan(File source, JsonObject res, String prefix, String prefixOut) {
 		for (File f : source.listFiles()) {
-			if (f.isDirectory())
+			if (f.isDirectory()) {
+				// Scan
 				scan(f, res, prefix + f.getName() + "/", prefixOut + f.getName() + "/");
-			else
+			} else
 				res.addProperty(prefix + f.getName(), prefixOut + f.getName());
 		}
 	}
@@ -249,5 +616,4 @@ public class DataProcessor extends HttpRequestProcessor {
 	public boolean supportsChildPaths() {
 		return true;
 	}
-
 }

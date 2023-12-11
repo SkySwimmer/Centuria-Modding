@@ -23,6 +23,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             private bool wantsToDespawn;
             private bool blipWasEnabledGlobal;
             private WorldObjectInfoMessage worldObjectInfo;
+            public bool expectFirstMove = false;
             private bool doCallOriginal;
             public bool busy;
             private bool expectBuildComplete;
@@ -201,6 +202,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     // Rebuild avi
                     expectBuildComplete = true;
                     doCallOriginal = true;
+                    expectFirstMove = true;
+                    this.worldObjectInfo = worldObjectInfo;
                     avatar.OnObjectInfo(worldObjectInfo);
                     doCallOriginal = false;
                 }
@@ -233,6 +236,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     return false;
                 if (doDelete)
                     despawned = true;
+                expectFirstMove = false;
                 spawned = false;
                 busy = true;
 
@@ -381,7 +385,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     }
 
                     // Check type
-                    if (teleporter != null && message.Node.nodeType == WorldObjectMoverNodeType.InitPosition)
+                    if (teleporter != null && message.Node.nodeType == WorldObjectMoverNodeType.InitPosition && !teleporter.expectFirstMove)
                     {
                         // Teleport to destination
 
@@ -403,6 +407,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         // Update
                         teleporter.posOriginal = message.Node.position;
                         teleporter.rotOriginal = message.Node.rotation;
+                        teleporter.expectFirstMove = false;
                     }
                 }
             }
@@ -410,13 +415,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(WorldObject), "OnObjectInfo")]
-        public static bool OnObjectInfo(ref WorldObject __instance, WorldObjectInfoMessage inInfoMessage)
+        [HarmonyPatch(typeof(Avatar_Network), "OnObjectInfo")]
+        public static bool OnObjectInfo(ref Avatar_Network __instance, WorldObjectInfoMessage inInfoMessage)
         {
             if (inInfoMessage.DefId != "852")
-                return true;
-            Avatar_Network aviNet = __instance.TryCast<Avatar_Network>();
-            if (aviNet == null)
                 return true;
 
             // Find avatar teleporter
@@ -426,7 +428,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 // Create
                 teleporter = __instance.gameObject.AddComponent<FT_AvatarTeleportAnimator>();
-                teleporter.avatar = aviNet;
+                teleporter.avatar = __instance;
                 teleporter.posOriginal = inInfoMessage.LastMove.position;
                 teleporter.rotOriginal = Quaternion.Euler(new Quaternion(inInfoMessage.LastMove.rotation.x, inInfoMessage.LastMove.rotation.y, inInfoMessage.LastMove.rotation.z, inInfoMessage.LastMove.rotation.w + 180).ToEulerAngles() + new Vector3(0, 180, 0));
             }

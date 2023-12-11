@@ -32,8 +32,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             FT_JoinNotifPatchVars vars = inMessage.Avatar.gameObject.GetComponent<FT_JoinNotifPatchVars>();
             if (vars == null)
                 vars = inMessage.Avatar.gameObject.AddComponent<FT_JoinNotifPatchVars>();
-            if (vars.JoinNotifAttempted)
+            if (vars.JoinNotifAttempted || PlayerLoginLogoutAnimsPatch.IsJoiningWorld)
             {
+                // Mark as attempted in case it isnt yet (like when joining world)
+                vars.JoinNotifAttempted = true;
+
                 // Deny
                 return false;
             }

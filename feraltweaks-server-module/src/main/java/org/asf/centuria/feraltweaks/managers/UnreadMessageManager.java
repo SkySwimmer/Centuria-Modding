@@ -43,6 +43,30 @@ public class UnreadMessageManager {
 	 * this method will mark the conversation as unread
 	 * 
 	 * @param conversationId Conversation where a new message was received
+	 * @param receiver       Account instance that received the message
+	 */
+	public static void receivedMessageInConverstaion(String conversationId,
+			CenturiaAccount receiver) {
+		// Check if online
+		if (receiver.getOnlinePlayerInstance() == null) {
+			// Add to unread history
+
+			// Load unreads
+			JsonObject unreads = loadUnreads(receiver);
+
+			// Update
+			unreads.addProperty(conversationId, unreads.has(conversationId) ? unreads.get(conversationId).getAsInt() + 1 : 1);
+
+			// Save
+			receiver.getSaveSharedInventory().setItem("unreadconversations", unreads);
+		}
+	}
+
+	/**
+	 * Called to handle unreads, when a message is received and a player is offline,
+	 * this method will mark the conversation as unread
+	 * 
+	 * @param conversationId Conversation where a new message was received
 	 * @param sender         Account instance that sent the message
 	 * @param receiver       Account instance that received the message
 	 */

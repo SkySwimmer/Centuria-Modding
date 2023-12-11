@@ -76,7 +76,21 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool CoreReset()
         {
             if (NetworkManager.instance == null || NetworkManager.instance._serverConnection == null || !NetworkManager.instance._serverConnection.IsConnected)
+            {
+                // Reset patches
+                ChatPatches.ChatPostInit = false;
+                ChatPatches.ChatHandshakeDone = false;
+                ChatPatches.ChatInitializing = false;
+                lock (ChatPatches.typingStatusDisplayNames)
+                {
+                    ChatPatches.typingStatusDisplayNames.Clear();
+                }
+                lock (ChatPatches.typingStatuses)
+                {
+                    ChatPatches.typingStatuses.Clear();
+                }
                 return true;
+            }
             if (loggingOut)
                 return false;
             CoreReset(SplashError.NONE, ErrorCode.None);

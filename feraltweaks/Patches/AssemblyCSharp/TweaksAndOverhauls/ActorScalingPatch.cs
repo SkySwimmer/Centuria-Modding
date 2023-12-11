@@ -172,7 +172,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 // Get scale
                 float scaleF = avatar.BodyScale;
-                __result = new Vector2(__result.x * scaleF, __result.y * scaleF);
+                if (scaleF > 1)
+                    __result = new Vector2(__result.x * scaleF, __result.y * scaleF);
             }
         }
 
@@ -185,7 +186,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 // Get scale
                 float scaleF = avatar.BodyScale;
-                __result = new Vector2(__result.x * scaleF, __result.y * scaleF);
+                if (scaleF > 1)
+                    __result = new Vector2(__result.x * scaleF, __result.y * scaleF);
             }
         }
 
