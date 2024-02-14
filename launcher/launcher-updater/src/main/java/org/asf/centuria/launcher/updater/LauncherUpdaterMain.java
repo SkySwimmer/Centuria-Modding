@@ -785,7 +785,7 @@ public class LauncherUpdaterMain {
 				System.exit(proc.exitValue());
 			} else {
 				// Start OSX launcher
-				ProcessBuilder builder = new ProcessBuilder("open", "-n", launcherOut.getAbsolutePath());
+				ProcessBuilder builder = new ProcessBuilder("open", "-n", new File("/Applications/" + srvName + ".app").getAbsolutePath());
 				builder.inheritIO();
 				Process proc = builder.start();
 				try {

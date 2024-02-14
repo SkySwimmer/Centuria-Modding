@@ -52,7 +52,7 @@ public class TypingStatusPacket extends AbstractChatPacket {
 			// Broadcast
 			for (ChatClient cl : client.getServer().getClients()) {
 				// Check supported
-				if (cl.getObject(TypingStatusSupported.class) != null) {
+				if (cl.getObject(TypingStatusSupported.class) != null && cl.isInRoom(conversationId)) {
 					// Send
 					cl.sendPacket(this);
 				}

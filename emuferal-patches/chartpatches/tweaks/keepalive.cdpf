@@ -1,0 +1,33 @@
+setchart GlobalChart
+
+cleardef 70
+patch 70
+	{
+		"templateClass": "GlobalTemplate",
+		"templateFormatHash": "d92f06f1add7ee72be3bec2451e9a13b",
+		"components": [
+			{
+				"componentClass": "GlobalDefComponent",
+				"componentJSON": {
+					"intValue": 3600
+				}
+			}
+		]
+	}
+endpatch
+
+cleardef 71
+patch 71
+	{
+		"templateClass": "GlobalTemplate",
+		"templateFormatHash": "d92f06f1add7ee72be3bec2451e9a13b",
+		"components": [
+			{
+				"componentClass": "GlobalDefComponent",
+				"componentJSON": {
+					"intValue": 4500
+				}
+			}
+		]
+	}
+endpatch

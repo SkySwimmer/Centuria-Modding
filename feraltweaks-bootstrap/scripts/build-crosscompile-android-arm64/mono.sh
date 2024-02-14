@@ -12,7 +12,7 @@ cd build/work
 
 # Properties
 monorepo="https://github.com/dotnet/runtime"
-monobranch="release/6.0"
+monobranch="release/8.0"
 
 # Download .NET runtime
 echo Cloning .NET runtime...

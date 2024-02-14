@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net60</TargetFramework>
+    <TargetFramework>net80</TargetFramework>
     <OutputPath>run\FeralTweaks</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -17,6 +17,14 @@
     <Compile Remove="build\**" />
     <EmbeddedResource Remove="build\**" />
     <None Remove="build\**" />
+    <Content Remove="run\**" />
+    <Compile Remove="run\**" />
+    <EmbeddedResource Remove="run\**" />
+    <None Remove="run\**" />
+    <Content Remove="run-backup\**" />
+    <Compile Remove="run-backup\**" />
+    <EmbeddedResource Remove="run-backup\**" />
+    <None Remove="run-backup\**" />
   </ItemGroup>
   
   <ItemGroup>
@@ -29,11 +37,11 @@
       <Private>false</Private>
     </Reference>
     <PackageReference Include="AssetRipper.VersionUtilities" Version="1.3.1" />
-    <PackageReference Include="HarmonyX" Version="2.10.1" />
-    <PackageReference Include="Il2CppInterop.Common" Version="1.4.3" />
-    <PackageReference Include="Il2CppInterop.Generator" Version="1.4.3" />
-    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.3" />
-    <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.4.3" />
+    <PackageReference Include="HarmonyX" Version="2.12.0" />
+    <PackageReference Include="Il2CppInterop.Common" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.Generator" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.4.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <!-- <Reference Include="Il2CppInterop.Runtime">
       <HintPath>Libaries\Il2CppInterop.Runtime.dll</HintPath>
@@ -43,14 +51,6 @@
       <HintPath>Libaries\Il2CppInterop.HarmonySupport.dll</HintPath>
       <Private>true</Private>
     </Reference> -->
-    <Reference Include="MonoMod.RuntimeDetour">
-      <HintPath>Libaries\MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="MonoMod.Utils">
-      <HintPath>Libaries\MonoMod.Utils.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -61,14 +61,6 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	<Copy
-		SourceFiles="Libraries\MonoMod.Utils.dll"
-		DestinationFolder="run\FeralTweaks"
-	/>
-	<Copy
-		SourceFiles="Libraries\MonoMod.RuntimeDetour.dll"
-		DestinationFolder="run\FeralTweaks"
-	/>
   </Target>
   
 </Project>

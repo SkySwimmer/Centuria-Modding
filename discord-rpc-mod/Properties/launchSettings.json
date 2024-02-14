@@ -3,7 +3,7 @@
     "Fer.al Discord RPC": {
       "commandName": "Executable",
       "executablePath": ".\\Fer.al.exe",
-      "commandLineArgs": "--debug-log --load-mod-from ../../discord-rpc-mod/assets --debug-mod-assemblies:discordrpc=../../discord-rpc-mod/bin/Debug/net6.0 --load-mod-from ../../feraltweaks/run/FeralTweaks/mods/feraltweaks --show-console",
+      "commandLineArgs": "--debug-log --load-mod-from ../../discord-rpc-mod/assets --debug-mod-assemblies:discordrpc=../../discord-rpc-mod/bin/Debug/net8.0 --load-mod-from ../../feraltweaks/run/FeralTweaks/mods/feraltweaks --show-console",
       "workingDirectory": "..\\feraltweaks-bootstrap\\run"
     }
   }

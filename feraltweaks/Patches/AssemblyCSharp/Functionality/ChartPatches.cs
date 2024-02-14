@@ -360,6 +360,138 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         }
                 }
                 comp.list._defs = BaseDef.GetDefs(comp.list._defIDs, false);
+            },
+            
+            // ActorClassDefComponent merger
+            ["ActorClassDefComponent"] = (def, component, patch) =>
+            {
+                ActorClassDefComponent comp = component.Cast<ActorClassDefComponent>();
+
+                // Merger
+                void MergeList(MergerJsons.ListDefComponentMerger data, List<string> defs)
+                {
+                    if (data.mode == null)
+                    {
+                        FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
+                        return;
+                    }
+                    data.mode = data.mode.ToLower();
+                    if (data.mode != "insertbefore" && data.mode != "add" && data.mode != "replace" && data.mode != "remove")
+                    {
+                        FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Invalid merger field: mode, expected either INSERTBEFORE, ADD, REMOVE or REPLACE");
+                        return;
+                    }
+                    if (data.defIDs == null)
+                    {
+                        FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Missing merger field: defIDs");
+                        return;
+                    }
+
+                    // Handle
+                    switch (data.mode)
+                    {
+
+                        // Insert
+                        case "insertbefore":
+                            {
+                                string[] oldDefs = defs.ToArray();
+                                defs.Clear();
+                                foreach (string id in data.defIDs)
+                                {
+                                    defs.Add(id);
+                                }
+                                foreach (string id in oldDefs)
+                                    defs.Add(id);
+                                break;
+                            }
+
+                        // Add
+                        case "add":
+                            {
+                                foreach (string id in data.defIDs)
+                                {
+                                    defs.Add(id);
+                                }
+                                break;
+                            }
+
+                        // Remove
+                        case "remove":
+                            {
+                                foreach (string id in data.defIDs)
+                                {
+                                    defs.Remove(id);
+                                }
+                                break;
+                            }
+
+                        // Remove
+                        case "replace":
+                            {
+                                defs.Clear();
+                                foreach (string id in data.defIDs)
+                                {
+                                    defs.Add(id);
+                                }
+                                break;
+                            }
+                    }
+                }
+
+                // Parse
+                MergerJsons.ActorClassDefComponentMerger data = JsonConvert.DeserializeObject<MergerJsons.ActorClassDefComponentMerger>(patch);
+                if (data.overrideScale != -1)
+                    comp.scale = data.overrideScale;
+                if (data.overrideAvatarLookDefId != null)
+                    comp.avatarLookDefId = data.overrideAvatarLookDefId;
+                if (data.bodyPartDefIDs != null)
+                {
+                    // Merge
+                    if (comp.bodyPartDefIDs == null)
+                        comp.bodyPartDefIDs = new List<string>();
+                    MergeList(data.bodyPartDefIDs, comp.bodyPartDefIDs);
+                }
+                if (data.bodyPartNodeDefIDs != null)
+                {
+                    // Merge
+                    if (comp.bodyPartNodeDefIDs == null)
+                        comp.bodyPartNodeDefIDs = new List<string>();
+                    MergeList(data.bodyPartNodeDefIDs, comp.bodyPartNodeDefIDs);
+                } 
+                if (data.eyePupilDefs != null)
+                {
+                    // Merge
+                    if (comp.eyePupilDefs == null)
+                        comp.eyePupilDefs = new ChartDefList();
+                    if (comp.eyePupilDefs._defIDs == null)
+                        comp.eyePupilDefs._defIDs = new List<string>();
+                    MergeList(data.eyePupilDefs, comp.eyePupilDefs._defIDs);
+                    comp.eyePupilDefs._defs = BaseDef.GetDefs(comp.eyePupilDefs._defIDs, false);
+                }
+                if (data.eyeShapeDefs != null)
+                {
+                    // Merge
+                    if (comp.eyeShapeDefs == null)
+                        comp.eyeShapeDefs = new ChartDefList();
+                    if (comp.eyeShapeDefs._defIDs == null)
+                        comp.eyeShapeDefs._defIDs = new List<string>();
+                    MergeList(data.eyeShapeDefs, comp.eyeShapeDefs._defIDs);
+                    comp.eyeShapeDefs._defs = BaseDef.GetDefs(comp.eyeShapeDefs._defIDs, false);
+                }
+                if (data.npcClothingItemDefIDs != null)
+                {
+                    // Merge
+                    if (comp.npcClothingItemDefIDs == null)
+                        comp.npcClothingItemDefIDs = new List<string>();
+                    MergeList(data.npcClothingItemDefIDs, comp.npcClothingItemDefIDs);
+                }
+                if (data.scaleGroupDefIDs != null)
+                {
+                    // Merge
+                    if (comp.scaleGroupDefIDs == null)
+                        comp.scaleGroupDefIDs = new List<string>();
+                    MergeList(data.scaleGroupDefIDs, comp.scaleGroupDefIDs);
+                }
             }
         };
 
@@ -1341,6 +1473,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 public string mode;
                 public string[] defIDs;
+            }
+
+            public class ActorClassDefComponentMerger
+            {
+                public float overrideScale = -1;
+                public ListDefComponentMerger bodyPartDefIDs = null;
+                public ListDefComponentMerger bodyPartNodeDefIDs = null;
+                public ListDefComponentMerger scaleGroupDefIDs = null;
+                public ListDefComponentMerger npcClothingItemDefIDs = null;
+                public ListDefComponentMerger eyeShapeDefs = null;
+                public ListDefComponentMerger eyePupilDefs = null;
+                public string overrideAvatarLookDefId = null;
             }
         }
 

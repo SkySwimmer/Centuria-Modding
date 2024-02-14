@@ -381,6 +381,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     foreach (string convoI in ChatManager.instance._unreadConversations)
                     {
                         bool isRoom = false;
+                        if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == convoI)
+                            continue;
                         if (ChatManager.instance._cachedConversations != null)
                         {
                             foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
@@ -634,6 +636,107 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Mark received
                 if (((string)packet["conversationId"]) == LastRoomJoinMessage.RoomConversationId)
                     ChatConvoJoinReceived = true;
+            }
+            else if (evt == "chat.postMessage")
+            {
+                // Check if a author string is present
+                if (packet.Contains("author") && packet.Contains("source") && packet.Contains("message") && packet.Contains("conversationId") && packet.Contains("conversationType"))
+                {
+                    // Check
+                    string author = (string)packet["author"];
+                    string source = (string)packet["source"];
+                    string message = (string)packet["message"];
+                    string conversationId = (string)packet["conversationId"];
+                    string conversationType = (string)packet["conversationType"];
+                    if (source != author)
+                    {
+                        // Check type
+                        if (conversationType == "room")
+                        {
+                            // Get display name of character
+                            var awaiter = UserManager.GetUserInfoAsync(source).GetAwaiter();
+                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            {
+                                // Wait
+                                if (!awaiter.IsCompleted)
+                                    return false;
+
+                                // Get result
+                                var info = awaiter.GetResult();
+                                if (info == null)
+                                    return true;
+
+                                // Create message container
+                                RoomConversationMessage cont = new RoomConversationMessage(new ChatEntry(packet));
+
+                                // Update message string
+                                message = "</noparse>" + info.Name + "<noparse>\n" + ChatFormatter.Format(message, true);
+
+                                // Update entry
+                                cont.ChatEntry.sourceUUID = author;
+                                cont.ChatEntry._message = message;
+                                cont.ChatEntry._filteredMessage = message;
+
+                                // Refresh
+                                var awaiter2 = cont.ChatEntry.RefreshDisplayData().GetAwaiter();
+                                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                {
+                                    // Wait
+                                    if (!awaiter2.IsCompleted)
+                                        return false;
+
+                                    // Locate actor bubble
+                                    AvatarBase[] actors = UnityEngine.Object.FindObjectsOfType<AvatarBase>();
+                                    foreach (AvatarBase actor in actors)
+                                    {
+                                        // Check bubble
+                                        if (actor.Bubble != null && actor.Bubble.TargetId == author)
+                                        {
+                                            // Display
+                                            actor.Bubble.OnChatMessage(cont);
+                                        }
+                                    }
+
+                                    // Reset typing status
+                                    lock (typingStatuses)
+                                    {
+                                        if (typingStatuses.ContainsKey(conversationId))
+                                        {
+                                            // Check if user is present
+                                            if (typingStatuses[conversationId].ContainsKey(author))
+                                            {
+                                                // Remove status
+                                                typingStatuses[conversationId].Remove(author);
+                                            }
+                                        }
+                                    }
+
+                                    // Return
+                                    return true;
+                                });
+
+                                // Return
+                                return true;
+                            });
+                        }
+                        else
+                        {
+                            // Reset typing status
+                            lock (typingStatuses)
+                            {
+                                if (typingStatuses.ContainsKey(conversationId))
+                                {
+                                    // Check if user is present
+                                    if (typingStatuses[conversationId].ContainsKey(author))
+                                    {
+                                        // Remove status
+                                        typingStatuses[conversationId].Remove(author);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Handle
@@ -897,11 +1000,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool DisplayedUnreads = false;
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(ChatConnectMessage))]
-        [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(bool), typeof(string) })]
-        public static bool OnConnection(bool success, string message)
+        [HarmonyPatch(typeof(NetworkManager), "SendChatServiceRequest")]
+        public static bool SendChatServiceRequest(PersistentServiceRequest req)
         {
-            if (success)
+            ChatServiceRequests.ChatStartSessionRequest reqStart = req.TryCast<ChatServiceRequests.ChatStartSessionRequest>();
+            if (reqStart != null)
             {
                 // Send handshake
                 ChatHandshakeDone = false;
@@ -1124,7 +1227,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 if (chatText != lastChatInputText)
                                 {
                                     // Send update
-                                    if (chatText != "" && !chatText.StartsWith("/") && NetworkManager.ChatServiceConnection != null && NetworkManager.ChatServiceConnection.IsConnected && FeralTweaksServer.IsModLoaded("feraltweaks") && ChatHandshakeDone && ChatPostInit)
+                                    if (chatText != "" && !chatText.StartsWith("/") && !chatText.StartsWith(">") && NetworkManager.ChatServiceConnection != null && NetworkManager.ChatServiceConnection.IsConnected && FeralTweaksServer.IsModLoaded("feraltweaks") && ChatHandshakeDone && ChatPostInit)
                                     {
                                         // Send typing status update
                                         Dictionary<string, string> pkt = new Dictionary<string, string>();

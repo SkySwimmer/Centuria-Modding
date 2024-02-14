@@ -49,6 +49,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -1154,10 +1155,10 @@ public class LauncherMain {
 		String manifest = downloadProtectedString(apiData + "feraltweaks/chartpatches/index.json", authToken);
 		JsonArray patches = JsonParser.parseString(manifest).getAsJsonArray();
 		for (JsonElement ele : patches) {
-			String url = apiData;
+			String url = api + "data";
 			if (!ele.getAsString().startsWith("/"))
 				url += "/";
-			url += ele.getAsString();
+			url += URLEncoder.encode(ele.getAsString(), "UTF-8");
 
 			// Download patch
 			String file = ele.getAsString();
@@ -1249,33 +1250,33 @@ public class LauncherMain {
 			// Handle error
 			String err = resp.get("error").getAsString();
 			switch (err) {
-			case "invalid_credential": {
-				throw new IOException("Credentials invalid");
-			}
-			case "feraltweaks_not_enabled": {
-				JOptionPane.showMessageDialog(frmCenturiaLauncher,
-						"Client modding is not enabled on your account, unable to launch the game.", "Launcher Error",
-						JOptionPane.ERROR_MESSAGE);
-				System.exit(1);
-				return;
-			}
-			default: {
-				if (resp.has("errorMessage"))
-				{
+				case "invalid_credential": {
+					throw new IOException("Credentials invalid");
+				}
+				case "feraltweaks_not_enabled": {
 					JOptionPane.showMessageDialog(frmCenturiaLauncher,
-							resp.get("errorMessage").getAsString(), "Launcher Error",
+							"Client modding is not enabled on your account, unable to launch the game.",
+							"Launcher Error",
 							JOptionPane.ERROR_MESSAGE);
 					System.exit(1);
 					return;
 				}
-				throw new Exception("Unknown server error: " + err);
-			}
+				default: {
+					if (resp.has("errorMessage")) {
+						JOptionPane.showMessageDialog(frmCenturiaLauncher,
+								resp.get("errorMessage").getAsString(), "Launcher Error",
+								JOptionPane.ERROR_MESSAGE);
+						System.exit(1);
+						return;
+					}
+					throw new Exception("Unknown server error: " + err);
+				}
 			}
 		}
 
 		// Set progress bar
 		SwingUtilities.invokeAndWait(() -> {
-			progressBar.setMaximum(resp.size());
+			progressBar.setMaximum(resp.size() * 100);
 			progressBar.setValue(0);
 			panel_1.repaint();
 		});
@@ -1291,17 +1292,56 @@ public class LauncherMain {
 			conn.addRequestProperty("Authorization", "Bearer " + authToken);
 			File outputFile = new File(output);
 			outputFile.getParentFile().mkdirs();
-			FileOutputStream outp = new FileOutputStream(outputFile);
-			conn.getInputStream().transferTo(outp);
-			outp.close();
 			System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading " + path + " into " + output + "...");
+			FileOutputStream outp = new FileOutputStream(outputFile);
+			long size = conn.getContentLengthLong();
+			if (size == -1) {
+				// Transfer
+				conn.getInputStream().transferTo(outp);
 
-			// Increase progress
-			SwingUtilities.invokeLater(() -> {
-				progressBar.setValue(progressBar.getValue() + 1);
-				panel_1.repaint();
-			});
+				// Increase progress
+				SwingUtilities.invokeLater(() -> {
+					progressBar.setValue(progressBar.getValue() + 100);
+					panel_1.repaint();
+				});
+			} else {
+				// Block transfer
+				long c = 0;
+				float step = 100f / (float) size;
+				int valStart = progressBar.getValue();
+				while (c < size) {
+					// Read block
+					byte[] buffer = new byte[2048];
+					int r = conn.getInputStream().read(buffer, 0, buffer.length);
+					if (r == -1)
+						throw new IOException("Stream closed before end of document");
+					c += r;
+
+					// Write
+					outp.write(buffer, 0, r);
+
+					// Set progress
+					long cF = c;
+					SwingUtilities.invokeLater(() -> {
+						progressBar.setValue(valStart + (int) ((float) step * cF));
+						panel_1.repaint();
+					});
+				}
+
+				// Set progress
+				SwingUtilities.invokeLater(() -> {
+					progressBar.setValue(valStart + 100);
+					panel_1.repaint();
+				});
+			}
+			outp.close();
 		}
+
+		// Set progress
+		SwingUtilities.invokeLater(() -> {
+			progressBar.setValue(progressBar.getMaximum());
+			panel_1.repaint();
+		});
 	}
 
 	private void log(String message) {

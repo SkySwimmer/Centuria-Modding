@@ -20,7 +20,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class LoginLogoutPatches
     {
-        private static string LoginErrorMessage = null;
+        internal static string LoginErrorMessage = null;
         private static bool waitingUserInputQuit = false;
         
         [HarmonyPrefix]
@@ -799,8 +799,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(IssClient), "Login")]
-        public static void Login(ref string name)
+        public static bool Login(ref string name, string zone, string pass, IssClient __instance)
         {
+            LoginErrorMessage = null;
+
             // Mention feraltweaks support
             LoginResultData = null;
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
@@ -840,15 +842,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
                 name = name + "%end";
             }
+            return true;
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(IssServerConnection), "ProcessLoginData")]
         public static void ProcessLoginData(JsonData json)
         {
-            // Clean first
-            LoginErrorMessage = null;
-
             // Find error
             LoginResultData = JsonUtility.FromJson<LoginData>(JsonMapper.ToJson(json["params"]));
             LoginResultStatus = (LoginStatus)((int)json["statusId"]);

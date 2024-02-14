@@ -446,6 +446,8 @@ namespace feraltweaks
 
                                                 LogInfo("Configuration updated: " + key + " = " + value);
                                             }
+                                            if (PatchConfig.ContainsKey("OverrideProtocolVersion"))
+                                                ProtocolVersion = int.Parse(PatchConfig["OverrideProtocolVersion"]);
                                         }
                                         catch
                                         {

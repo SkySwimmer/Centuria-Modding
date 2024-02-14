@@ -14,17 +14,36 @@ using FeralTweaks;
 using System.Linq;
 using StrayTech;
 using UnityEngine;
+using UniRx.Async;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
     public static class DecreePatches
     {
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(ListDecreesResponse), MethodType.Constructor, new System.Type[] { typeof(Il2CppReferenceArray<DecreeDefComponent>) })]
-        public static bool ListDecreesResponseCtorLst(Il2CppReferenceArray<DecreeDefComponent> items, ListDecreesResponse __instance)
+        [HarmonyPatch(typeof(DecreeSrvHandler), "RequestDecrees")]
+        public static bool RequestDecrees(ref UniTask<ListDecreesResponse> __result)
         {
+            // Get def id list
+            List<BaseDef> defs = ListChartData.instance.GetDef("12803").GetComponent<ListDefComponent>().Defs;
+
             // Create list
-            System.Collections.Generic.List<DecreeDefComponent> itms = new System.Collections.Generic.List<DecreeDefComponent>(items.ToArray());
+            System.Collections.Generic.List<DecreeDefComponent> itms = new System.Collections.Generic.List<DecreeDefComponent>();
+            foreach (BaseDef def in defs)
+            {
+                // Check availability
+                if (def.HasComponent<AvailabilityDefComponent>())
+                {
+                    // Skip if unavailable
+                    if (!def.GetComponent<AvailabilityDefComponent>().chartDateAvailability.IsAvailable)
+                        continue;
+                }
+
+                // Add decree
+                DecreeDefComponent decree = def.GetComponent<DecreeDefComponent>();
+                if (decree != null)
+                    itms.Add(decree);
+            }
 
             // Find dynamic decrees
             System.Collections.Generic.List<DecreeData> dynDecrees = new System.Collections.Generic.List<DecreeData>();
@@ -120,14 +139,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
             itemListNew.AddRange(itms);
 
             // Assign items
-            int i2 = 0;
-            __instance.items = new Il2CppReferenceArray<DecreeItem>(itemListNew.Count);
-            foreach (DecreeDefComponent itm in itemListNew)
+            Il2CppReferenceArray<DecreeDefComponent> lst = new Il2CppReferenceArray<DecreeDefComponent>((long)itemListNew.Count);
+            for (int i = 0; i < itemListNew.Count ; i++)
             {
-                __instance.items[i2++] = new DecreeItem(itm);
+                lst[i] = itemListNew[i];
             }
-
-            // Return
+            ListDecreesResponse resp = new ListDecreesResponse(lst);
+            __result = UniTask.FromResult(resp);
             return false;
         }
 

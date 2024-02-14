@@ -1,0 +1,133 @@
+setchart CraftableItemChart
+
+merge 2757 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 5035 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 27746 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 30417 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 1929 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 14572 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 22661 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 25954 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 23970 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 22610 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge
+
+merge 19018 ActorClassDefComponent
+	{
+		"scaleGroupDefIDs": {
+			"mode": "ADD",
+			"defIDs": [
+				"6601",
+				"703"
+			]
+		}
+	}
+endmerge

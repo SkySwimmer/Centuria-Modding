@@ -11,7 +11,7 @@ cd build/work
 
 
 # Properties
-netdownloadurl=https://download.visualstudio.microsoft.com/download/pr/17309c0b-8c70-467b-9f95-a4f7ee8bd095/e6ccec507628a50cd81caef510b6fe76/dotnet-runtime-6.0.15-win-x64.zip
+netdownloadurl=https://download.visualstudio.microsoft.com/download/pr/eac51dde-7bac-4bdb-aacd-e8c870f29aa4/d6c945e85adab9af2446856f90f6d326/dotnet-runtime-8.0.1-win-x64.zip
 
 
 # Download CoreCLR

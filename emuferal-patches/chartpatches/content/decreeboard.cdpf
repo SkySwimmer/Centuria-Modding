@@ -1,3 +1,383 @@
+#
+# EA 1.8 Wave 1 Increase
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_ea1w1e_release
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_ea1w1e_release.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_ea1w1e_release.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_ea1w1e_release.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "01/25/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_ea1w1e_release.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_ea1w1e_release.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Wave 1 Apps Increased",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_ea1w1e_release.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Hello sparks! We have increased the application limit for wave 1 with 50 since it being full in one day was kinda silly XD. To apply for EA, go to #emuferal-applications in the Fer.ever Discord server!!\n\nVisit our Discord for more details: discord.gg/ferever",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Decal limit increase
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease_2
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171_decalincrease_2.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171_decalincrease_2.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b171_decalincrease_2.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 1
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "01/24/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease_2.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b171_decalincrease_2.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Decal limit increased!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b171_decalincrease_2.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "For EmuFeral Desktop, the decal limit has been increased to 700! Enjoy detailing your avatars with this new higher limit!\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# EA 1.8 Release
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_ea1_release
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_ea1_release.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_ea1_release.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_ea1_release.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "01/23/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_ea1_release.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_ea1_release.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Beta 1.8 Early Access Applications",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_ea1_release.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Heeeello Feralians!!\n\nLong anticipated update, Beta 1.8 Early Access applications are now LIVE! What does this mean, you may ask? Well, if you apply and we accept you, you get early access to Emuferal's version 1.8 launcher! This includes some cool features you may have seen-in game already, such as increased avatar sizes, multiple items on one body part, etc. This is different from last year's Experience mode Early Access so you will need to reapply! The entire changelog is below if you want to know what awesome things come in this update! To apply for EA, go to #emuferal-applications in the Fer.ever Discord server!!\n\nChanges for everyone:\n - Implemented voice chat\n - Added four unused emotes (/yes, /no, /eat, /scared) that were left over from the original game but were never unused (NOTE THAT WE CANNOT FIX BROKEN EMOTES, THESE FOUR ARENT SUPPORTED BY ALL AVATARS)\n - Implemented OC proxying (use >help for a list of commands ingame related to this feature)\n - Added a typing status indicator, showing that players are typing\n\nChanges in 1.8 early access:\n - Dragons and Shinigami can now 'glide' without wings\n - Added a 'no legs' body mod for dragons\n - Added an unread counter in world chat for when in GCs or DMs\n - Made it so that you can have multiple clothing items of the same category (PC ONLY)\n - Increased sizes are now possible from customization\n - Increased decal resolution for high graphics setups\n - Re-implemented blinking\n\nVisit our Discord for more details: discord.gg/ferever",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
 
 #
 # DevTest 7
@@ -493,133 +873,6 @@ def decreeboard:emuferal:emuferal_b18_devtest4.message.text
 				"componentJSON": {
 					"needsTranslation": true,
 					"en": "Beta 1.8 is going into LIVE TESTING! Some players are receiving a WIP version of the huge upcoming Beta 1.8 update! There are many changes and many overhauls coming in the major update, some of which are available for testing already! Please do note that the Beta 1.8 Dev Client is still very buggy and can have many issues, please keep an eye out for updates in the group chat of the Dev Test Programme. Stay Fer.al!\n\n - EmuFeral/Centuria Development Team",
-					"fr": "",
-					"de": "",
-					"es": "",
-					"pt": ""
-				}
-			},
-			{
-				"componentClass": "OldLocalizationDefComponent",
-				"componentJSON": {}
-			}
-		]
-	}
-enddef
-
-#
-# Decal limit increase
-#
-
-setchart CraftableItemChart
-
-def decreeboard:emuferal:emuferal_b171_decalincrease
-	{
-		"templateClass": "DecreeTemplate",
-		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
-		"components": [
-			{
-				"componentClass": "DecreeDefComponent",
-				"componentJSON": {
-					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b171_decalincrease.header.text",
-					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b171_decalincrease.message.text",
-					"imageDefID": "decreeboard:emuferal:emuferal_b171_decalincrease.image",
-					"decreeCategory": 0,
-					"decreeLayoutType": 1
-				}
-			},
-			{
-				"componentClass": "AvailabilityDefComponent",
-				"componentJSON":
-				{
-				    "dateOverrideRef": {
-				        "_defID": "-1"
-				    },
-				    "chartDateAvailability": {
-				        "_ignoreYear": true,
-				        "_repeatMode": 1,
-				        "_dateStart": "",
-				        "_dateEnd": ""
-				    }
-				}
-			},
-			{
-				"componentClass": "DecreeDateDefComponent",
-				"componentIsCustom": true,
-				"componentJSON": {
-					"decreeDate": "12/04/2023"
-				}
-			}
-		]
-	}
-enddef
-
-setchart ImageChart
-
-def decreeboard:emuferal:emuferal_b171_decalincrease.image
-	{
-		"templateClass": "ImageTemplate",
-		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
-		"components": [
-			{
-				"componentClass": "BundleIDDefComponent",
-				"componentJSON": {
-					"bundle": {
-						"bundlePath": "Images/AstralShop/Icons/avatar"
-					}
-				}
-			},
-			{
-				"componentClass": "ImageDefComponent",
-				"componentJSON": {
-					"localize": false,
-					"highQualityAndLowQuality": false,
-					"bundleIDArray": [],
-					"calendarRefArray": {
-						"_defIDs": []
-					}
-				}
-			}
-		]
-	}
-enddef
-
-setchart LocalizationChart
-
-def decreeboard:emuferal:emuferal_b171_decalincrease.header.text
-	{
-		"templateClass": "LocalizationTemplate",
-		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
-		"components": [
-			{
-				"componentClass": "LocalizationDefComponent",
-				"componentJSON": {
-					"needsTranslation": true,
-					"en": "Decal limit increased!",
-					"fr": "",
-					"de": "",
-					"es": "",
-					"pt": ""
-				}
-			},
-			{
-				"componentClass": "OldLocalizationDefComponent",
-				"componentJSON": {}
-			}
-		]
-	}
-enddef
-
-def decreeboard:emuferal:emuferal_b171_decalincrease.message.text
-	{
-		"templateClass": "LocalizationTemplate",
-		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
-		"components": [
-			{
-				"componentClass": "LocalizationDefComponent",
-				"componentJSON": {
-					"needsTranslation": true,
-					"en": "For EmuFeral Desktop, the decal limit has been increased to 350! Enjoy detailing your avatars with this new higher limit!\n\n - EmuFeral/Centuria Development Team",
 					"fr": "",
 					"de": "",
 					"es": "",

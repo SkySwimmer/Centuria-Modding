@@ -4,6 +4,7 @@ using System.Reflection;
 using CodeStage.AntiCheat.ObscuredTypes;
 using FeralTweaks.Mods;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem.Collections.Generic;
@@ -200,6 +201,5 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (scaleF > 2f)
                 __result = __result * (scaleF / 2);
         }
-
     }
 }

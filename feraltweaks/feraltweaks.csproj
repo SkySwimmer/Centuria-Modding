@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net60</TargetFramework>
+    <TargetFramework>net80</TargetFramework>
     <AssemblyName>feraltweaks</AssemblyName>
     <Description>Chart modification system and various tweaks</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,9 +20,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HarmonyX" Version="2.10.1" />
+    <PackageReference Include="DeviceId.Linux" Version="6.4.0" />
+    <PackageReference Include="DeviceId.Windows" Version="6.6.0" />
+    <PackageReference Include="DeviceId.Windows.Mmi" Version="6.5.0" />
+    <PackageReference Include="DeviceId.Mac" Version="6.3.0" />
+    <PackageReference Include="HarmonyX" Version="2.12.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.3" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
     <Reference Include="FeralTweaksBootstrap">
       <HintPath>lib\ftl\FeralTweaksBootstrap.dll</HintPath>
       <Private>false</Private>
