@@ -83,11 +83,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        [HarmonyReversePatch]
-        [HarmonyPatch(typeof(UI_LazyItemList<ChatConversationData>), nameof(UI_LazyItemList<ChatConversationData>.Setup))]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void SetupDummy(UI_LazyItemList_ChatConversation instance) { }
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "OnConversationAdded")]
         public static bool OnConversationAdded(ref UI_LazyItemList_ChatConversation __instance, CachedConversationAddedMessage inMessage)
@@ -200,9 +195,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "Setup")]
-        public static bool SetupConvoList(ref UI_LazyItemList_ChatConversation __instance)
+        [HarmonyPatch(typeof(UI_LazyItemList<ChatConversationData>), "Setup")]
+        public static void SetupConvoList(ref UI_LazyItemList<ChatConversationData> __instance)
         {
+            UI_LazyItemList_ChatConversation pnl = __instance.TryCast<UI_LazyItemList_ChatConversation>();
+            if (pnl == null)
+                return; 
             if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Filter it
@@ -227,12 +225,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     else
                         convos.Add(convo);
                 }
-
-                __instance._dataItems = convos;
-                SetupDummy(__instance);
-                return false;
+                pnl._dataItems = convos;
             }
-            return true;
         }
 
         [HarmonyPostfix]
@@ -363,6 +357,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "RefreshText")]
         public static void RefreshText(ref UI_UnreadConversationCount __instance, ref int inUnreadCount)
         {
+            if (__instance.gameObject == null || __instance.gameObject.transform == null || __instance.gameObject.transform.parent == null || __instance.gameObject.transform.parent.parent == null)
+                return;
             GameObject obj = __instance.gameObject.transform.parent.parent.gameObject;
             if (obj.name == "Button_Chat")
             {

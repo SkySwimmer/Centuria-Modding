@@ -140,6 +140,12 @@ namespace FeralTweaksBootstrap
 
             // Log
             LogInfo("Preparing...");
+            LogInfo("Binding exception logger...");
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                // Log
+                LogError("Caught an unhandled exception! Thread name: " + Thread.CurrentThread.Name + "\nException: " + args.ExceptionObject + ":\n" + ((Exception)args.ExceptionObject).StackTrace);
+            };
 
             // Handle arguments
             LogInfo("Processing arguments...");
