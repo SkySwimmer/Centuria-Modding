@@ -214,6 +214,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "Setup")]
         public static void SetupConvoList(ref UI_LazyItemList_ChatConversation __instance)
         {
+            if (__instance.GetIl2CppType().FullName != "UI_LazyItemList_ChatConversation")
+                return;
             FT_ChatListVars.Init();
             FT_ChatListVars vars = __instance.gameObject.GetComponent<FT_ChatListVars>();
             if (vars == null)
@@ -225,6 +227,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "GetDataItems")]
         public static void GetDataItems(ref UI_LazyItemList_ChatConversation __instance)
         {
+            if (__instance.GetIl2CppType().FullName != "UI_LazyItemList_ChatConversation")
+                return;
             FT_ChatListVars.Init();
             FT_ChatListVars vars = __instance.gameObject.GetComponent<FT_ChatListVars>();
             if (vars == null)
