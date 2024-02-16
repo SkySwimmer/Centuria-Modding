@@ -232,6 +232,21 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 default:
                     // Allow reset
                     WantsToQuit = true;
+
+                    // Disconnect
+                    if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+                        NetworkManager.instance._serverConnection.Disconnect();
+                    if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                        NetworkManager.instance._chatServiceConnection.Disconnect();
+                    if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                        NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                    NetworkManager.instance._serverConnection = null;
+                    NetworkManager.instance._chatServiceConnection = null;
+                    NetworkManager.instance._voiceChatServiceConnection = null;
+                    NetworkManager.instance._jwt = null;
+                    NetworkManager.instance._uuid = null;
+
+                    // Return
                     return true;
 
             }
