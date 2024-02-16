@@ -40,6 +40,22 @@ namespace feraltweaks.Patches.AssemblyCSharp
             public bool WasAtBottom;
             public UI_ChatPanel Panel;
         }
+        public class FT_ChatListVars : MonoBehaviour
+        {
+            private static bool injected;
+
+            public static void Init()
+            {
+                if (!injected)
+                    ClassInjector.RegisterTypeInIl2Cpp<FT_ChatListVars>();
+                injected = true;
+            }
+
+            public FT_ChatListVars() : base() { }
+            public FT_ChatListVars(IntPtr ptr) : base(ptr) { }
+
+            public bool Inited;
+        }
 
         internal static bool ShowWorldJoinChatUnreadPopup;
         internal static bool ChatPostInit;
@@ -195,12 +211,26 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_LazyItemList<ChatConversationData>), "Setup")]
-        public static void SetupConvoList(ref UI_LazyItemList<ChatConversationData> __instance)
+        [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "Setup")]
+        public static void SetupConvoList(ref UI_LazyItemList_ChatConversation __instance)
         {
-            UI_LazyItemList_ChatConversation pnl = __instance.TryCast<UI_LazyItemList_ChatConversation>();
-            if (pnl == null)
-                return; 
+            FT_ChatListVars.Init();
+            FT_ChatListVars vars = __instance.gameObject.GetComponent<FT_ChatListVars>();
+            if (vars == null)
+                vars = __instance.gameObject.AddComponent<FT_ChatListVars>();
+            vars.Inited = false;
+        }
+        
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "GetDataItems")]
+        public static void GetDataItems(ref UI_LazyItemList_ChatConversation __instance)
+        {
+            FT_ChatListVars.Init();
+            FT_ChatListVars vars = __instance.gameObject.GetComponent<FT_ChatListVars>();
+            if (vars == null)
+                vars = __instance.gameObject.AddComponent<FT_ChatListVars>();
+            if (vars.Inited)
+                return;            
             if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Filter it
@@ -225,8 +255,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     else
                         convos.Add(convo);
                 }
-                pnl._dataItems = convos;
+                __instance._dataItems = convos;
             }
+            vars.Inited = true;
         }
 
         [HarmonyPostfix]
