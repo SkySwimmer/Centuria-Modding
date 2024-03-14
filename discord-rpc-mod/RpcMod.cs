@@ -57,6 +57,7 @@ namespace FeralDiscordRpcMod
 
         private class Conf
         {
+            public bool enabled = true;
             public int pipe = -1;
             public bool joiningEnabled;
             public string joinExecutableLinux;
@@ -67,6 +68,7 @@ namespace FeralDiscordRpcMod
             public bool disableAskToJoin;
             public int partySize;
             public BtnConf[] buttons;
+            public bool enableLogging = false;
         }
 
         public override void PostInit()
@@ -76,6 +78,7 @@ namespace FeralDiscordRpcMod
             {
                 Directory.CreateDirectory(ConfigDir);
                 File.WriteAllText(ConfigDir + "/config.json", "{\n"
+                    + "    \"enabled\": true,\n"
                     + "    \"pipe\": -1,\n"
                     + "    \"joiningEnabled\": " + (Environment.GetEnvironmentVariable("CENTURIA_LAUNCHER_PATH") != null ? "true" : "false") + ",\n"
                     + "    \"disableAskToJoin\": false,"
@@ -85,7 +88,8 @@ namespace FeralDiscordRpcMod
                     + "    \"joinExecutableIOS\": \"\",\n"
                     + "    \"joinExecutableAndroid\": \"\",\n"
                     + "    \"partySize\": 10,\n"
-                    + "    \"buttons\": []\n"
+                    + "    \"buttons\": [],\n"
+                    + "    \"enableLogging\": false\n"
                     + "}\n");
             }
 
@@ -97,6 +101,10 @@ namespace FeralDiscordRpcMod
                 config.partySize = 10;
                 File.WriteAllText(ConfigDir + "/config.json", JsonConvert.SerializeObject(config, Formatting.Indented));
             }
+            
+            // Check enabled
+            if (!config.enabled)
+                return; // Not enabled
 
             // Check platform
             if (OperatingSystem.IsWindows())
@@ -156,7 +164,7 @@ namespace FeralDiscordRpcMod
             }
 
             // Init RPC logging
-            client.Logger = new ModLogger() { mod = this };
+            client.Logger = new ModLogger() { mod = this, enabled = config.enableLogging };
 
             // Bind updates
             client.OnReady += (sender, e) =>
@@ -725,6 +733,10 @@ namespace FeralDiscordRpcMod
 
         internal void HandleJoinRequest(RpcJoinPlayerRequestPacket packet)
         {
+            // Check enabled
+            if (!config.enabled)
+                return;
+
             // Check party id
             if (partyID == packet.partyID && currentSecret != null)
             {
@@ -749,6 +761,10 @@ namespace FeralDiscordRpcMod
 
         internal void HandleJoinResult(RpcJoinPlayerResultPacket packet)
         {
+            // Check enabled
+            if (!config.enabled)
+                return;
+
             lock (pendingResults)
             {
                 if (pendingResults.ContainsKey(packet.playerID))

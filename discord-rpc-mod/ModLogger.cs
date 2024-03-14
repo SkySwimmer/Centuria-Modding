@@ -8,9 +8,12 @@ namespace FeralDiscordRpcMod
     {
         public RpcMod mod;
         public LogLevel Level { get => Bootstrap.DebugLogging ? LogLevel.Trace : LogLevel.Info ; set  { } }
+        public bool enabled;
 
         public void Error(string message, params object[] args)
         {
+            if (!enabled)
+                return;
             message = appendTo(message, args);
             mod.LogError(message);
         }
@@ -24,18 +27,24 @@ namespace FeralDiscordRpcMod
 
         public void Info(string message, params object[] args)
         {
+            if (!enabled)
+                return;
             message = appendTo(message, args);
             mod.LogInfo(message);
         }
 
         public void Trace(string message, params object[] args)
         {
+            if (!enabled)
+                return;
             message = appendTo(message, args);
             mod.LogDebug(message);
         }
 
         public void Warning(string message, params object[] args)
         {
+            if (!enabled)
+                return;
             message = appendTo(message, args);
             mod.LogWarn(message);
         }
