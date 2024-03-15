@@ -18,6 +18,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UserManager), "GetDisplayNameBatched")]
         public static bool GetDisplayNameBatched(UserManager __instance, string inUUID, ref Task<string> __result)
         {
+            if (__instance._users._usersByUUID.ContainsKey(inUUID))
+                __result = Task.Run<string>(new Func<string>(() =>
+                {
+                    return __instance._users._usersByUUID[inUUID].Name;
+                }));
             __result = IdentityService.GetDisplayName(inUUID, NetworkManager.JWT);
             return false;
         }
