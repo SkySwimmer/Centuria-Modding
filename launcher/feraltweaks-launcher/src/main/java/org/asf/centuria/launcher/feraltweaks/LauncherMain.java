@@ -943,7 +943,8 @@ public class LauncherMain {
 						// Linux or wine-method-macos
 						arguments.add("wine");
 						arguments.add(clientFile.getAbsolutePath());
-					}
+					} else
+						throw new Exception("Invalid platform: " + os);
 
 					// Handoff
 					arguments.add("--launcher-handoff");
@@ -1081,8 +1082,7 @@ public class LauncherMain {
 							new File(prefix, "completed").createNewFile();
 						}
 						builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
-					} else
-						throw new Exception("Invalid platform: " + os);
+					}
 					builder.inheritIO();
 					builder.directory(new File("client/build"));
 
