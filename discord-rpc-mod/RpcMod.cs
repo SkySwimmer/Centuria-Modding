@@ -81,7 +81,7 @@ namespace FeralDiscordRpcMod
                     + "    \"enabled\": true,\n"
                     + "    \"pipe\": -1,\n"
                     + "    \"joiningEnabled\": " + (Environment.GetEnvironmentVariable("CENTURIA_LAUNCHER_PATH") != null ? "true" : "false") + ",\n"
-                    + "    \"disableAskToJoin\": false,"
+                    + "    \"disableAskToJoin\": false,\n"
                     + "    \"joinExecutableWindows\": \"\",\n"
                     + "    \"joinExecutableLinux\": \"\",\n"
                     + "    \"joinExecutableOSX\": \"\",\n"
@@ -169,7 +169,8 @@ namespace FeralDiscordRpcMod
             // Bind updates
             client.OnReady += (sender, e) =>
             {
-                LogInfo("Received Ready from user " + e.User.Username);
+                if (config.enableLogging)
+                    LogInfo("Received Ready from user " + e.User.Username);
                 if (client.CurrentPresence != null)
                 {
                     RichPresence pr = client.CurrentPresence.Clone();

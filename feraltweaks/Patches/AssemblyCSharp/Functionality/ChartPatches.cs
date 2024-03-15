@@ -564,11 +564,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (!FeralTweaks.PatchConfig.ContainsKey("DisableClientChartPatches") || FeralTweaks.PatchConfig["DisableClientChartPatches"] != "True")
             {
                 // Create patch directory
-                Directory.CreateDirectory(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/chartpatches");
+                string pth = System.Collections.Generic.CollectionExtensions.GetValueOrDefault(FeralTweaks.PatchConfig, "ChartPatchSource", FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/chartpatches");
+                Directory.CreateDirectory(pth);
 
                 // Read patches
                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying chart patches from configuration...");
-                foreach (FileInfo file in new DirectoryInfo(FeralTweaksLoader.GetLoadedMod<FeralTweaks>().ConfigDir + "/chartpatches").GetFiles("*.cdpf", SearchOption.AllDirectories))
+                foreach (FileInfo file in new DirectoryInfo(pth).GetFiles("*.cdpf", SearchOption.AllDirectories))
                 {
                     string patch = File.ReadAllText(file.FullName).Replace("\t", "    ").Replace("\r", "");
                     ApplyPatch(patch, file.Name);
