@@ -44,6 +44,9 @@ public class LauncherUpdaterMain {
 
 	private static JFrame frmCenturiaLauncher;
 	private static JLabel lblNewLabel;
+	private static BackgroundPanel panel_1;
+
+	private static String[] args;
 
 	/**
 	 * Launch the application.
@@ -52,6 +55,7 @@ public class LauncherUpdaterMain {
 	 * @throws JsonSyntaxException
 	 */
 	public static void main(String[] args) throws JsonSyntaxException, IOException {
+		LauncherUpdaterMain.args = args;
 		if (new File("installerdata").exists()) {
 			installerMode = true;
 
@@ -131,11 +135,11 @@ public class LauncherUpdaterMain {
 			// Perform installer operation if needed
 			if (operation != -1) {
 				// Contact server
-				String launcherVersion;
-				String launcherDir;
-				String launcherURL;
-				String dataUrl;
-				String srvName;
+				String launcherVersion = null;
+				String launcherDir = null;
+				String launcherURL = null;
+				String dataUrl = null;
+				String srvName = null;
 				File instDir;
 				try {
 					// Read server info
@@ -148,6 +152,7 @@ public class LauncherUpdaterMain {
 						dirName = conf.get("launcherDirName").getAsString();
 						url = conf.get("serverConfig").getAsString();
 						dataUrl = url;
+						launcherDir = dirName;
 					} catch (Exception e) {
 						JOptionPane.showMessageDialog(null,
 								"Invalid " + (installerMode ? "installer" : "launcher") + " configuration.",
@@ -164,12 +169,13 @@ public class LauncherUpdaterMain {
 					JsonObject launcher = info.get("launcher").getAsJsonObject();
 					url = launcher.get("url").getAsString();
 					launcherVersion = launcher.get("version").getAsString();
-					launcherDir = dirName;
 					launcherURL = url;
 				} catch (Exception e) {
-					System.err.println("Error: failed to contact launcher servers.");
-					System.exit(1);
-					return;
+					if (operation == 0) {
+						System.err.println("Error: failed to contact launcher servers.");
+						System.exit(1);
+						return;
+					}
 				}
 
 				// Build folder path
@@ -219,7 +225,7 @@ public class LauncherUpdaterMain {
 							installDirFile);
 				} else if (operation == 1) {
 					// Uninstall
-					uninstallLauncher(instDir, null, launcherVersion, srvName, launcherURL, dataUrl, launcherDir);
+					uninstallLauncher(instDir, null, srvName, launcherDir);
 				}
 
 				// Exit
@@ -271,6 +277,10 @@ public class LauncherUpdaterMain {
 			strmi.close();
 		} catch (IOException e1) {
 		}
+		try {
+			frmCenturiaLauncher.setIconImage(ImageIO.read(new File("icon.png")));
+		} catch (IOException e1) {
+		}
 
 		JPanel panel = new JPanel();
 		frmCenturiaLauncher.getContentPane().add(panel, BorderLayout.SOUTH);
@@ -280,7 +290,7 @@ public class LauncherUpdaterMain {
 		progressBar.setPreferredSize(new Dimension(146, 10));
 		panel.add(progressBar, BorderLayout.NORTH);
 
-		BackgroundPanel panel_1 = new BackgroundPanel();
+		panel_1 = new BackgroundPanel();
 		panel_1.setForeground(Color.WHITE);
 		frmCenturiaLauncher.getContentPane().add(panel_1, BorderLayout.CENTER);
 		panel_1.setLayout(new BorderLayout(0, 0));
@@ -289,23 +299,20 @@ public class LauncherUpdaterMain {
 		lblNewLabel.setPreferredSize(new Dimension(46, 20));
 		panel_1.add(lblNewLabel, BorderLayout.SOUTH);
 
-		// Contact server
-		String launcherVersion;
-		String launcherDir;
-		String launcherURL;
-		String dataUrl;
-		String srvName;
-		File instDir;
 		try {
 			// Read server info
 			String dirName;
 			String url;
+			String launcherDir;
+			String dataUrl;
+			String srvName;
 			try {
 				JsonObject conf = JsonParser.parseString(Files.readString(Path.of("server.json"))).getAsJsonObject();
 				srvName = conf.get("serverName").getAsString();
 				dirName = conf.get("launcherDirName").getAsString();
 				url = conf.get("serverConfig").getAsString();
 				dataUrl = url;
+				launcherDir = dirName;
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(null,
 						"Invalid " + (installerMode ? "installer" : "launcher") + " configuration.",
@@ -314,50 +321,8 @@ public class LauncherUpdaterMain {
 				return;
 			}
 
-			// Download data
-			InputStream strm = new URL(url).openStream();
-			String data = new String(strm.readAllBytes(), "UTF-8");
-			strm.close();
-			JsonObject info = JsonParser.parseString(data).getAsJsonObject();
-			JsonObject launcher = info.get("launcher").getAsJsonObject();
-			String splash = launcher.get("splash").getAsString();
-			url = launcher.get("url").getAsString();
-			String version = launcher.get("version").getAsString();
-
-			// Handle relative paths for banner
-			if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
-				JsonObject serverInfo = info.get("server").getAsJsonObject();
-				JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
-				String api = hosts.get("api").getAsString();
-				if (!api.endsWith("/"))
-					api += "/";
-				while (splash.startsWith("/"))
-					splash = splash.substring(1);
-				splash = api + splash;
-			}
-
-			// Download splash and set image
-			BufferedImage img = ImageIO.read(new URL(splash));
-			panel_1.setImage(img);
-			launcherVersion = version;
-			launcherDir = dirName;
-			launcherURL = url;
-
-			// Set title
-			if (!installerMode)
-				frmCenturiaLauncher.setTitle(srvName + " Launcher");
-			else
-				frmCenturiaLauncher.setTitle(srvName + " Installer");
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null,
-					"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please submit a support ticket.",
-					(installerMode ? "Installer" : "Launcher") + " Error", JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
-			return;
-		}
-
-		try {
 			// Build folder path
+			File instDir;
 			boolean inHome = false;
 			if (System.getenv("LOCALAPPDATA") == null) {
 				instDir = new File(System.getProperty("user.home") + "/.local/share");
@@ -394,13 +359,78 @@ public class LauncherUpdaterMain {
 						JsonParser.parseString(Files.readString(new File(instDir, "installation.json").toPath()))
 								.getAsJsonObject().get("installationDirectory").getAsString());
 
+			// Set title
+			if (!installerMode)
+				frmCenturiaLauncher.setTitle(srvName + " Launcher");
+			else
+				frmCenturiaLauncher.setTitle(srvName + " Installer");
+
+			// Contact server
+			String launcherVersion = null;
+			String launcherURL = null;
+			boolean connection = false;
+			try {
+				// Download data
+				InputStream strm = new URL(url).openStream();
+				String data = new String(strm.readAllBytes(), "UTF-8");
+				strm.close();
+				JsonObject info = JsonParser.parseString(data).getAsJsonObject();
+				JsonObject launcher = info.get("launcher").getAsJsonObject();
+				String splash = launcher.get("splash").getAsString();
+				url = launcher.get("url").getAsString();
+				String version = launcher.get("version").getAsString();
+
+				// Handle relative paths for banner
+				if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
+					JsonObject serverInfo = info.get("server").getAsJsonObject();
+					JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
+					String api = hosts.get("api").getAsString();
+					if (!api.endsWith("/"))
+						api += "/";
+					while (splash.startsWith("/"))
+						splash = splash.substring(1);
+					splash = api + splash;
+				}
+
+				// Download splash and set image
+				try {
+					InputStream strmi = new URL(splash).openStream();
+					FileOutputStream bannerO = new FileOutputStream(new File(instDir, "banner.image"));
+					strmi.transferTo(bannerO);
+					strmi.close();
+					bannerO.close();
+				} catch (IOException e) {
+				}
+				BufferedImage img = ImageIO.read(new File(instDir, "banner.image"));
+				panel_1.setImage(img);
+				launcherVersion = version;
+				launcherURL = url;
+				connection = true;
+			} catch (Exception e) {
+				if (!installerMode || !new File(instDir, "banner.image").exists()) {
+					JOptionPane.showMessageDialog(null,
+							"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please contact support.",
+							(installerMode ? "Installer" : "Launcher") + " Error", JOptionPane.ERROR_MESSAGE);
+					System.exit(1);
+					return;
+				} else {
+					// Download splash and set image
+					BufferedImage img = ImageIO.read(new File(instDir, "banner.image"));
+					panel_1.setImage(img);
+					launcherURL = url;
+				}
+			}
+
 			// Start launcher
 			if (!installerMode)
-				startLauncher(instDir, progressBar, launcherVersion, srvName, launcherURL, dataUrl);
+				startLauncher(instDir, progressBar, launcherVersion, srvName, launcherURL, dataUrl, args);
 			else {
 				File dir = instDir;
 
 				// Installer mode, ask which operation to perform
+				boolean connectionF = connection;
+				String launcherVersionF = launcherVersion;
+				String launcherURLF = launcherURL;
 				Thread th = new Thread(() -> {
 					log("Waiting for user to select installer operation...");
 					SwingUtilities.invokeLater(() -> {
@@ -443,10 +473,18 @@ public class LauncherUpdaterMain {
 								});
 
 								// Run operation
-								if (selected == 0)
-									installLauncher(dir, progressBar, launcherVersion, srvName, launcherURL, dataUrl,
+								if (selected == 0) {
+									if (!connectionF) {
+										JOptionPane.showMessageDialog(null,
+												"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please contact support.",
+												(installerMode ? "Installer" : "Launcher") + " Error",
+												JOptionPane.ERROR_MESSAGE);
+										System.exit(1);
+										return;
+									}
+									installLauncher(dir, progressBar, launcherVersionF, srvName, launcherURLF, dataUrl,
 											launcherDir);
-								else {
+								} else {
 									SwingUtilities.invokeAndWait(() -> {
 										if (JOptionPane.showConfirmDialog(frmCenturiaLauncher,
 												"Are you sure you wish to uninstall the " + srvName
@@ -456,8 +494,7 @@ public class LauncherUpdaterMain {
 											System.exit(1);
 										}
 									});
-									uninstallLauncher(dir, progressBar, launcherVersion, srvName, launcherURL, dataUrl,
-											launcherDir);
+									uninstallLauncher(dir, progressBar, srvName, launcherDir);
 								}
 							} catch (Exception e) {
 								try {
@@ -703,6 +740,9 @@ public class LauncherUpdaterMain {
 		installDirFile.getParentFile().mkdirs();
 		Files.writeString(installDirFile.toPath(), infoJson.toString());
 
+		// TODO: support URL protocols
+		// TODO: register uninstall stuff for windows
+
 		// Windows and linux only, macos already has the app installed now
 		if (os != 0) {
 			log("Creating shortcuts...");
@@ -785,7 +825,8 @@ public class LauncherUpdaterMain {
 				System.exit(proc.exitValue());
 			} else {
 				// Start OSX launcher
-				ProcessBuilder builder = new ProcessBuilder("open", "-n", new File("/Applications/" + srvName + ".app").getAbsolutePath());
+				ProcessBuilder builder = new ProcessBuilder("open", "-n",
+						new File("/Applications/" + srvName + ".app").getAbsolutePath());
 				builder.inheritIO();
 				Process proc = builder.start();
 				try {
@@ -827,8 +868,7 @@ public class LauncherUpdaterMain {
 		vbs.delete();
 	}
 
-	private static void uninstallLauncher(File instDir, JProgressBar progressBar, String launcherVersion,
-			String srvName, String launcherURL, String dataUrl, String launcherDir) {
+	private static void uninstallLauncher(File instDir, JProgressBar progressBar, String srvName, String launcherDir) {
 		log("Preparing to uninstall...");
 
 		// Check for installation data
@@ -1087,7 +1127,7 @@ public class LauncherUpdaterMain {
 	}
 
 	private void startLauncher(File instDir, JProgressBar progressBar, String launcherVersion, String srvName,
-			String launcherURL, String dataUrl) {
+			String launcherURL, String dataUrl, String[] args) {
 		File dir = instDir;
 		Thread th = new Thread(() -> {
 			// Set progress bar status
@@ -1167,6 +1207,8 @@ public class LauncherUpdaterMain {
 							.replace("$<jvm>", ProcessHandle.current().info().command().get())
 							.replace("$<pathsep>", File.pathSeparator).replace("$<server>", srvName)
 							.replace("$<data-url>", dataUrl));
+				for (String arg : args)
+					cmd.add(arg);
 
 				// Detect OS
 				int os;
@@ -1184,6 +1226,8 @@ public class LauncherUpdaterMain {
 				builder.environment().put("CENTURIA_LAUNCHER_PATH",
 						(os == 0 || os == 2 ? new File("launcher.sh").getAbsolutePath()
 								: new File("launcher.bat").getAbsolutePath()));
+				if (os == 0)
+					builder.environment().put("PATH", System.getenv("PATH") + ":/usr/local/bin");
 				builder.inheritIO();
 				Process proc = builder.start();
 
@@ -1191,9 +1235,99 @@ public class LauncherUpdaterMain {
 				if (!currentVersion.equals(launcherVersion))
 					Files.writeString(verFile.toPath(), launcherVersion);
 				SwingUtilities.invokeAndWait(() -> {
-					frmCenturiaLauncher.dispose();
+					frmCenturiaLauncher.setVisible(false);
 				});
 				proc.waitFor();
+				int exitCode = proc.waitFor();
+				if (exitCode == 237) {
+					// Reset
+					log("Checking launcher files...");
+					SwingUtilities.invokeAndWait(() -> {
+						progressBar.setMaximum(100);
+						progressBar.setValue(0);
+					});
+
+					// Read server info
+					String url;
+					String dataUrl2;
+					String srvName2;
+					try {
+						JsonObject conf = JsonParser.parseString(Files.readString(Path.of("server.json")))
+								.getAsJsonObject();
+						srvName2 = conf.get("serverName").getAsString();
+						url = conf.get("serverConfig").getAsString();
+						dataUrl2 = url;
+					} catch (Exception e) {
+						JOptionPane.showMessageDialog(null,
+								"Invalid " + (installerMode ? "installer" : "launcher") + " configuration.",
+								(installerMode ? "Installer" : "Launcher") + " Error", JOptionPane.ERROR_MESSAGE);
+						System.exit(1);
+						return;
+					}
+
+					// Set title
+					if (!installerMode)
+						frmCenturiaLauncher.setTitle(srvName + " Launcher");
+					else
+						frmCenturiaLauncher.setTitle(srvName + " Installer");
+
+					// Contact server
+					String launcherVersion2;
+					String launcherURL2;
+					try {
+						// Download data
+						InputStream strm = new URL(url).openStream();
+						String data = new String(strm.readAllBytes(), "UTF-8");
+						strm.close();
+						JsonObject info = JsonParser.parseString(data).getAsJsonObject();
+						JsonObject launcher = info.get("launcher").getAsJsonObject();
+						String splash = launcher.get("splash").getAsString();
+						url = launcher.get("url").getAsString();
+						String version = launcher.get("version").getAsString();
+
+						// Handle relative paths for banner
+						if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
+							JsonObject serverInfo = info.get("server").getAsJsonObject();
+							JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
+							String api = hosts.get("api").getAsString();
+							if (!api.endsWith("/"))
+								api += "/";
+							while (splash.startsWith("/"))
+								splash = splash.substring(1);
+							splash = api + splash;
+						}
+
+						// Download splash and set image
+						try {
+							InputStream strmi = new URL(splash).openStream();
+							FileOutputStream bannerO = new FileOutputStream(new File(instDir, "banner.image"));
+							strmi.transferTo(bannerO);
+							strmi.close();
+							bannerO.close();
+						} catch (IOException e) {
+						}
+						BufferedImage img = ImageIO.read(new File(instDir, "banner.image"));
+						panel_1.setImage(img);
+						launcherVersion2 = version;
+						launcherURL2 = url;
+
+						// Launch again
+						SwingUtilities.invokeAndWait(() -> {
+							frmCenturiaLauncher.setVisible(true);
+						});
+						startLauncher(instDir, progressBar, launcherVersion2, srvName2, launcherURL2, dataUrl2, args);
+					} catch (Exception e) {
+						JOptionPane.showMessageDialog(null,
+								"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please contact support.",
+								(installerMode ? "Installer" : "Launcher") + " Error", JOptionPane.ERROR_MESSAGE);
+						System.exit(1);
+						return;
+					}
+					return;
+				}
+				SwingUtilities.invokeAndWait(() -> {
+					frmCenturiaLauncher.dispose();
+				});
 				System.exit(proc.exitValue());
 			} catch (Exception e) {
 				try {

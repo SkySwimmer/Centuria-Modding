@@ -53,6 +53,8 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -230,6 +232,7 @@ public class LauncherMain {
 		JsonObject client;
 		JsonObject modloader;
 		String manifest;
+		boolean useWineMethodOSX;
 		try {
 			// Read server info
 			String url;
@@ -243,6 +246,10 @@ public class LauncherMain {
 				System.exit(1);
 				return;
 			}
+			ArrayList<String> arguments = new ArrayList<String>(Arrays.asList(args));
+			arguments.remove(0);
+			arguments.remove(0);
+			args = arguments.toArray(t -> new String[t]);
 			frmCenturiaLauncher.setTitle(srvName + " Launcher");
 			lblNewLabel_1.setText(srvName + " Launcher");
 
@@ -259,6 +266,7 @@ public class LauncherMain {
 			ports = serverInfo.get("ports").getAsJsonObject();
 			client = launcher.get("client").getAsJsonObject();
 			JsonObject loader = launcher.get("modloader").getAsJsonObject();
+			useWineMethodOSX = launcher.has("osxUseWineMethod") && launcher.get("osxUseWineMethod").getAsBoolean();
 
 			// Handle relative paths for banner
 			if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
@@ -287,16 +295,29 @@ public class LauncherMain {
 			} else if (System.getProperty("os.name").toLowerCase().contains("darwin")
 					|| System.getProperty("os.name").toLowerCase().contains("mac")) { // MacOS
 				os = "osx";
-				feralPlat = "osx";
-				if (!loader.has(os)) {
-					JOptionPane.showMessageDialog(null,
-							"Unsupported platform!\nThe launcher cannot load on your device due to there being no modloader for your platform in the server configuration. Please wait until your device is supported.\n\nOS Name: "
-									+ System.getProperty("os.name"),
-							"Launcher Error", JOptionPane.ERROR_MESSAGE);
-					System.exit(1);
-					return;
+				if (useWineMethodOSX) {
+					feralPlat = "win64";
+					if (!loader.has("win64")) {
+						JOptionPane.showMessageDialog(null,
+								"Unsupported platform!\nThe launcher cannot load on your device due to there being no modloader for your platform in the server configuration. Please wait until your device is supported.\n\nOS Name: "
+										+ System.getProperty("os.name"),
+								"Launcher Error", JOptionPane.ERROR_MESSAGE);
+						System.exit(1);
+						return;
+					}
+					manifest = client.get("win64").getAsString();
+				} else {
+					feralPlat = "osx";
+					if (!loader.has(os)) {
+						JOptionPane.showMessageDialog(null,
+								"Unsupported platform!\nThe launcher cannot load on your device due to there being no modloader for your platform in the server configuration. Please wait until your device is supported.\n\nOS Name: "
+										+ System.getProperty("os.name"),
+								"Launcher Error", JOptionPane.ERROR_MESSAGE);
+						System.exit(1);
+						return;
+					}
+					manifest = client.get(os).getAsString();
 				}
-				manifest = client.get(os).getAsString();
 			} else if (System.getProperty("os.name").toLowerCase().contains("linux")) {// Linux
 				os = "linux";
 				feralPlat = "win64";
@@ -324,7 +345,7 @@ public class LauncherMain {
 			panel_1.setImage(img);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null,
-					"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please submit a support ticket.",
+					"Could not connect with the launcher servers, please check your internet connection. If you are connected, please wait a few minutes and try again.\n\nIf the issue remains and you are connected to the internet, please contact support.",
 					"Launcher Error", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 			return;
@@ -333,7 +354,6 @@ public class LauncherMain {
 		Thread th = new Thread(() -> {
 			// Set progress bar status
 			try {
-
 				// Set label
 				SwingUtilities.invokeAndWait(() -> {
 					log("Preparing...");
@@ -441,8 +461,7 @@ public class LauncherMain {
 				if (!api.endsWith("/"))
 					api += "/";
 				String apiData = api + "data/";
-				if (hosts.has("launcherDataSource"))
-				{
+				if (hosts.has("launcherDataSource")) {
 					apiData = hosts.get("launcherDataSource").getAsString();
 					if (!apiData.endsWith("/"))
 						apiData += "/";
@@ -478,9 +497,8 @@ public class LauncherMain {
 							System.exit(1);
 							return;
 						} else if (resp.has("errorMessage")) {
-							JOptionPane.showMessageDialog(frmCenturiaLauncher,
-									resp.get("errorMessage").getAsString(), "Launcher Error",
-									JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(frmCenturiaLauncher, resp.get("errorMessage").getAsString(),
+									"Launcher Error", JOptionPane.ERROR_MESSAGE);
 							System.exit(1);
 							return;
 						}
@@ -500,6 +518,41 @@ public class LauncherMain {
 				String currentClient = "";
 				if (new File("clientversion.info").exists()) {
 					currentClient = Files.readString(Path.of("clientversion.info"));
+
+					// Verify method switch
+					if (!useWineMethodOSX) {
+						// Check if last time was wine method
+						if (new File("macosusewine").exists()) {
+							// Clean up
+							if (new File("client").exists())
+								deleteDir(new File("client"));
+							if (new File("clientversion.info").exists())
+								new File("clientversion.info").delete();
+							if (new File("loaderversion.info").exists())
+								new File("loaderversion.info").delete();
+							if (new File("modversion.info").exists())
+								new File("modversion.info").delete();
+							if (new File("assetversion.info").exists())
+								new File("assetversion.info").delete();
+							new File("macosusewine").delete();
+						}
+					} else if (os.equals("osx")) {
+						// Check if last time was non-wine method
+						if (!new File("macosusewine").exists()) {
+							// Clean up
+							if (new File("client").exists())
+								deleteDir(new File("client"));
+							if (new File("clientversion.info").exists())
+								new File("clientversion.info").delete();
+							if (new File("loaderversion.info").exists())
+								new File("loaderversion.info").delete();
+							if (new File("modversion.info").exists())
+								new File("modversion.info").delete();
+							if (new File("assetversion.info").exists())
+								new File("assetversion.info").delete();
+							new File("macosusewine").createNewFile();
+						}
+					}
 				}
 
 				// Download manifest
@@ -682,7 +735,7 @@ public class LauncherMain {
 					});
 
 					// OSX stuff
-					if (os.equals("osx")) {
+					if (feralPlat.equals("osx")) {
 						resetAttrs = true;
 					}
 				}
@@ -725,7 +778,7 @@ public class LauncherMain {
 					Files.writeString(Path.of("loaderversion.info"), modloader.get("version").getAsString());
 
 					// OSX stuff
-					if (os.equals("osx")) {
+					if (feralPlat.equals("osx")) {
 						resetAttrs = true;
 					}
 
@@ -793,8 +846,8 @@ public class LauncherMain {
 					});
 
 					// Download manifest
-					updateMods("assets/index.json", apiData, modloader.get("assetBaseDir").getAsString(), hosts, authToken,
-							progressBar, panel_1);
+					updateMods("assets/index.json", apiData, modloader.get("assetBaseDir").getAsString(), hosts,
+							authToken, progressBar, panel_1);
 
 					// Save version
 					Files.writeString(Path.of("assetversion.info"), serverInfo.get("assetVersion").getAsString());
@@ -875,16 +928,37 @@ public class LauncherMain {
 				}
 
 				try {
-					// Check OS
-					if (os.equals("win64"))
-						builder = new ProcessBuilder(clientFile.getAbsolutePath(), "--launcher-handoff",
-								Integer.toString(port)); // Windows
-					else if (os.equals("osx")) {
-						builder = new ProcessBuilder("sh", clientFile.getAbsolutePath(), "--launcher-handoff",
-								Integer.toString(port)); // MacOS
-					} else if (os.equals("linux")) {
-						builder = new ProcessBuilder("wine", clientFile.getAbsolutePath(), "--launcher-handoff",
-								Integer.toString(port)); // Linux, need wine
+					// Build startup command
+					ArrayList<String> arguments = new ArrayList<String>();
+
+					// Start command
+					if (os.equals("win64")) {
+						// Windows
+						arguments.add(clientFile.getAbsolutePath());
+					} else if (os.equals("osx") && !useWineMethodOSX) {
+						// MacOS
+						arguments.add("sh");
+						arguments.add(clientFile.getAbsolutePath());
+					} else if (os.equals("linux") || useWineMethodOSX) {
+						// Linux or wine-method-macos
+						arguments.add("wine");
+						arguments.add(clientFile.getAbsolutePath());
+					}
+
+					// Handoff
+					arguments.add("--launcher-handoff");
+					arguments.add(Integer.toString(port));
+
+					// User arguments
+					for (String arg : args)
+						arguments.add(arg);
+
+					// Builder
+					builder = new ProcessBuilder(arguments.toArray(t -> new String[t]));
+
+					// Wine
+					if (os.equals("linux") || (useWineMethodOSX && os.equals("osx"))) {
+						// Check prefix
 						File prefix = new File("wineprefix");
 						if (!new File(prefix, "completed").exists()) {
 							prefix.mkdirs();
@@ -944,7 +1018,9 @@ public class LauncherMain {
 								panel_5.setVisible(true);
 								panel_1.repaint();
 							});
-							String man = downloadString("https://api.github.com/repos/doitsujin/dxvk/releases/latest");
+							String man = downloadString(os.equalsIgnoreCase("linux")
+									? "https://api.github.com/repos/doitsujin/dxvk/releases/latest"
+									: "https://api.github.com/repos/Gcenx/DXVK-macOS/releases/latest");
 							JsonArray assets = JsonParser.parseString(man).getAsJsonObject().get("assets")
 									.getAsJsonArray();
 							String dxvk = null;
@@ -1039,7 +1115,7 @@ public class LauncherMain {
 								SwingUtilities.invokeAndWait(() -> {
 									JOptionPane.showMessageDialog(frmCenturiaLauncher,
 											"Client process exited before the launch was completed!\nExit code: "
-													+ proc.exitValue() + "\n\nPlease open a support ticket!",
+													+ proc.exitValue() + "\n\nPlease contact support!",
 											"Launcher Error", JOptionPane.ERROR_MESSAGE);
 									System.exit(proc.exitValue());
 								});
@@ -1066,8 +1142,8 @@ public class LauncherMain {
 								progressBar.setValue(0);
 								panel_1.repaint();
 							});
-							launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), apiDataF, serverInfo, hosts, ports,
-									completedTutorial);
+							launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), apiDataF, serverInfo, hosts,
+									ports, completedTutorial);
 							cl.close();
 							SwingUtilities.invokeAndWait(() -> {
 								log("Finished startup!");
@@ -1136,8 +1212,8 @@ public class LauncherMain {
 		th.start();
 	}
 
-	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo, JsonObject hosts,
-			JsonObject ports, boolean completedTutorial) throws Exception {
+	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo,
+			JsonObject hosts, JsonObject ports, boolean completedTutorial) throws Exception {
 		if (!api.endsWith("/"))
 			api += "/";
 		if (!apiData.endsWith("/"))
@@ -1232,8 +1308,8 @@ public class LauncherMain {
 		dir.delete();
 	}
 
-	private void updateMods(String pth, String apiData, String baseOut, JsonObject hosts, String authToken, JProgressBar progressBar,
-			JPanel panel_1) throws Exception {
+	private void updateMods(String pth, String apiData, String baseOut, JsonObject hosts, String authToken,
+			JProgressBar progressBar, JPanel panel_1) throws Exception {
 		String api = hosts.get("api").getAsString();
 		if (!api.endsWith("/"))
 			api += "/";
@@ -1250,27 +1326,25 @@ public class LauncherMain {
 			// Handle error
 			String err = resp.get("error").getAsString();
 			switch (err) {
-				case "invalid_credential": {
-					throw new IOException("Credentials invalid");
-				}
-				case "feraltweaks_not_enabled": {
-					JOptionPane.showMessageDialog(frmCenturiaLauncher,
-							"Client modding is not enabled on your account, unable to launch the game.",
-							"Launcher Error",
-							JOptionPane.ERROR_MESSAGE);
+			case "invalid_credential": {
+				throw new IOException("Credentials invalid");
+			}
+			case "feraltweaks_not_enabled": {
+				JOptionPane.showMessageDialog(frmCenturiaLauncher,
+						"Client modding is not enabled on your account, unable to launch the game.", "Launcher Error",
+						JOptionPane.ERROR_MESSAGE);
+				System.exit(1);
+				return;
+			}
+			default: {
+				if (resp.has("errorMessage")) {
+					JOptionPane.showMessageDialog(frmCenturiaLauncher, resp.get("errorMessage").getAsString(),
+							"Launcher Error", JOptionPane.ERROR_MESSAGE);
 					System.exit(1);
 					return;
 				}
-				default: {
-					if (resp.has("errorMessage")) {
-						JOptionPane.showMessageDialog(frmCenturiaLauncher,
-								resp.get("errorMessage").getAsString(), "Launcher Error",
-								JOptionPane.ERROR_MESSAGE);
-						System.exit(1);
-						return;
-					}
-					throw new Exception("Unknown server error: " + err);
-				}
+				throw new Exception("Unknown server error: " + err);
+			}
 			}
 		}
 
