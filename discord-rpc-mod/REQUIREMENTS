@@ -6,13 +6,13 @@ To do this, you will need to run the following commands.
 Linux:
 ```
 cd bridge
-winegcc -shared -o ../assets/winepipebridge.linux.dll.so bridge_unix.c bridge_unix.spec -fshort-wchar
+winegcc -shared -o ../assets/winepipebridge.dll.so bridge_unix.c bridge_unix.spec -fshort-wchar
 ```
 
 MacOS:
 ```
 cd bridge
-winegcc -shared -o ../assets/winepipebridge.macos.dll.dylib bridge_unix.c bridge_unix.spec -fshort-wchar
+winegcc -shared -o ../assets/winepipebridge.dll.dylib bridge_unix.c bridge_unix.spec -fshort-wchar
 ```
 
 

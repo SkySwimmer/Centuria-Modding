@@ -128,11 +128,11 @@ namespace FeralDiscordRpcMod
                     string sys = WineUnixPipeClient.WineUtils.GetHostSysName();
 
                     // Handle result
-                    string pipeFileName = ModBaseDirectory + "/winepipebridge.linux.dll.so";
+                    string pipeFileName = ModBaseDirectory + "/winepipebridge.dll.so";
                     if (sys.ToLower().Contains("linux"))
-                        pipeFileName = ModBaseDirectory + "/winepipebridge.linux.dll.so";
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.dll.so";
                     else
-                        pipeFileName = ModBaseDirectory + "/winepipebridge.macos.dll.dylib";
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.dll.dylib";
 
                     // Check
                     if (!File.Exists(pipeFileName))
