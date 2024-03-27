@@ -124,8 +124,18 @@ namespace FeralDiscordRpcMod
                 }
                 if (wine)
                 {
+                    // Get system name
+                    string sys = WineUnixPipeClient.WineUtils.GetHostSysName();
+
+                    // Handle result
+                    string pipeFileName = ModBaseDirectory + "/winepipebridge.linux.dll.so";
+                    if (sys.ToLower().Contains("linux"))
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.linux.dll.so";
+                    else
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.macos.dll.dylib";
+
                     // Check
-                    if (!File.Exists(ModBaseDirectory + "/winepipebridge.dll.so"))
+                    if (!File.Exists(pipeFileName))
                     {
                         LogError("Unable to load wine compatibility layer for Rich Presence!");
                         client = new DiscordRpcClient(clientid, config.pipe);
@@ -133,7 +143,7 @@ namespace FeralDiscordRpcMod
                     else
                     {
                         // Wine
-                        NativeLibrary.Load(Path.GetFullPath(ModBaseDirectory + "/winepipebridge.dll.so"));
+                        NativeLibrary.Load(Path.GetFullPath(pipeFileName));
                         client = new DiscordRpcClient(clientid, config.pipe, client: new WineUnixPipeClient());
                     }
                     joinExe = config.joinExecutableLinux;

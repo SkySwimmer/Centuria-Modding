@@ -921,6 +921,7 @@ public class LauncherMain {
 				if (resetAttrs) {
 					ProcessBuilder proc = new ProcessBuilder("xattr", "-cr",
 							new File("client/build").getCanonicalPath());
+					proc.inheritIO();
 					try {
 						proc.start().waitFor();
 					} catch (InterruptedException e1) {
@@ -976,26 +977,31 @@ public class LauncherMain {
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
 										"native,builtin", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
 								proc.start().waitFor();
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
 										"native", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
 								proc.start().waitFor();
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
 										"native", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
 								proc.start().waitFor();
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "dxgi", "/d", "native",
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
 								proc.start().waitFor();
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d", "native",
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
 								proc.start().waitFor();
 							} catch (Exception e) {
 								prefix.delete();

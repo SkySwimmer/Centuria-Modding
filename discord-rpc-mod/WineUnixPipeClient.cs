@@ -15,6 +15,35 @@ namespace FeralDiscordRpcMod
 {
     public class WineUnixPipeClient : INamedPipeClient
     {
+        public static class WineUtils
+        {
+            public static string GetHostSysName()
+            {
+                unsafe 
+                {
+                    char * sysName;
+                    char * version;
+                    wine_get_host_version(&sysName, &version);
+                    string sysNameStr = Marshal.PtrToStringAnsi((IntPtr) sysName);
+                    return sysNameStr;
+                }
+            }
+            public static string GetHostVersion()
+            {
+                unsafe 
+                {
+                    char * sysName;
+                    char * version;
+                    wine_get_host_version(&sysName, &version);
+                    string versionStr = Marshal.PtrToStringAnsi((IntPtr) version);
+                    return versionStr;
+                }
+            }
+
+            [DllImport("ntdll", EntryPoint = "wine_get_host_version")]
+            public unsafe static extern string wine_get_host_version(char ** sysName, char ** version);
+        }
+
         public static class PipeBridge
         {
             [DllImport("winepipebridge", EntryPoint = "create_socket")]

@@ -787,7 +787,7 @@ public class LauncherUpdaterMain {
 				sO.write(("Name=" + srvName + "\n").getBytes("UTF-8"));
 				sO.write(("Categories=Game;\n").getBytes("UTF-8"));
 				sO.write(("Comment=Launcher for " + srvName + "\n").getBytes("UTF-8"));
-				sO.write(("Exec=" + new File(launcherOut, "launcher.sh").getAbsolutePath() + "\n").getBytes("UTF-8"));
+				sO.write(("Exec=\"" + new File(launcherOut, "launcher.sh").getAbsolutePath() + "\"\n").getBytes("UTF-8"));
 				sO.write(("Icon=" + new File(launcherOut, "icon.png").getAbsolutePath() + "\n").getBytes("UTF-8"));
 				sO.write(("Path=" + launcherOut.getAbsolutePath() + "\n").getBytes("UTF-8"));
 				sO.write(("StartupNotify=true\n").getBytes("UTF-8"));

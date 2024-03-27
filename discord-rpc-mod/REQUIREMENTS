@@ -1,11 +1,19 @@
-For the wine compatibilty layer to work, you MUST compile the wrapper library.
+For the wine Linux & MacOS compatibilty layer to work, you MUST compile the wrapper library.
 You will need to have wine and wine-tools installed to compile the wrapper.
 
-To do this, you will need to run the following command on linux:
+To do this, you will need to run the following commands.
 
+Linux:
 ```
 cd bridge
-winegcc -shared -o ../assets/winepipebridge.dll.so bridge_unix.c bridge_unix.spec -fshort-wchar
+winegcc -shared -o ../assets/winepipebridge.linux.dll.so bridge_unix.c bridge_unix.spec -fshort-wchar
 ```
+
+MacOS:
+```
+cd bridge
+winegcc -shared -o ../assets/winepipebridge.macos.dll.dylib bridge_unix.c bridge_unix.spec -fshort-wchar
+```
+
 
 If this program is not compiled, wine compatibilty will not work

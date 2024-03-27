@@ -68,7 +68,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static long timeLastTypingStatusCheck;
         private static string lastChatInputText;
 
-        private static string typingStatusString = ".";
+        private static string typingStatusString = ".  ";
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(FeralVivoxManager), "OnLoginComplete")]
@@ -1203,14 +1203,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Status tick
                 switch(typingStatusString)
                 {
-                    case ".":
-                        typingStatusString = "..";
+                    case ".  ":
+                        typingStatusString = ".. ";
                         break;
-                    case "..":
+                    case ".. ":
                         typingStatusString = "...";
                         break;
                     case "...":
-                        typingStatusString = ".";
+                        typingStatusString = ".  ";
                         break;
                 }
 

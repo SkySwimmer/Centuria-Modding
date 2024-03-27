@@ -1,1 +1,2 @@
-assets/winepipebridge.dll.so
+assets/winepipebridge.linux.dll.so
+assets/winepipebridge.macos.dll.dylib

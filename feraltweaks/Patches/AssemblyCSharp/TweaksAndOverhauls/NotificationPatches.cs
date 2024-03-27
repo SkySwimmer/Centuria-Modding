@@ -53,17 +53,20 @@ namespace feraltweaks.Patches.AssemblyCSharp
             [HarmonyPatch(typeof(NotificationController), "OnPrimaryQuestUpdated")]
             public static bool OnPrimaryQuestUpdated(PrimaryQuestUpdatedMessage inMessage)
             {
-                // Create notification
-                Notification notif = new Notification();
-                notif.isLogged = true;
-                notif._isUnread = false;
-                notif.imageDefId = null;
-                notif.messageText = LocalizationChartData.Format("14216");
-                notif.timeStamp = CoreDateUtils.Now;
-                notif.notificationGroup = NotificationGroup.System;
+                if (inMessage.SecondaryQuest.IsCompleted)
+                {
+                    // Create notification
+                    Notification notif = new Notification();
+                    notif.isLogged = true;
+                    notif._isUnread = false;
+                    notif.imageDefId = null;
+                    notif.messageText = LocalizationChartData.Format("14216");
+                    notif.timeStamp = CoreDateUtils.Now;
+                    notif.notificationGroup = NotificationGroup.System;
 
-                // Show notif
-                NotificationManager.instance.AddNotification(notif);
+                    // Show notif
+                    NotificationManager.instance.AddNotification(notif);
+                }
                 return false;
             }
 

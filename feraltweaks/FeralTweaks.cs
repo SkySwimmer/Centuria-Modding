@@ -10,7 +10,6 @@ using FeralTweaks.Mods;
 using FeralTweaks;
 using FeralTweaks.Actions;
 using FeralTweaks.BundleInjection;
-using Razorwhip.Sentinel.Feral;
 
 namespace feraltweaks
 {
@@ -54,9 +53,6 @@ namespace feraltweaks
 
             // Start action thread
             FeralTweaksActionManager.StartActionThread();
-
-            // Sentinel
-            FeralSentinelInitializer.Init();
 
             // Patch with harmony
             LogInfo("Applying patches...");

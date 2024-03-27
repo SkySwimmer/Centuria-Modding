@@ -273,6 +273,7 @@ namespace FeralTweaks
 
             // Discover packaged mods
             LogInfo("Finding mod packages...");
+            List<string> loadedPackageIDs = new List<string>();
             foreach (FileInfo mod in new DirectoryInfo("FeralTweaks/mods").GetFiles("*.ftm"))
             {
                 // Log
@@ -308,6 +309,7 @@ namespace FeralTweaks
                         else if (Directory.Exists("FeralTweaks/mods/" + man.id))
                             throw new ArgumentException("Conflict: folder " + man.id + " exists and is not related to the mod package.");
                         LogInfo("Discovered package: " + man.id + ", version: " + man.version);
+                        loadedPackageIDs.Add(man.id.ToLower());
 
                         // Check
                         if (current != man.timestamp)
@@ -377,6 +379,30 @@ namespace FeralTweaks
                 catch (Exception e)
                 {
                     LogError("Failed to parse FTM package: " + mod.FullName + ": " + e.GetType().FullName + (e.Message != null && e.Message != "" ? ": " + e.Message : ""));
+                }
+            }
+
+            // Remove the folders of deleted mod packages
+            List<string> dirsToDelete = new List<string>();
+            foreach (DirectoryInfo dir in new DirectoryInfo("FeralTweaks/mods").GetDirectories())
+            {
+                if (!File.Exists(dir.FullName + "/clientmod.json") || !File.Exists(dir.FullName + "/version.info"))
+                    continue; // Skip 
+                if (!loadedPackageIDs.Contains(dir.Name.ToLower()))
+                {
+                    // Delete
+                    dirsToDelete.Add(dir.FullName);
+                }
+            }
+            foreach (string dir in dirsToDelete)
+            {
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch
+                {
+                    Directory.Delete(dir);
                 }
             }
 
