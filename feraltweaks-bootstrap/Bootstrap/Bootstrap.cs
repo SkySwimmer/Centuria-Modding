@@ -209,7 +209,7 @@ namespace FeralTweaksBootstrap
                                 LogInfo("    --debug-log                            -  enables debug logging in the loader, preloader and mods");
                                 LogInfo("    --log-level <level>                    -  assigns the log level (eg. debug, trace, info, warn, error, fatal, quiet)");
                                 LogInfo("    --console-log-level <level>            -  assigns the console log level (eg. debug, trace, info, warn, error, fatal, quiet)");
-                                LogInfo("    --log-unity                            -  enables unity logging");
+                                LogInfo("    --log-unity-to-file                    -  logs unity logs to a file");
                                 LogInfo("");
                                 LogInfo("  Modloader arguments:");
                                 LogInfo("    --load-mod-from \"<path>\"               -  instructs FTL to load a structured mod from the specified folder path");
@@ -322,6 +322,11 @@ namespace FeralTweaksBootstrap
                                 }
 
                                 break;
+                            }
+                        case "log-unity-to-file":
+                            {
+                                logUnityToFile = true;
+                                break;    
                             }
                         case "debug-log":
                             {
