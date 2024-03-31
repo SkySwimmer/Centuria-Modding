@@ -20,10 +20,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DeviceId.Linux" Version="6.4.0" />
-    <PackageReference Include="DeviceId.Windows" Version="6.6.0" />
-    <PackageReference Include="DeviceId.Windows.Mmi" Version="6.5.0" />
-    <PackageReference Include="DeviceId.Mac" Version="6.3.0" />
     <PackageReference Include="HarmonyX" Version="2.12.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
@@ -37,6 +33,10 @@
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>lib\feral\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>lib\feral\UnityEngine.UnityWebRequestModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
@@ -94,9 +94,9 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	<Copy
-		SourceFiles="assets\clientmod.json"
-		DestinationFolder="run\FeralTweaks\mods\feraltweaks"
-	/>
+    <Copy
+      SourceFiles="assets\clientmod.json"
+      DestinationFolder="run\FeralTweaks\mods\feraltweaks"
+    />
   </Target>
 </Project>

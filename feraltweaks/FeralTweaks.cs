@@ -218,6 +218,7 @@ namespace feraltweaks
                 + "\n"
                 + "GlidingTurnSpeed=0.1\n"
                 + "GlidingGravity=3\n"
+                + "GlidingMaxRollAngle=70\n"
                 + "GlidingRollAmount=12\n"
                 + "GlidingSpeedMultiplier=2\n"
                 + "GlidingAllowFlap=true\n"

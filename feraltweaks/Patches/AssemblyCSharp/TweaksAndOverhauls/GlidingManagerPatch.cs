@@ -20,7 +20,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool AllowFlap = true;
         public static float FlapForce = 10f;
         public static long FlapCooldown = 200;
-        public static float GlidingMaxRollAngle = 120f;
+        public static float GlidingMaxRollAngle = 70f;
         public static float GlidingRollAmount = 12f;
         public static float GlidingSpeedMultiplier = 2f;
 

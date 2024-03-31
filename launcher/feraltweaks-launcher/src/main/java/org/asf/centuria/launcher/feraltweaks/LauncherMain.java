@@ -80,6 +80,8 @@ public class LauncherMain {
 	private boolean shiftDown;
 	private boolean connected;
 
+	public static final String PREFERRED_DXVK_VERSION_MACOS = "v1.10.3";
+
 	/**
 	 * Launch the application.
 	 */
@@ -514,45 +516,45 @@ public class LauncherMain {
 					panel_1.repaint();
 				});
 
+				// Verify method switch
+				if (!useWineMethodOSX) {
+					// Check if last time was wine method
+					if (new File("macosusewine").exists()) {
+						// Clean up
+						if (new File("client").exists())
+							deleteDir(new File("client"));
+						if (new File("clientversion.info").exists())
+							new File("clientversion.info").delete();
+						if (new File("loaderversion.info").exists())
+							new File("loaderversion.info").delete();
+						if (new File("modversion.info").exists())
+							new File("modversion.info").delete();
+						if (new File("assetversion.info").exists())
+							new File("assetversion.info").delete();
+						new File("macosusewine").delete();
+					}
+				} else if (os.equals("osx")) {
+					// Check if last time was non-wine method
+					if (!new File("macosusewine").exists()) {
+						// Clean up
+						if (new File("client").exists())
+							deleteDir(new File("client"));
+						if (new File("clientversion.info").exists())
+							new File("clientversion.info").delete();
+						if (new File("loaderversion.info").exists())
+							new File("loaderversion.info").delete();
+						if (new File("modversion.info").exists())
+							new File("modversion.info").delete();
+						if (new File("assetversion.info").exists())
+							new File("assetversion.info").delete();
+						new File("macosusewine").createNewFile();
+					}
+				}
+
 				// Read version
 				String currentClient = "";
 				if (new File("clientversion.info").exists()) {
 					currentClient = Files.readString(Path.of("clientversion.info"));
-
-					// Verify method switch
-					if (!useWineMethodOSX) {
-						// Check if last time was wine method
-						if (new File("macosusewine").exists()) {
-							// Clean up
-							if (new File("client").exists())
-								deleteDir(new File("client"));
-							if (new File("clientversion.info").exists())
-								new File("clientversion.info").delete();
-							if (new File("loaderversion.info").exists())
-								new File("loaderversion.info").delete();
-							if (new File("modversion.info").exists())
-								new File("modversion.info").delete();
-							if (new File("assetversion.info").exists())
-								new File("assetversion.info").delete();
-							new File("macosusewine").delete();
-						}
-					} else if (os.equals("osx")) {
-						// Check if last time was non-wine method
-						if (!new File("macosusewine").exists()) {
-							// Clean up
-							if (new File("client").exists())
-								deleteDir(new File("client"));
-							if (new File("clientversion.info").exists())
-								new File("clientversion.info").delete();
-							if (new File("loaderversion.info").exists())
-								new File("loaderversion.info").delete();
-							if (new File("modversion.info").exists())
-								new File("modversion.info").delete();
-							if (new File("assetversion.info").exists())
-								new File("assetversion.info").delete();
-							new File("macosusewine").createNewFile();
-						}
-					}
 				}
 
 				// Download manifest
@@ -962,7 +964,9 @@ public class LauncherMain {
 					if (os.equals("linux") || (useWineMethodOSX && os.equals("osx"))) {
 						// Check prefix
 						File prefix = new File("wineprefix");
-						if (!new File(prefix, "completed").exists()) {
+						if (!new File(prefix, "completed").exists() && !new File(prefix, "completedwine").exists()) {
+							if (prefix.exists())
+								deleteDir(prefix);
 							prefix.mkdirs();
 
 							// Set overrides
@@ -1017,6 +1021,16 @@ public class LauncherMain {
 								});
 							}
 
+							// Mark done
+							new File(prefix, "completed").createNewFile();
+						}
+						builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+					}
+					if (os.equals("linux") || (useWineMethodOSX && os.equals("osx"))) {
+						// Check prefix
+						File dxvkD = new File("dxvk");
+						File prefix = new File("wineprefix");
+						if (!new File(dxvkD, "completed").exists()) {
 							// Download DXVK
 							SwingUtilities.invokeAndWait(() -> {
 								log("Downloading DXVK...");
@@ -1025,11 +1039,30 @@ public class LauncherMain {
 								panel_5.setVisible(true);
 								panel_1.repaint();
 							});
-							String man = downloadString(os.equalsIgnoreCase("linux")
-									? "https://api.github.com/repos/doitsujin/dxvk/releases/latest"
-									: "https://api.github.com/repos/Gcenx/DXVK-macOS/releases/latest");
-							JsonArray assets = JsonParser.parseString(man).getAsJsonObject().get("assets")
-									.getAsJsonArray();
+
+							// Get url
+							String macosURL = null;
+							JsonObject rel = null;
+							if (os.equalsIgnoreCase("osx")) {
+								String man = downloadString("https://api.github.com/repos/Gcenx/DXVK-macOS/releases");
+								JsonArray versions = JsonParser.parseString(man).getAsJsonArray();
+								for (JsonElement ele : versions) {
+									JsonObject r = ele.getAsJsonObject();
+									if (r.get("tag_name").getAsString().equals(PREFERRED_DXVK_VERSION_MACOS)) {
+										rel = r;
+										break;
+									}
+								}
+								if (rel == null)
+									throw new IOException(
+											"Could not find DXVK version " + PREFERRED_DXVK_VERSION_MACOS);
+							} else {
+								String man = downloadString(os.equalsIgnoreCase("linux")
+										? "https://api.github.com/repos/doitsujin/dxvk/releases/latest"
+										: macosURL);
+								rel = JsonParser.parseString(man).getAsJsonObject();
+							}
+							JsonArray assets = rel.get("assets").getAsJsonArray();
 							String dxvk = null;
 							for (JsonElement ele : assets) {
 								JsonObject asset = ele.getAsJsonObject();
@@ -1085,9 +1118,8 @@ public class LauncherMain {
 							}
 
 							// Mark done
-							new File(prefix, "completed").createNewFile();
+							new File(dxvkD, "completed").createNewFile();
 						}
-						builder.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 					}
 					builder.inheritIO();
 					builder.directory(new File("client/build"));
@@ -1216,6 +1248,7 @@ public class LauncherMain {
 		}, "Launcher Thread");
 		th.setDaemon(true);
 		th.start();
+
 	}
 
 	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo,
