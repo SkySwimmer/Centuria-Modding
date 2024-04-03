@@ -102,6 +102,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (!__instance._hasWingsEquipped.GetDecrypted())
                         __instance._hasWingsEquipped = new ObscuredBool(true);
                 }
+                else if (avatar.WingAnimator != null)
+                {
+                    // Override
+                    if (!__instance._hasWingsEquipped.GetDecrypted())
+                        __instance._hasWingsEquipped = new ObscuredBool(true);
+                }
+                else if (avatar.WingAnimator == null)
+                {
+                    // Override
+                    if (__instance._hasWingsEquipped.GetDecrypted())
+                        __instance._hasWingsEquipped = new ObscuredBool(false);
+                }
 
                 // Flap logic
                 long timeSinceLastFlap = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - LastFlapTime;

@@ -1532,6 +1532,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
 
                 // Show message
+                __instance._chatBubbleText.maxVisibleCharacters = int.MaxValue;
+                __instance._chatBubbleText.maxVisibleLines = int.MaxValue;
+                __instance._chatBubbleText.maxVisibleWords = int.MaxValue;
                 __instance._chatBubbleText.text = __instance._chatStringBuilder.ToString();
                 __instance._emojiBubbleText.text = "";
                 __instance._emojiBubbleTransform.gameObject.SetActive(false);
@@ -1587,7 +1590,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
 
                 // Check if the bubble still has a typing status suffix
-                if (__instance._chatBubbleText.text.EndsWith("."))
+                if (__instance._chatBubbleText.text.EndsWith(".") || __instance._chatBubbleText.text.EndsWith(". ") || __instance._chatBubbleText.text.EndsWith(".  "))
                 {
                     // Generate bubble text
                     string msg = __instance._chatStringBuilder.ToString();
