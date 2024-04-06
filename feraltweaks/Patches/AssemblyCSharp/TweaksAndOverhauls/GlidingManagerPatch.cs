@@ -96,7 +96,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (avatar != null && avatar.Info != null)
             {
                 // Check if a dragon or shinigami, if so, override wings to allow without
-                if ((avatar.Info.actorClassDefID == "5035" && FeralTweaks.PatchConfig.ContainsKey("AllowDragonGlidingWithNoWings") && FeralTweaks.PatchConfig["AllowDragonGlidingWithNoWings"].ToLower() == "true") || (avatar.Info.actorClassDefID == "23970" && FeralTweaks.PatchConfig.ContainsKey("AllowShinigamiGlidingWithNoWings") && FeralTweaks.PatchConfig["AllowShinigamiGlidingWithNoWings"].ToLower() == "true"))
+                if ((avatar.Info.actorClassDefID == "25954") || (avatar.Info.actorClassDefID == "5035" && FeralTweaks.PatchConfig.ContainsKey("AllowDragonGlidingWithNoWings") && FeralTweaks.PatchConfig["AllowDragonGlidingWithNoWings"].ToLower() == "true") || (avatar.Info.actorClassDefID == "23970" && FeralTweaks.PatchConfig.ContainsKey("AllowShinigamiGlidingWithNoWings") && FeralTweaks.PatchConfig["AllowShinigamiGlidingWithNoWings"].ToLower() == "true"))
                 {
                     // Override
                     if (!__instance._hasWingsEquipped.GetDecrypted())
