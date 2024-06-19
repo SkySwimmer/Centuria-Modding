@@ -33,8 +33,8 @@ jobs:
       - name: 'Download and compile external lib: Funchook'
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/funchook.sh
 
-      - name: 'Download and compile external lib: Mono'
-        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/mono.sh
+      - name: 'Download and compile external lib: CoreCLR'
+        run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/coreclr.sh
 
       - name: 'Setup Windowsill'
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-android-arm64/windowsill.sh
