@@ -25,14 +25,15 @@ cd runtime/repo
 
 # Prepare
 echo Preparing crosscompile...
-bash eng/common/cross/build-android-rootfs.sh || exit 1
+echo "$(cat eng/common/cross/build-android-rootfs.sh | sed "s/__NDK_Version=.*/__NDK_Version=r26/g")" > eng/common/cross/build-android-rootfs.sh
+bash eng/common/cross/build-android-rootfs.sh arm64 24 || exit 1
 echo Switching branch...
 git checkout "$monobranch" || exit 1
 git pull
 
 # Build
 echo Compiling...
-ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh mono --cross --arch arm64 -os android -c release /p:RunAOTCompilation=false /p:MonoForceInterpreter=true || exit 1
+ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh mono+libs --cross --arch arm64 -os android -c release /p:RunAOTCompilation=false /p:MonoForceInterpreter=true || exit 1
 
 # Copy
 echo Copying files...
