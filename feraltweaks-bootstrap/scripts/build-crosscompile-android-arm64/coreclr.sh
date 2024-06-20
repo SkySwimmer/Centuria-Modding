@@ -25,14 +25,17 @@ cd runtime/repo
 
 # Prepare
 echo Preparing crosscompile...
-bash eng/common/cross/build-android-rootfs.sh || exit 1
+cd eng/common
+bash cross/build-android-rootfs.sh || exit 1
 echo Switching branch...
 git checkout "$coreclrbranch" || exit 1
 git pull
 
 # Build
 echo Compiling...
-ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh Clr.Runtime+libs --cross --arch arm64 -os android -c release /p:RunAOTCompilation=false /p:MonoForceInterpreter=true || exit 1
+ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory coreclr || exit 1
+ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory libraries || exit 1
+cd ../..
 
 # Copy
 echo Copying files...
