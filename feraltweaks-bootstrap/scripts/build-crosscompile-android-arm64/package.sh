@@ -28,10 +28,10 @@ mkdir -vp package/FeralTweaks/lib/android
 cp -rfv work/libfunchook/*.so package/
 echo Zipping...
 
-# Copy CoreCLR
-echo Copying CoreCLR...
-mkdir package/CoreCLR
-cp -rfv work/coreclrlib/. package/CoreCLR/
+# Copy Mono
+echo Copying Mono...
+mkdir package/Mono
+cp -rfv work/monolib/. package/Mono/
 
 # Zip
 cd package
