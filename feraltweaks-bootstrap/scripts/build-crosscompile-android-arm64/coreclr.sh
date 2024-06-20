@@ -33,8 +33,8 @@ git pull
 
 # Build
 echo Compiling...
-ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory coreclr || exit 1
-ROOTFS_DIR=$(realpath ./.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory libraries || exit 1
+ROOTFS_DIR=$(realpath ../../.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory coreclr || exit 1
+ROOTFS_DIR=$(realpath ../../.tools/android-rootfs/android-ndk-*/sysroot) ./build.sh --cross --arch arm64 --subsetCategory libraries || exit 1
 cd ../..
 
 # Copy
