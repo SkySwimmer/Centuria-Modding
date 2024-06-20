@@ -25,7 +25,7 @@ cd runtime/repo
 
 # Prepare
 echo Preparing crosscompile...
-echo "$(cat eng/common/cross/build-android-rootfs.sh | sed "s/__NDK_Version=.*/__NDK_Version=r26/g")" > eng/common/cross/build-android-rootfs.sh
+echo "$(cat eng/common/cross/build-android-rootfs.sh | sed "s/__NDK_Version=.*/__NDK_Version=r26d/g")" > eng/common/cross/build-android-rootfs.sh
 bash eng/common/cross/build-android-rootfs.sh arm64 24 || exit 1
 echo Switching branch...
 git checkout "$monobranch" || exit 1
