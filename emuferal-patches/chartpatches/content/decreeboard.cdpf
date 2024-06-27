@@ -1,4 +1,385 @@
 #
+# Display names fix
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:fixdisplaynames20240604
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:fixdisplaynames20240604.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:fixdisplaynames20240604.message.text",
+					"imageDefID": "decreeboard:emuferal:fixdisplaynames20240604.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "04/07/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:fixdisplaynames20240604.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/seasonPass"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:fixdisplaynames20240604.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Another small fix!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:fixdisplaynames20240604.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "More good news, we managed to fix issues where the display name loading process causes infinite loading, your social tab and dms/gcs should load at normal speed now!\n\n- Zera and the EmuFeral Staff Team",
+					"fr": "",
+ 					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# More Eye Types mod fix
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:moreeyetypesfix20240604
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:moreeyetypesfix20240604.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:moreeyetypesfix20240604.message.text",
+					"imageDefID": "decreeboard:emuferal:moreeyetypesfix20240604.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "04/07/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:moreeyetypesfix20240604.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/seasonPass"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:moreeyetypesfix20240604.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "More Eye Types Mod Fixed!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:moreeyetypesfix20240604.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Good news everyone! We managed to fix the more-eye-types mod! If you see this message it means you are already on the latest build so all you need to do is install the mod to use it, enjoy!\n\n- Zera and the EmuFeral Staff Team",
+					"fr": "",
+ 					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Early Access W2
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:earlyaccess18w2rel
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:earlyaccess18w2rel.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:earlyaccess18w2rel.message.text",
+					"imageDefID": "decreeboard:emuferal:earlyaccess18w2rel.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "04/07/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:earlyaccess18w2rel.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/seasonPass"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:earlyaccess18w2rel.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "1.8 Early Access - Wave 2",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:earlyaccess18w2rel.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "<size=120%><b>Beta 1.8 Early Access is entering the next wave!</b></size>\nThe next wave of the 1.8 Early Access programme is being released! While there are yet to be content updates, we decided its only fair to let players apply already. We are actively working on fixing issues with wave 1 and expanding on the game, however things have been going slowly, too slowly for our taste sometimes. So we decided to let yall be able to apply ahead of time since only a few have access to 1.8 currently.\n\n\n<size=110%><b>For the new, you may wonder, what is 1.8 Early Access?</b></size>\nThe 1.8 Early Access programme is a beta testing programme to allow community members to gain access to the major currently-in-development EmuFeral 1.8 update, this update brings next-generation client modding and content expansion to feral allowing for community content to finally be developed as well as improving many things about Feral. However this update <u>is extremely work-in-progress</u> and is not ready for public release at all due to severe bugs and not yet being fully finished. However, it is close enough to being ready to be beta tested by players!\n\n\n<size=110%><b>What is to be expected from 1.8 and what is the goal?</b></size>\nCurrently, 1.8 provides some small client modding things like legless dragons, increased size limits, some QoL fixes related to chat and notifications and is mostly quality-of-life improvements only right now. But our goal is to make it possible to mod Feral in full, from small Quality-of-Life (QoL) mods to full content expansion, however its likely to take a long time before EmuFeral gets that far. The 1.8 update is a major step to making that all possible as we already have achieved small custom body mods like legless dragons (however the animations are janky!) and more eye types as well as the ability to remove eyes.\n\nIt may however be a bit until the development of wave 2's features finish, so for the time being, wave 2 will be the same as wave 1, with just more players. Once wave 2 client is ready for release, we will announce it here in the decree board and in Discord.\n\n\n<size=110%><b>How do i apply for wave 2?</b></size>\nApplication for the Early Access programme is done from within our Discord! You can find applications in the #emuferal-application channel in the Fer.ever Discord! Please note that if you are verified with limited access, you may need to wait until you can verify for full access to gain access to this channel.\n\nApplications are open until the first of August of 2024, there are a total of 200 slots available so make sure to grab yours quickly!\n\nIf you aren't in the Discord yet, you can join with this invite: https://discord.gg/ferever\n\nEnjoy!\n- Zera and the EmuFeral Staff Team",
+					"fr": "",
+ 					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
 # Spring event
 #
 

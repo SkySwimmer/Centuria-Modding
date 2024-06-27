@@ -31,9 +31,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
             __result = Task.Run<string>(new Func<string>(() =>
             {
                 // Check in progress
-                if (!inProgressDisplayNames.Contains(inUUID))
+                lock (fetchDisplayNames)
                 {
-                    lock (fetchDisplayNames)
+                    if (!inProgressDisplayNames.Contains(inUUID))
                     {
                         if (!fetchDisplayNames.Contains(inUUID))
                         {
@@ -102,7 +102,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     if (!__instance._users._usersByUUID.ContainsKey(id.uuid))
                                     {
                                         // Add
-                                        __instance._users.Add(new UserInfo(id.uuid, id.display_name));
+                                        UserInfo uInfo = new UserInfo(id.uuid, id.display_name);
+                                        __instance._users.Add(uInfo);
+                                        __instance._users._usersByUUID[id.uuid] = uInfo;
                                     }
                                 }
 

@@ -21,8 +21,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
             public bool spawned;
             private bool wantsToSpawn;
             private bool wantsToDespawn;
+            private bool wantsToDestroy;
             private bool blipWasEnabledGlobal;
-            private WorldObjectInfoMessage worldObjectInfo;
+            private List<WorldObjectInfoMessage> pendingWorldObjectInfos = new List<WorldObjectInfoMessage>();
             public bool expectFirstMove = false;
             private bool doCallOriginal;
             public bool busy;
@@ -57,13 +58,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Clear action
                 avatar._nextActionType = ActorActionType.None;
                 avatar._nextActionBreakLoop = true;
-
-                // Play sound
-                FeralAudioInfo audioInfo = new FeralAudioInfo();
-                audioInfo.eventRef = "event:/cutscenes/boundary_camera_fade_in";
-                FeralAudioBehaviour behaviour = avatar.gameObject.GetComponent<FeralAudioBehaviour>();
-                if (behaviour != null)
-                    behaviour.Play(audioInfo, null, Il2CppType.Of<Il2CppSystem.Nullable<float>>().GetConstructor(new Il2CppSystem.Type[] { Il2CppType.Of<float>() }).Invoke(new Il2CppSystem.Object[] { Il2CppSystem.Single.Parse("0") }).Cast<Il2CppSystem.Nullable<float>>());
 
                 // Hide from minimap
                 MinimapBlip blip = avatar.gameObject.GetComponent<MinimapBlip>();
@@ -124,7 +118,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         avatar.transform.rotation = rotOriginal;
                         avatar.transform.position = posOriginal;
                         wantsToSpawn = false;
-                        worldObjectInfo = null;
                         busy = false;
 
                         // Show on minimap
@@ -141,6 +134,25 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         {
                             // Despawn
                             DespawnAvatar();
+                        }
+                        else 
+                        {
+                            WorldObjectInfoMessage msg = null;
+                            lock (pendingWorldObjectInfos)
+                            {
+                                // Check if done
+                                if (pendingWorldObjectInfos.Count != 0)
+                                {
+                                    // Continue spawning
+                                    msg = pendingWorldObjectInfos[0];
+                                    pendingWorldObjectInfos.RemoveAt(0);
+                                }
+                            }
+                            if (msg != null)
+                            {
+                                spawned = true;
+                                SpawnAvatar(msg);
+                            }
                         }
 
                         // Return
@@ -163,7 +175,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     // Queue
                     wantsToSpawn = true;
-                    this.worldObjectInfo = worldObjectInfo;
+                    addInfo(worldObjectInfo);
                     return true;
                 }
 
@@ -180,8 +192,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     // Despawn first
                     wantsToSpawn = true;
-                    this.worldObjectInfo = worldObjectInfo;
-                    DespawnAvatar(false);
+                    DespawnAvatar(false, worldObjectInfo);
                     return true;
                 }
                 busy = true;
@@ -203,7 +214,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     expectBuildComplete = true;
                     doCallOriginal = true;
                     expectFirstMove = true;
-                    this.worldObjectInfo = worldObjectInfo;
                     avatar.OnObjectInfo(worldObjectInfo);
                     doCallOriginal = false;
                 }
@@ -217,7 +227,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return true;
             }
 
-            public bool DespawnAvatar(bool doDelete = true)
+            public bool DespawnAvatar(bool deleteObject = true, WorldObjectInfoMessage returningMessage = null)
             {
                 // Call original if needed
                 if (doCallOriginal)
@@ -227,6 +237,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 if (busy)
                 {
                     // Queue
+                    if (deleteObject)
+                        wantsToDestroy = true;
                     wantsToDespawn = true;
                     return true;
                 }
@@ -234,8 +246,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Check if despawned
                 if (despawned)
                     return false;
-                if (doDelete)
+                if (deleteObject)
                     despawned = true;
+                if (deleteObject)
+                    wantsToDestroy = true;
                 expectFirstMove = false;
                 spawned = false;
                 busy = true;
@@ -243,13 +257,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Clear action
                 avatar._nextActionType = ActorActionType.None;
                 avatar._nextActionBreakLoop = true;
-
-                // Play sound
-                FeralAudioInfo audioInfo = new FeralAudioInfo();
-                audioInfo.eventRef = "event:/cutscenes/boundary_camera_fade_out";
-                FeralAudioBehaviour behaviour = avatar.gameObject.GetComponent<FeralAudioBehaviour>();
-                if (behaviour != null)
-                    behaviour.Play(audioInfo, null, Il2CppType.Of<Il2CppSystem.Nullable<float>>().GetConstructor(new Il2CppSystem.Type[] { Il2CppType.Of<float>() }).Invoke(new Il2CppSystem.Object[] { Il2CppSystem.Single.Parse("0") }).Cast<Il2CppSystem.Nullable<float>>());
 
                 // Teleport away
                 GCR.instance.StartCoroutine(avatar.TransitionDeparture(false, false, "teleport"));
@@ -307,7 +314,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             avatar.transform.position = posOriginal;
 
                             // Delete object
-                            if (doDelete && !wantsToSpawn)
+                            if (wantsToDestroy)
                             {
                                 doCallOriginal = true;
                                 avatar.Delete();
@@ -318,10 +325,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             busy = false;
 
                             // Check if wanting to spawn
-                            if (wantsToSpawn)
+                            if (wantsToSpawn && returningMessage != null && !wantsToDestroy)
                             {
                                 // Spawn
-                                SpawnAvatar(worldObjectInfo);
+                                SpawnAvatar(returningMessage);
                             }
 
                             // Return
@@ -338,6 +345,17 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Return
                 return true;
+            }
+
+            private void addInfo(WorldObjectInfoMessage info)
+            {
+                if (info == null)
+                    return;
+                lock (pendingWorldObjectInfos)
+                {
+                    // Add
+                    pendingWorldObjectInfos.Add(info);
+                }
             }
         }
 
