@@ -2,8 +2,6 @@
 # EmuFeral Online
 #
 
-OverrideProtocolVersion=2
-
 # Names and such
 AllowNonEmailUsernames=true
 FlexibleDisplayNames=true
