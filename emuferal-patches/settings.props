@@ -1,0 +1,43 @@
+#
+# EmuFeral Online
+#
+
+OverrideProtocolVersion=2
+
+# Names and such
+AllowNonEmailUsernames=true
+FlexibleDisplayNames=true
+UserNameRegex=^[A-Za-z0-9@._#]+$
+DisplayNameRegex=^[0-9A-Za-z\-_. ]+
+UserNameMaxLength=320
+DisplayNameMaxLength=16
+
+# Quality
+CityFeraMovingRocks=true
+CityFeraTeleporterSFX=true
+JiggleResourceInteractions=true
+
+# Tweaks
+AllowMultipleClothingItemsOfSameType=true
+DisableUpdraftAudioSuppressor=true
+ActorScaleMultiplier=3
+ActorScaleMultiplierLowerMost=0.25
+JumpIncreaseFactor=1.2
+TradeItemLimit=1000
+
+# Gliding overhauls
+GlidingTurnSpeed=0.1
+GlidingGravity=3
+GlidingMaxRollAngle=70
+GlidingRollAmount=12
+GlidingSpeedMultiplier=2
+GlidingAllowFlap=true
+GlidingFlapForce=9
+GlidingFlapCooldown=200
+AllowDragonGlidingWithNoWings=true
+AllowShinigamiGlidingWithNoWings=true
+
+# UI
+DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]
+VersionLabel=${global:7358}\nCenturia ${server:version}\nFer.al ${game:version} (build ${game:build}))\n\nBETA 1.8 EARLY ACCESS 1(
+EnableGroupChatTab=true
