@@ -11,7 +11,7 @@ echo Cloning git repository...
 tmpdir="/tmp/build-centuria-standalone-module/$(date "+%s-%N")"
 rm -rf "$tmpdir"
 mkdir -p "$tmpdir"
-git clone $git "$tmpdir"
+git clone $git --branch 1.7.2 "$tmpdir"
 cd "$tmpdir"
 echo
 
