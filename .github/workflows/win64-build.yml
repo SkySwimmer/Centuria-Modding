@@ -43,7 +43,7 @@ jobs:
         run: bash feraltweaks-bootstrap/scripts/build-crosscompile-win64/package.sh
 
       - name: Publish build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: 'FeralTweaksLoader Latest (Win64)'
           path: feraltweaks-bootstrap/build/package
