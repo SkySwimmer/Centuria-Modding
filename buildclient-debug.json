@@ -1,0 +1,117 @@
+{
+    "buildSource": ".",
+    "buildOutput": ".",
+
+    "modules": [
+        {
+            "disabled": true,
+
+            "file": "/path/to/dll",
+            "type": "Sentinel.Example.ExampleModule",
+
+            "needsLibsFolder": true,
+            "libsFolder": "/path/to/library/dll/folder"
+        }
+    ],
+
+    "__comment1__": "Built-in tasks: copy, move, delete, mkdir, mkfile, execprocess, buildconfig, buildcontext, buildvariation",
+    "__comment2__": "Common task flags: ignoreTaskFail (ignores failures), proceedOnFail (continues but still flags a failure at the end of the build)",
+    "tasks": [
+        {
+            "type": "setvar",
+            "overwriteExisting": false,
+            "warnExisting": false,
+
+            "variables": {
+                "VARIATION_NAME_WIN64": "emuferal-1.8-win64ftl",
+                "VARIATION_NAME_MACOS": "emuferal-1.8-osxftl"
+            }
+        },
+
+        {
+            "name": "Create Win64 Sentinel folder",
+            "type": "mkdir",
+
+            "path": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/win64",
+            "warnExisting": false
+        },
+        {
+            "name": "Create Win64 Sentinel configuration binary",
+            "type": "buildconfig",
+
+            "configSource": "build/config-win64.json",
+            "configDestination": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/win64/config.bin",
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "generaterandom",
+            "updateConfigAesParams": {},
+            "updateConfigAesStore": true
+        },
+        {
+            "name": "Create Win64 Sentinel context binary",
+            "type": "buildcontext",
+
+            "contextSource": "build/context-win64.json",
+            "contextDestination": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/win64/context.bin",
+
+            "updateContextAes": true,
+            "updateContextAesMethod": "collectivehash",
+            "updateContextAesParams": {
+                "source": "feraltweaks/run/FeralTweaks/mods/feraltweaks",
+                "fileMatcher": "*.dll"
+            },
+            "updateContextAesStore": true,
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "fromconfig",
+            "updateConfigAesParams": {
+                "configFile": "build/config-win64.json",
+                "encoding": "base64"
+            },
+            "updateConfigAesStore": true
+        },
+
+        {
+            "name": "Create OSX Sentinel folder",
+            "type": "mkdir",
+
+            "path": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/osx",
+            "warnExisting": false
+        },
+        {
+            "name": "Create OSX Sentinel configuration binary",
+            "type": "buildconfig",
+
+            "configSource": "build/config-osx.json",
+            "configDestination": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/osx/config.bin",
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "generaterandom",
+            "updateConfigAesParams": {},
+            "updateConfigAesStore": true
+        },
+        {
+            "name": "Create OSX Sentinel context binary",
+            "type": "buildcontext",
+
+            "contextSource": "build/context-osx.json",
+            "contextDestination": "feraltweaks/run/FeralTweaks/mods/feraltweaks/sentinel/osx/context.bin",
+
+            "updateContextAes": true,
+            "updateContextAesMethod": "collectivehash",
+            "updateContextAesParams": {
+                "source": "feraltweaks/run/FeralTweaks/mods/feraltweaks",
+                "fileMatcher": "*.dll"
+            },
+            "updateContextAesStore": true,
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "fromconfig",
+            "updateConfigAesParams": {
+                "configFile": "build/config-osx.json",
+                "encoding": "base64"
+            },
+            "updateConfigAesStore": true
+        }
+    ]
+}

@@ -23,7 +23,6 @@
     <PackageReference Include="HarmonyX" Version="2.12.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
     <Reference Include="FeralTweaksBootstrap">
       <HintPath>lib\ftl\FeralTweaksBootstrap.dll</HintPath>
       <Private>false</Private>
@@ -92,11 +91,4 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy
-      SourceFiles="assets\clientmod.json"
-      DestinationFolder="run\FeralTweaks\mods\feraltweaks"
-    />
-  </Target>
 </Project>

@@ -9,7 +9,7 @@ patch 28806
 			{
 				"componentClass": "GlobalDefComponent",
 				"componentJSON": {
-					"boolValue": true
+					"boolValue": false
 				}
 			}
 		]

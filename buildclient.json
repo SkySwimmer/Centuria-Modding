@@ -1,0 +1,880 @@
+{
+    "buildSource": ".",
+    "buildOutput": "build",
+
+    "modules": [
+        {
+            "disabled": true,
+
+            "file": "/path/to/dll",
+            "type": "Sentinel.Example.ExampleModule",
+
+            "needsLibsFolder": true,
+            "libsFolder": "/path/to/library/dll/folder"
+        }
+    ],
+
+    "__comment1__": "Built-in tasks: copy, move, delete, mkdir, mkfile, setvar, delvar, execprocess, buildconfig, buildcontext, buildvariation",
+    "__comment2__": "Common task flags: ignoreTaskFail (ignores failures), proceedOnFail (continues but still flags a failure at the end of the build)",
+    "tasks": [
+        {
+            "type": "setvar",
+            "overwriteExisting": false,
+            "warnExisting": false,
+
+            "variables": {
+                "VARIATION_NAME_WIN64": "emuferal-1.8-win64ftl",
+                "VARIATION_NAME_MACOS": "emuferal-1.8-osxftl",
+
+                "DOORSTOP_VERSION": "4.0.0",
+
+                "DOORSTOP_ARTIFACT_WIN64": "doorstop_win_release_$<DOORSTOP_VERSION>.zip",
+                "DOORSTOP_ARTIFACT_MACOS": "doorstop_macos_release_$<DOORSTOP_VERSION>.zip",
+
+                "DOORSTOP_SOURCE_WIN64": "https://github.com/NeighTools/UnityDoorstop/releases/download/v$<DOORSTOP_VERSION>/$<DOORSTOP_ARTIFACT_WIN64>",
+                "DOORSTOP_SOURCE_MACOS": "https://github.com/NeighTools/UnityDoorstop/releases/download/v$<DOORSTOP_VERSION>/$<DOORSTOP_ARTIFACT_MACOS>",
+
+                "PLAIN_CLIENT_SOURCE_WIN64": "https://emuferal.ddns.net/feraldownloads/win64/b444802d2ab386d50f57f641ff74422471910210fc9ef1faf3631404a8401630.7z",
+                "PLAIN_CLIENT_SOURCE_MACOS": "https://emuferal.ddns.net/feraldownloads/osx/8dcad448ce76c5bcbd8e1385bf6e60598c96d7283620dbeb62bd11443c02998f.zip",
+
+                "CORECLR_DIR_NAME": "8.0.1",
+                "CORECLR_SOURCE_WIN64": "https://download.visualstudio.microsoft.com/download/pr/eac51dde-7bac-4bdb-aacd-e8c870f29aa4/d6c945e85adab9af2446856f90f6d326/dotnet-runtime-8.0.1-win-x64.zip",
+                "CORECLR_SOURCE_MACOS": "https://download.visualstudio.microsoft.com/download/pr/220d43f7-eb7f-470d-a80b-b30210adbbf2/dbfa691328557ee9888a1f38a29f72bd/dotnet-runtime-8.0.1-osx-x64.tar.gz",
+
+                "UNITY_ASSEMBLY_SOURCE": "https://unity.bepinex.dev/libraries/2020.3.1.zip"
+            }
+        },
+
+        {
+            "name": "Backup old run folder",
+            "type": "move",
+
+            "source": "feraltweaks-bootstrap/run",
+            "destination": "$<source>/feraltweaks-bootstrap/run-backup",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false,
+            "proceedOnFail": true
+        },
+        {
+            "name": "Create run folder",
+            "type": "mkdir",
+
+            "path": "$<source>/feraltweaks-bootstrap/run",
+            "warnExisting": false
+        },
+        {
+            "name": "Compile FTL",
+            "type": "execprocess",
+
+            "cwd": "$<source>/feraltweaks-bootstrap",
+            "process": "dotnet",
+            "arguments": [
+                "build"
+            ],
+            "environment": {},
+            "nonZeroIsSuccess": false,
+            "proceedOnFail": true
+        },
+        {
+            "name": "Move FTL build to output",
+            "type": "move",
+
+            "source": "feraltweaks-bootstrap/run",
+            "destination": "client-shared",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false,
+            "proceedOnFail": true
+        },
+        {
+            "name": "Restore old run folder",
+            "type": "move",
+
+            "source": "feraltweaks-bootstrap/run-backup",
+            "destination": "$<source>/feraltweaks-bootstrap/run",
+
+            "ignoreMissing": true,
+            "ignoreExisting": false,
+            "proceedOnFail": true
+        },
+
+        {
+            "name": "Compile FeralTweaks and FT Sentinel",
+            "type": "execprocess",
+
+            "cwd": "$<source>/feraltweaks",
+            "process": "dotnet",
+            "arguments": [
+                "build"
+            ],
+            "environment": {},
+            "nonZeroIsSuccess": false
+        },
+        {
+            "name": "Copy FeralTweaks and FT Sentinel",
+            "type": "copy",
+
+            "source": "feraltweaks/run/FeralTweaks/mods/feraltweaks",
+            "destination": "client-shared/FeralTweaks/mods/feraltweaks",
+            "warnExisting": false,
+
+            "__comment1__": "Exclude ONLY works with / for path separation, doesnt support case insensitivity, leading/trailing path separators are stripped, it works relative to the source folder",
+            "exclude": [
+                "security"
+            ]
+        },
+
+        {
+            "name": "Strip unneeded files",
+            "type": "delete",
+
+            "path": "$<output>/client-shared",
+
+            "patterns": [
+                "*.xml",
+                "*.pdb",
+                "*.deps.json"
+            ]
+        },
+
+        {
+            "name": "Move assemblies folder",
+            "type": "move",
+
+            "source": "$<output>/client-shared/FeralTweaks/mods/feraltweaks/assemblies",
+            "destination": "client-shared/FeralTweaks/mods/feraltweaks",
+
+            "ignoreExisting": true,
+            "warnExisting": false
+        },
+
+        {
+            "name": "Copy asset bundles",
+            "type": "copy",
+
+            "source": "emuferal-patches/assetbundles",
+            "destination": "client-shared/FeralTweaks/mods/feraltweaks/assetbundles",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false
+        },
+
+        {
+            "name": "Download Unity assemblies",
+            "type": "http",
+
+            "url": "$<UNITY_ASSEMBLY_SOURCE>",
+            "destination": "unity.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract Unity assemblies",
+            "type": "unzip",
+
+            "source": "$<output>/unity.zip",
+            "destination": "unity"
+        },
+        {
+            "name": "Copy Unity assemblies",
+            "type": "copy",
+
+            "source": "$<output>/unity",
+            "destination": "client-shared/FeralTweaks/cache/unity",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup Unity assemblies",
+            "type": "delete",
+
+            "path": "$<output>/unity"
+        },
+        {
+            "name": "Cleanup Unity assemblies zip",
+            "type": "delete",
+
+            "path": "$<output>/unity.zip"
+        },
+
+        {
+            "name": "Clear build files of Win64 client",
+            "type": "delete",
+
+            "path": "$<output>/client-win64",
+            "ignoreMissing": true
+        },
+        {
+            "name": "Clear build files of OSX client",
+            "type": "delete",
+
+            "path": "$<output>/client-osx",
+            "ignoreMissing": true
+        },
+
+        {
+            "name": "Copy shared assemblies to OSX build",
+            "type": "copy",
+
+            "source": "$<output>/client-shared",
+            "destination": "client-osx",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Copy shared assemblies to Win64 build",
+            "type": "copy",
+
+            "source": "$<output>/client-shared",
+            "destination": "client-win64",
+
+            "warnExisting": false
+        },
+
+        {
+            "name": "Create Win64 Sentinel folder",
+            "type": "mkdir",
+
+            "path": "client-win64/FeralTweaks/mods/feraltweaks/sentinel/win64",
+            "warnExisting": false
+        },
+        {
+            "name": "Create Win64 Sentinel configuration binary",
+            "type": "buildconfig",
+
+            "configSource": "$<output>/config-win64.json",
+            "configDestination": "client-win64/FeralTweaks/mods/feraltweaks/sentinel/win64/config.bin",
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "generaterandom",
+            "updateConfigAesParams": {},
+            "updateConfigAesStore": true
+        },
+        {
+            "name": "Create Win64 Sentinel context binary",
+            "type": "buildcontext",
+
+            "contextSource": "$<output>/context-win64.json",
+            "contextDestination": "client-win64/FeralTweaks/mods/feraltweaks/sentinel/win64/context.bin",
+
+            "updateContextAes": true,
+            "updateContextAesMethod": "collectivehash",
+            "updateContextAesParams": {
+                "source": "$<output>/client-win64/FeralTweaks/mods/feraltweaks",
+                "fileMatcher": "*.dll"
+            },
+            "updateContextAesStore": true,
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "fromconfig",
+            "updateConfigAesParams": {
+                "configFile": "$<output>/config-win64.json",
+                "encoding": "base64"
+            },
+            "updateConfigAesStore": true
+        },
+
+        {
+            "name": "Create OSX Sentinel folder",
+            "type": "mkdir",
+
+            "path": "client-osx/FeralTweaks/mods/feraltweaks/sentinel/osx",
+            "warnExisting": false
+        },
+        {
+            "name": "Create OSX Sentinel configuration binary",
+            "type": "buildconfig",
+
+            "configSource": "$<output>/config-osx.json",
+            "configDestination": "client-osx/FeralTweaks/mods/feraltweaks/sentinel/osx/config.bin",
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "generaterandom",
+            "updateConfigAesParams": {},
+            "updateConfigAesStore": true
+        },
+        {
+            "name": "Create OSX Sentinel context binary",
+            "type": "buildcontext",
+
+            "contextSource": "$<output>/context-osx.json",
+            "contextDestination": "client-osx/FeralTweaks/mods/feraltweaks/sentinel/osx/context.bin",
+
+            "updateContextAes": true,
+            "updateContextAesMethod": "collectivehash",
+            "updateContextAesParams": {
+                "source": "$<output>/client-osx/FeralTweaks/mods/feraltweaks",
+                "fileMatcher": "*.dll"
+            },
+            "updateContextAesStore": true,
+
+            "updateConfigAes": true,
+            "updateConfigAesMethod": "fromconfig",
+            "updateConfigAesParams": {
+                "configFile": "$<output>/config-osx.json",
+                "encoding": "base64"
+            },
+            "updateConfigAesStore": true
+        },
+
+        {
+            "name": "Download Win64 doorstop",
+            "type": "http",
+
+            "url": "$<DOORSTOP_SOURCE_WIN64>",
+            "destination": "doorstop-win64.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract Win64 doorstop",
+            "type": "unzip",
+
+            "source": "$<output>/doorstop-win64.zip",
+            "destination": "doorstop-win64"
+        },
+        {
+            "name": "Copy Win64 doorstop",
+            "type": "copy",
+
+            "source": "$<output>/doorstop-win64/x64",
+            "destination": "client-win64",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Copy Win64 doorstop configs",
+            "type": "copy",
+
+            "source": "buildlibs/doorstop/win64",
+            "destination": "client-win64",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup doorstop",
+            "type": "delete",
+
+            "path": "$<output>/doorstop-win64"
+        },
+        {
+            "name": "Cleanup doorstop zip",
+            "type": "delete",
+
+            "path": "$<output>/doorstop-win64.zip"
+        },
+
+        {
+            "name": "Download OSX doorstop",
+            "type": "http",
+
+            "url": "$<DOORSTOP_SOURCE_MACOS>",
+            "destination": "doorstop-osx.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract OSX doorstop",
+            "type": "unzip",
+
+            "source": "$<output>/doorstop-osx.zip",
+            "destination": "doorstop-osx"
+        },
+        {
+            "name": "Copy OSX doorstop",
+            "type": "copy",
+
+            "source": "$<output>/doorstop-osx/x64",
+            "destination": "client-osx",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Copy OSX doorstop configs",
+            "type": "copy",
+
+            "source": "buildlibs/doorstop/osx",
+            "destination": "client-osx",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup doorstop",
+            "type": "delete",
+
+            "path": "$<output>/doorstop-osx"
+        },
+        {
+            "name": "Cleanup doorstop zip",
+            "type": "delete",
+
+            "path": "$<output>/doorstop-osx.zip"
+        },
+
+        {
+            "name": "Download Win64 CoreCLR",
+            "type": "http",
+
+            "url": "$<CORECLR_SOURCE_WIN64>",
+            "destination": "coreclr-win64.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract Win64 CoreCLR",
+            "type": "unzip",
+
+            "source": "$<output>/coreclr-win64.zip",
+            "destination": "coreclr-win64"
+        },
+        {
+            "name": "Copy Win64 CoreCLR",
+            "type": "copy",
+
+            "source": "$<output>/coreclr-win64/shared/Microsoft.NETCore.App/$<CORECLR_DIR_NAME>",
+            "destination": "client-win64/CoreCLR",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup CoreCLR",
+            "type": "delete",
+
+            "path": "$<output>/coreclr-win64"
+        },
+        {
+            "name": "Cleanup CoreCLR zip",
+            "type": "delete",
+
+            "path": "$<output>/coreclr-win64.zip"
+        },
+
+        {
+            "name": "Download OSX CoreCLR",
+            "type": "http",
+
+            "url": "$<CORECLR_SOURCE_MACOS>",
+            "destination": "coreclr-osx.tar.gz",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract OSX CoreCLR",
+            "type": "untar",
+            "compression": "gzip",
+
+            "source": "$<output>/coreclr-osx.tar.gz",
+            "destination": "coreclr-osx"
+        },
+        {
+            "name": "Copy OSX CoreCLR",
+            "type": "copy",
+
+            "source": "$<output>/coreclr-osx/shared/Microsoft.NETCore.App/$<CORECLR_DIR_NAME>",
+            "destination": "client-osx/CoreCLR",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup CoreCLR",
+            "type": "delete",
+
+            "path": "$<output>/coreclr-osx"
+        },
+        {
+            "name": "Cleanup CoreCLR tar",
+            "type": "delete",
+
+            "path": "$<output>/coreclr-osx.tar.gz"
+        },
+
+        {
+            "name": "Copy Win64 Funchook",
+            "type": "copy",
+
+            "source": "buildlibs/funchook/win64",
+            "destination": "client-win64",
+
+            "warnExisting": false
+        },
+
+        {
+            "name": "Copy OSX Funchook",
+            "type": "copy",
+
+            "source": "buildlibs/funchook/osx",
+            "destination": "client-osx",
+
+            "warnExisting": false
+        },
+
+        {
+            "name": "Create downloads folder",
+            "type": "mkdir",
+
+            "path": "downloads",
+            "warnExisting": false
+        },
+
+        {
+            "name": "Copy Win64 FTL build to FTL folder",
+            "type": "copy",
+
+            "source": "$<output>/client-win64",
+            "destination": "ftl-win64-latest",
+
+            "warnExisting": false,
+
+            "exclude": [
+                "FeralTweaks/mods",
+                "FeralTweaks/cache"
+            ]
+        },
+        {
+            "name": "Zip Win64 FTL build",
+            "type": "zip",
+
+            "source": "$<output>/ftl-win64-latest",
+            "destination": "downloads/ftl-win64-latest.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup Win64 FTL",
+            "type": "delete",
+
+            "path": "$<output>/ftl-win64-latest"
+        },
+
+        {
+            "name": "Copy OSX FTL build to FTL folder",
+            "type": "copy",
+
+            "source": "$<output>/client-osx",
+            "destination": "ftl-osx-latest",
+
+            "warnExisting": false,
+
+            "exclude": [
+                "FeralTweaks/mods",
+                "FeralTweaks/cache"
+            ]
+        },
+        {
+            "name": "Zip OSX FTL build",
+            "type": "zip",
+
+            "source": "$<output>/ftl-osx-latest",
+            "destination": "downloads/ftl-osx-latest.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup OSX FTL",
+            "type": "delete",
+
+            "path": "$<output>/ftl-osx-latest"
+        },
+
+        {
+            "name": "Copy FeralTweaks chart patches to server data",
+            "type": "copy",
+
+            "source": "emuferal-patches/chartpatches",
+            "destination": "server-data/feraltweaks/content/feraltweaks/chartpatches",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false
+        },
+        {
+            "name": "Copy FeralTweaks configuration to server data",
+            "type": "copy",
+
+            "source": "emuferal-patches/settings.props",
+            "destination": "server-data/feraltweaks/content/feraltweaks/settings.props",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false
+        },
+        {
+            "name": "Copy FeralTweaks assemblies to server data",
+            "type": "copy",
+
+            "source": "$<output>/client-shared/FeralTweaks/mods",
+            "destination": "server-data/feraltweaks/content/clientmods/assemblies",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false,
+
+            "include": [
+                "feraltweaks/feraltweaks.dll",
+                "feraltweaks/sentinel/assemblies"
+            ],
+            "includeAll": false
+        },
+        {
+            "name": "Copy FeralTweaks assets to server data",
+            "type": "copy",
+
+            "source": "$<output>/client-win64/FeralTweaks/mods/feraltweaks",
+            "destination": "server-data/feraltweaks/content/clientmods/assets/FeralTweaks/mods/feraltweaks",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false,
+
+            "exclude": [
+                "sentinel/assemblies",
+                "sentinel/osx",
+                "feraltweaks.dll"
+            ]
+        },
+        {
+            "name": "Copy FeralTweaks assets to server data",
+            "type": "copy",
+
+            "source": "$<output>/client-osx/FeralTweaks/mods/feraltweaks",
+            "destination": "server-data/feraltweaks/content/clientmods/assets/FeralTweaks/mods/feraltweaks",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false,
+
+            "exclude": [
+                "sentinel/assemblies",
+                "sentinel/win64",
+                "feraltweaks.dll"
+            ]
+        },
+        {
+            "name": "Copy Unity assemblies to server data",
+            "type": "copy",
+
+            "source": "$<output>/client-shared/FeralTweaks/cache/unity",
+            "destination": "server-data/feraltweaks/content/clientmods/assets/FeralTweaks/cache/unity",
+
+            "ignoreMissing": true,
+            "ignoreExisting": true,
+            "warnExisting": false
+        },
+
+        {
+            "name": "Download Win64 Fer.al Client",
+            "type": "http",
+
+            "url": "$<PLAIN_CLIENT_SOURCE_WIN64>",
+            "destination": "feral-win64.7z",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract Win64 Fer.al Client",
+            "type": "un7z",
+
+            "source": "$<output>/feral-win64.7z",
+            "destination": "feral-win64"
+        },
+        {
+            "name": "Copy Win64 Fer.al Client",
+            "type": "copy",
+
+            "source": "$<output>/feral-win64/build",
+            "destination": "client-win64",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup Fer.al Client",
+            "type": "delete",
+
+            "path": "$<output>/feral-win64"
+        },
+        {
+            "name": "Cleanup Fer.al Client zip",
+            "type": "delete",
+
+            "path": "$<output>/feral-win64.7z"
+        },
+
+        {
+            "name": "Download OSX Fer.al Client",
+            "type": "http",
+
+            "url": "$<PLAIN_CLIENT_SOURCE_MACOS>",
+            "destination": "feral-osx.zip",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Extract OSX Fer.al Client",
+            "type": "unzip",
+
+            "source": "$<output>/feral-osx.zip",
+            "destination": "feral-osx"
+        },
+        {
+            "name": "Copy OSX Fer.al Client",
+            "type": "copy",
+
+            "source": "$<output>/feral-osx/build",
+            "destination": "client-osx",
+
+            "warnExisting": false
+        },
+        {
+            "name": "Cleanup Fer.al Client",
+            "type": "delete",
+
+            "path": "$<output>/feral-osx"
+        },
+        {
+            "name": "Cleanup Fer.al Client zip",
+            "type": "delete",
+
+            "path": "$<output>/feral-osx.zip"
+        },
+
+        {
+            "name": "Create build Win64 variation files",
+            "type": "buildvariation",
+
+            "variationOutput": "$<output>/server-data/razorwhip/client-types/win64-standalone-ftl/variations",
+            "variationName": "$<VARIATION_NAME_WIN64>",
+
+            "clientConfig": "$<output>/config-win64.json",
+
+            "updateServerTypeId": true,
+            "updateServerTypeIdConfig": "$<output>/server-data/razorwhip/client-types/win64-standalone-ftl/clienttype.json",
+
+            "variationAssemblies": {
+                "primaryGameAssembly": "$<output>/client-win64/GameAssembly.dll",
+                "primaryLoaderAssembly": "$<output>/client-win64/FeralTweaks/FeralTweaksBootstrap.dll",
+                "primarySentinelAssembly": "$<output>/client-win64/FeralTweaks/mods/feraltweaks/feraltweaks.dll",
+                "sentinelAssemblies": [
+                    {
+                        "__comment__": "Sentinel assemblies",
+                        "path": "$<output>/client-win64/FeralTweaks/mods/feraltweaks",
+                        "base": "$<output>/client-win64",
+
+                        "patterns": [
+                            "*.dll"
+                        ]
+                    }
+                ],
+                "gameAssemblies": [
+                    {
+                        "__comment__": "Primary game assembly",
+                        "path": "$<output>/client-win64/GameAssembly.dll",
+                        "base": "$<output>/client-win64"
+                    }
+                ],
+                "clrAssemblies": [
+                    {
+                        "__comment__": "CoreCLR assemblies",
+                        "path": "$<output>/client-win64/CoreCLR",
+                        "base": "$<output>/client-win64",
+
+                        "patterns": [
+                            "*.dll",
+                            "*.exe"
+                        ]
+                    }
+                ],
+                "allowedAssemblies": [
+                    {
+                        "__comment__": "All assemblies",
+                        "path": "$<output>/client-win64",
+                        "base": "$<output>/client-win64",
+
+                        "patterns": [
+                            "*.dll",
+                            "*.exe"
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "Create build OSX variation files",
+            "type": "buildvariation",
+
+            "variationOutput": "$<output>/server-data/razorwhip/client-types/osx-standalone-ftl/variations",
+            "variationName": "$<VARIATION_NAME_MACOS>",
+
+            "clientConfig": "$<output>/config-osx.json",
+
+            "updateServerTypeId": true,
+            "updateServerTypeIdConfig": "$<output>/server-data/razorwhip/client-types/osx-standalone-ftl/clienttype.json",
+
+            "variationAssemblies": {
+                "primaryGameAssembly": "$<output>/client-osx/Fer.al.app/Contents/Frameworks/GameAssembly.dylib",
+                "primaryLoaderAssembly": "$<output>/client-osx/FeralTweaks/FeralTweaksBootstrap.dll",
+                "primarySentinelAssembly": "$<output>/client-osx/FeralTweaks/mods/feraltweaks/feraltweaks.dll",
+                "sentinelAssemblies": [
+                    {
+                        "__comment__": "Sentinel assemblies",
+                        "path": "$<output>/client-osx/FeralTweaks/mods/feraltweaks",
+                        "base": "$<output>/client-osx",
+
+                        "patterns": [
+                            "*.dll"
+                        ]
+                    }
+                ],
+                "gameAssemblies": [
+                    {
+                        "__comment__": "Primary game assembly",
+                        "path": "$<output>/client-osx/Fer.al.app/Contents/Frameworks/GameAssembly.dylib",
+                        "base": "$<output>/client-osx"
+                    }
+                ],
+                "clrAssemblies": [
+                    {
+                        "__comment__": "CoreCLR assemblies",
+                        "path": "$<output>/client-osx/CoreCLR",
+                        "base": "$<output>/client-osx",
+
+                        "patterns": [
+                            "*.dll",
+                            "*.dylib"
+                        ]
+                    },
+                    {
+                        "__comment__": "CoreCLR executables",
+                        "path": "$<output>/client-osx/CoreCLR/createdump",
+                        "base": "$<output>/client-osx"
+                    }
+                ],
+                "allowedAssemblies": [
+                    {
+                        "path": "$<output>/client-osx",
+                        "base": "$<output>/client-osx",
+
+                        "patterns": [
+                            "*.dll",
+                            "*.exe",
+                            "*.dylib",
+                            "*.sh"
+                        ]
+                    },
+                    {
+                        "path": "$<output>/client-osx/Fer.al.app/Contents/PlugIns",
+                        "base": "$<output>/client-osx"
+                    },
+                    {
+                        "path": "$<output>/client-osx/Fer.al.app/MacOS/Feral",
+                        "base": "$<output>/client-osx"
+                    }
+                ]
+            }
+        }
+    ]
+}

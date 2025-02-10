@@ -291,7 +291,7 @@ namespace feraltweaks
             // Parse environment
             string[] payload = args.Split(" ");
             if (payload.Length == 0)
-                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false]");
+                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false] [encryptedvoicechat: true/false]");
             try
             {
                 if (payload.Length >= 1)

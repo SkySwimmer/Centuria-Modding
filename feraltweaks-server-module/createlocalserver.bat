@@ -8,7 +8,7 @@ echo Cloning git repository...
 set tmpdir="%userprofile%\AppData\Local\Temp\build-centuria-standalone-module"
 if EXIST "%tmpdir%" rmdir /S /Q "%tmpdir%"
 mkdir "%tmpdir%"
-git clone %git% --branch 1.7.2 "%tmpdir%"
+git clone %git% "%tmpdir%"
 cd /d %tmpdir%
 echo.
 

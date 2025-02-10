@@ -9,7 +9,7 @@ patch 8652
 			{
 				"componentClass": "GlobalDefComponent",
 				"componentJSON": {
-					"intValue": 1000
+					"intValue": 1500
 				}
 			}
 		]
