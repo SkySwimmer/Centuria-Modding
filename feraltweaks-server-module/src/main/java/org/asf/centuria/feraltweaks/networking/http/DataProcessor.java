@@ -578,10 +578,10 @@ public class DataProcessor extends HttpRequestProcessor {
 				serverBlock.addProperty("encryptedVoiceChat", Centuria.encryptVoiceChat);
 				serverBlock.addProperty("modVersion", (serverBlock.has("modVersion") ? serverBlock.get("modVersion").getAsString() + "-" : "") + module.modDataVersion);
 				serverBlock.addProperty("assetVersion", (serverBlock.has("assetVersion") ? serverBlock.get("assetVersion").getAsString() + "-" : "") + module.modDataVersion);
-				if (ports.has("launcherDataSource")) {
+				if (hosts.has("launcherDataSource")) {
 					// Deal with data sources pointing to upstream, as that WILL go wrong
 					// Check upstream source
-					String upstream = ports.get("launcherDataSource").getAsString();
+					String upstream = hosts.get("launcherDataSource").getAsString();
 					if (!module.upstreamServerJsonURL.isEmpty() && !module.upstreamServerJsonURL.equals("undefined")
 							&& !module.upstreamServerJsonURL.equals("disabled")) {
 						String url = module.upstreamServerJsonURL;
@@ -594,7 +594,7 @@ public class DataProcessor extends HttpRequestProcessor {
 									+ addr + ":"
 									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/data/"
 									+ upstream.substring(url.length());
-							ports.addProperty("launcherDataSource", upstream);
+									hosts.addProperty("launcherDataSource", upstream);
 						}
 					}
 				}
