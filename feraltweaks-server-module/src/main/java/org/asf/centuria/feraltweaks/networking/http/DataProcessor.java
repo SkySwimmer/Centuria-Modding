@@ -1,3 +1,4 @@
+
 package org.asf.centuria.feraltweaks.networking.http;
 
 import java.io.File;
@@ -8,6 +9,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.Base64;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+
 import org.asf.centuria.Centuria;
 import org.asf.centuria.accounts.AccountManager;
 import org.asf.centuria.accounts.CenturiaAccount;
@@ -17,6 +22,7 @@ import org.asf.centuria.networking.gameserver.GameServer;
 import org.asf.connective.NetworkedConnectiveHttpServer;
 import org.asf.connective.RemoteClient;
 import org.asf.connective.TlsSecuredHttpServer;
+import org.asf.connective.impl.http_1_1.RemoteClientHttp_1_1;
 import org.asf.connective.processors.HttpRequestProcessor;
 
 import com.google.gson.Gson;
@@ -397,7 +403,7 @@ public class DataProcessor extends HttpRequestProcessor {
 					&& !path.endsWith("/feraltweaks/settings.props")
 					&& !path.endsWith("/clientmods/assemblies/index.json")
 					&& !path.endsWith("/clientmods/assets/index.json")
-					&& !path.equals("/server.json")) {
+					&& !path.endsWith("/server.json")) {
 
 				// Check if its a index json request of a different folder
 				if (path.endsWith("/index.json")) {
@@ -487,10 +493,13 @@ public class DataProcessor extends HttpRequestProcessor {
 			}
 
 			// Handle server.json
-			if (path.equals("/server.json")) {
+			if (path.endsWith("/server.json")) {
 				// Create cache
 				File cacheDir = new File("cache/feraltweaks");
 				cacheDir.mkdirs();
+				File cachedServerFileDir = new File(cacheDir,
+					path.substring(0, path.length() - "/server.json".length()));
+				cachedServerFileDir.mkdirs();
 
 				// Attempt to update upstream
 				JsonObject serverInfo = new JsonObject();
@@ -498,11 +507,13 @@ public class DataProcessor extends HttpRequestProcessor {
 				if (!module.upstreamServerJsonURL.isEmpty() && !module.upstreamServerJsonURL.equals("undefined")
 						&& !module.upstreamServerJsonURL.equals("disabled")) {
 					try {
-						HttpURLConnection conn = (HttpURLConnection) new URL(module.upstreamServerJsonURL)
-								.openConnection();
+						String url = module.upstreamServerJsonURL;
+						if (!url.endsWith("/"))
+							url = url + "/";
+						HttpURLConnection conn = (HttpURLConnection) new URL(url + "data/" + path).openConnection();
 						InputStream strm = conn.getInputStream();
 						String data = new String(strm.readAllBytes(), "UTF-8");
-						Files.writeString(new File(cacheDir, "upstream.server.json").toPath(), data);
+						Files.writeString(new File(cachedServerFileDir, "upstream.server.json").toPath(), data);
 						serverInfo = JsonParser.parseString(data).getAsJsonObject();
 						successfulUpdate = true;
 					} catch (Exception e) {
@@ -512,7 +523,7 @@ public class DataProcessor extends HttpRequestProcessor {
 				if (!successfulUpdate) {
 					// Load existing
 					try {
-						File serverFile = new File(cacheDir, "upstream.server.json");
+						File serverFile = new File(cachedServerFileDir, "upstream.server.json");
 						if (serverFile.exists())
 							serverInfo = JsonParser.parseString(Files.readString(serverFile.toPath()))
 									.getAsJsonObject();
@@ -520,19 +531,43 @@ public class DataProcessor extends HttpRequestProcessor {
 					}
 				}
 
+				// Parse address
+				String addr = Centuria.discoveryAddress;
+				if (addr.equals("localhost") || addr.equals("127.0.0.1")) {
+					// Get local IP
+					String host = "localhost";
+					if (client instanceof RemoteClientHttp_1_1) {
+						RemoteClientHttp_1_1 cl = (RemoteClientHttp_1_1) client;
+						Socket sock = cl.getSocket();
+
+						// Get interface
+						SocketAddress ad = sock.getLocalSocketAddress();
+						if (ad instanceof InetSocketAddress) {
+							InetSocketAddress iA = (InetSocketAddress) ad;
+							if (Centuria.encryptGame && (!Centuria.encryptGame || Centuria.directorServer instanceof TlsSecuredHttpServer || this.getServer() instanceof TlsSecuredHttpServer))
+								host = iA.getAddress().getCanonicalHostName();
+							else
+								host = iA.getAddress().getHostAddress();
+							addr = host;
+						}
+					}
+					if (host.equals("localhost") && (!Centuria.encryptGame && !(Centuria.directorServer instanceof TlsSecuredHttpServer) && !(this.getServer() instanceof TlsSecuredHttpServer)))
+						addr = "127.0.0.1";
+				}
+
 				// Generate data
 				JsonObject serverBlock = createOrGetJsonObject(serverInfo, "server");
 				JsonObject hosts = createOrGetJsonObject(serverBlock, "hosts");
 				hosts.addProperty("director",
 						((Centuria.directorServer instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
-								+ Centuria.discoveryAddress + ":"
+								+ addr + ":"
 								+ ((NetworkedConnectiveHttpServer) Centuria.directorServer).getListenPort() + "/");
 				hosts.addProperty("api",
 						((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
-								+ Centuria.discoveryAddress + ":"
+								+ addr + ":"
 								+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/");
-				hosts.addProperty("chat", Centuria.discoveryAddress);
-				hosts.addProperty("voiceChat", Centuria.discoveryAddress);
+				hosts.addProperty("chat", addr);
+				hosts.addProperty("voiceChat", addr);
 				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
 				ports.addProperty("game", Centuria.gameServer.getServerSocket().getLocalPort());
 				ports.addProperty("chat", Centuria.chatServer.getServerSocket().getLocalPort());
@@ -541,8 +576,27 @@ public class DataProcessor extends HttpRequestProcessor {
 				serverBlock.addProperty("encryptedGame", Centuria.encryptGame);
 				serverBlock.addProperty("encryptedChat", Centuria.encryptChat);
 				serverBlock.addProperty("encryptedVoiceChat", Centuria.encryptVoiceChat);
-				serverBlock.addProperty("modVersion", module.modDataVersion);
-				serverBlock.addProperty("assetVersion", module.modDataVersion);
+				serverBlock.addProperty("modVersion", (serverBlock.has("modVersion") ? serverBlock.get("modVersion").getAsString() + "-" : "") + module.modDataVersion);
+				serverBlock.addProperty("assetVersion", (serverBlock.has("assetVersion") ? serverBlock.get("assetVersion").getAsString() + "-" : "") + module.modDataVersion);
+				if (serverBlock.has("launcherDataSource")) {
+					// Deal with data sources pointing to upstream, as that WILL go wrong
+					// Check upstream source
+					String upstream = serverBlock.get("launcherDataSource").getAsString();
+					if (!module.upstreamServerJsonURL.isEmpty() && !module.upstreamServerJsonURL.equals("undefined")
+							&& !module.upstreamServerJsonURL.equals("disabled")) {
+						String url = module.upstreamServerJsonURL;
+						if (!url.endsWith("/"))
+							url = url + "/";
+						if (upstream.startsWith(url)) {
+							// Uses upstream okaaaaaaaaay
+							// Lets change that to the local server
+							upstream = ((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
+									+ addr + ":"
+									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/data/"
+									+ upstream.substring(url.length());
+						}
+					}
+				}
 
 				// Load existing data over it
 				if (reqFile.exists()) {

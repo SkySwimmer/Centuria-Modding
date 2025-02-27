@@ -78,7 +78,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 						+ "prevent-non-ft-clients=true\n" //
 						+ "data-path=feraltweaks/content\n" //
 						+ "cache-path=feraltweaks/cache\n" //
-						+ "upstream-server-json=https://emuferal.ddns.net:6970/data/server.json\n" //
+						+ "upstream-server-json-source=https://emuferal.ddns.net:6970/\n" //
 						+ "error-unauthorized=\\nFeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.\n" //
 						+ "error-outdated=Incompatible client!\\nYour client is currently out of date, restart the game to update the client mods.\n" //
 						+ "mod-data-version=1\n"
@@ -116,8 +116,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 		preventNonFTClients = properties.getOrDefault("prevent-non-ft-clients", "false").equalsIgnoreCase("true");
 		ftDataPath = properties.getOrDefault("data-path", "feraltweaks/content");
 		ftCachePath = properties.getOrDefault("cache-path", "feraltweaks/cache");
-		upstreamServerJsonURL = properties.getOrDefault("upstream-server-json",
-				"https://emuferal.ddns.net:6970/data/server.json");
+		upstreamServerJsonURL = properties.getOrDefault("upstream-server-json-source",
+				"https://emuferal.ddns.net:6970/");
 		ftOutdatedErrorMessage = properties.getOrDefault("error-outdated",
 				"\nIncompatible client!\nYour client is currently out of date, restart the game to update the client mods.")
 				.replaceAll("\\\\n", "\n");
