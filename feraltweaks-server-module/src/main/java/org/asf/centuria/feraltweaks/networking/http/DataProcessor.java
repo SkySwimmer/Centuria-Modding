@@ -592,7 +592,7 @@ public class DataProcessor extends HttpRequestProcessor {
 							// Lets change that to the local server
 							upstream = ((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
 									+ addr + ":"
-									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/data/"
+									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/"
 									+ upstream.substring(url.length());
 							hosts.addProperty("launcherDataSource", upstream);
 						}
