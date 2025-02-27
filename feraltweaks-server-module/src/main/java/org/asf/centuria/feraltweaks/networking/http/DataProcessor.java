@@ -594,7 +594,7 @@ public class DataProcessor extends HttpRequestProcessor {
 									+ addr + ":"
 									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/data/"
 									+ upstream.substring(url.length());
-									hosts.addProperty("launcherDataSource", upstream);
+							hosts.addProperty("launcherDataSource", upstream);
 						}
 					}
 				}
