@@ -1,0 +1,25 @@
+DisableUpdraftAudioSuppressor=true
+
+AllowNonEmailUsernames=true
+FlexibleDisplayNames=true
+UserNameRegex=^[A-Za-z0-9@._#]+$
+DisplayNameRegex=^[0-9A-Za-z\-_. ]+
+UserNameMaxLength=320
+DisplayNameMaxLength=16
+
+TradeItemLimit=1000
+DisableClientChartPatches=true
+
+EnableGroupChatTab=true
+JiggleResourceInteractions=true
+
+CityFeraMovingRocks=true
+CityFeraTeleporterSFX=true
+
+VersionLabel=${global:7358}\nCenturia ${server:version}\nFer.al ${game:version} (build ${game:build})
+
+ActorScaleMultiplier=3
+ActorScaleMultiplierLowerMost=0.25
+JumpIncreaseFactor=1.2
+
+DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]

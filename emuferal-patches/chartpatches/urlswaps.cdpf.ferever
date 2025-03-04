@@ -1,0 +1,322 @@
+setchart URLChart
+
+#
+# Registration
+#
+
+patch 7123
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://emuferal.ddns.net/register.html",
+					"stage": "https://emuferal.ddns.net/register.html",
+					"prod": "https://emuferal.ddns.net/register.html"
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# ToS
+#
+
+patch 3962
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# Privacy Practices
+#
+
+patch 46
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# Analytics will be finally disabled
+#
+
+patch 51
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# App updates 
+#
+
+patch 45
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+patch 55
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+patch 44
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# Feedback
+#
+
+patch 49
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "https://discord.gg/ferever",
+					"stage": "https://discord.gg/ferever",
+					"prod": "https://discord.gg/ferever"
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# EWWWW WE DONT DO INGAME PAYMENTS
+#
+
+patch 11629
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+#
+# Leftovers from AJPW
+#
+
+patch 54
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 43
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 47
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 53
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 48
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 52
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 56
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch
+
+patch 50
+	{
+		"templateClass": "URLTemplate",
+		"templateFormatHash": "cedad63b9cc47055c8c4f8af6bef8da2",
+		"components": [
+			{
+				"componentClass": "URLDefComponent",
+				"componentJSON": {
+					"dev": "",
+					"stage": "",
+					"prod": ""
+				}
+			}
+		]
+	}
+endpatch

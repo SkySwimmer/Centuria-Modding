@@ -1,0 +1,25 @@
+setchart LocalizationChart
+
+patch 32583
+	{
+		"templateClass":"LocalizationTemplate",
+		"templateFormatHash":"392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "##komodori-kid-talking##When the Rat King rises again, I think he'll understand that a package of my favorite cookies is still pretty important!",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+endpatch

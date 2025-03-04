@@ -1,0 +1,77 @@
+setchart CraftableItemChart
+
+patch 9147
+	{
+        "templateClass": "ActorBodyPartTemplate",
+        "templateFormatHash": "b6a1d90387455725a42456729b44f310",
+        "components": [
+            {
+                "componentClass": "AlwaysInClientInventoryDefComponent",
+                "componentJSON": {
+                    "itemType": 9,
+                    "components": {
+                    },
+                    "requireOwnedItems": false,
+                    "requiredOwnedItemDefs": []
+                }
+            }
+        ]
+    }
+endpatch
+
+patch 9131
+	{
+        "templateClass": "ActorBodyPartTemplate",
+        "templateFormatHash": "b6a1d90387455725a42456729b44f310",
+        "components": [
+            {
+                "componentClass": "AlwaysInClientInventoryDefComponent",
+                "componentJSON": {
+                    "itemType": 9,
+                    "components": {
+                    },
+                    "requireOwnedItems": false,
+                    "requiredOwnedItemDefs": []
+                }
+            }
+        ]
+    }
+endpatch
+
+patch 9135
+	{
+        "templateClass": "ActorBodyPartTemplate",
+        "templateFormatHash": "b6a1d90387455725a42456729b44f310",
+        "components": [
+            {
+                "componentClass": "AlwaysInClientInventoryDefComponent",
+                "componentJSON": {
+                    "itemType": 9,
+                    "components": {
+                    },
+                    "requireOwnedItems": false,
+                    "requiredOwnedItemDefs": []
+                }
+            }
+        ]
+    }
+endpatch
+
+patch 9139
+	{
+        "templateClass": "ActorBodyPartTemplate",
+        "templateFormatHash": "b6a1d90387455725a42456729b44f310",
+        "components": [
+            {
+                "componentClass": "AlwaysInClientInventoryDefComponent",
+                "componentJSON": {
+                    "itemType": 9,
+                    "components": {
+                    },
+                    "requireOwnedItems": false,
+                    "requiredOwnedItemDefs": []
+                }
+            }
+        ]
+    }
+endpatch

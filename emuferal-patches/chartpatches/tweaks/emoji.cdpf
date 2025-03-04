@@ -1,0 +1,171 @@
+#
+# Commands
+#
+
+setchart LocalizationChart
+
+def emojicommands:emuferal:rofl
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": ":rofl:",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def emojicommands:emuferal:skull
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": ":skull:",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Emoji
+#
+
+setchart CraftableItemChart
+
+cleardef 11703
+patch 11703
+    {
+        "templateClass":"ChatEmojiTemplate",
+        "templateFormatHash":"b32e050ed8f2e2edce916b30fb5c64ba",
+        "components": [
+            {
+                "componentClass": "LocalizedNameDefComponent",
+                "componentJSON":
+                    {
+                        "localizedDefID": "11791"
+                    }
+                },
+            {
+                "componentClass": "ChatEmojiDefComponent",
+                "componentJSON":
+                    {
+                        "localizedChatCommandDefIds": [
+                            "11742"
+                        ],
+                        "unicode": "U+1F600"
+                    }
+                }
+        ]
+    }
+endpatch
+
+cleardef 11818
+patch 11818
+    {
+        "templateClass":"ChatEmojiTemplate",
+        "templateFormatHash":"b32e050ed8f2e2edce916b30fb5c64ba",
+        "components": [
+            {
+                "componentClass": "LocalizedNameDefComponent",
+                "componentJSON":
+                    {
+                        "localizedDefID": "11819"
+                    }
+                },
+            {
+                "componentClass": "ChatEmojiDefComponent",
+                "componentJSON":
+                    {
+                        "localizedChatCommandDefIds": [
+                            "11821",
+                            "11820",
+                            "emojicommands:emuferal:rofl"
+                        ],
+                        "unicode": "U+1F923"
+                    }
+                }
+        ]
+    }
+endpatch
+
+cleardef 11799
+patch 11799
+    {
+        "templateClass":"ChatEmojiTemplate",
+        "templateFormatHash":"b32e050ed8f2e2edce916b30fb5c64ba",
+        "components": [
+            {
+                "componentClass": "LocalizedNameDefComponent",
+                "componentJSON":
+                    {
+                        "localizedDefID": "11800"
+                    }
+                },
+            {
+                "componentClass": "ChatEmojiDefComponent",
+                "componentJSON":
+                    {
+                        "localizedChatCommandDefIds": [
+                            "12041"
+                        ],
+                        "unicode": "U+1F622"
+                    }
+                }
+        ]
+    }
+endpatch
+
+cleardef 18021
+patch 18021
+    {
+        "templateClass":"ChatEmojiTemplate",
+        "templateFormatHash":"b32e050ed8f2e2edce916b30fb5c64ba",
+        "components": [
+            {
+                "componentClass": "LocalizedNameDefComponent",
+                "componentJSON":
+                    {
+                        "localizedDefID": ""
+                    }
+                },
+            {
+                "componentClass": "ChatEmojiDefComponent",
+                "componentJSON":
+                    {
+                        "localizedChatCommandDefIds": [
+                            "18056",
+                            "18057",
+                            "emojicommands:emuferal:skull"
+                        ],
+                        "unicode": "U+2620"
+                    }
+                }
+        ]
+    }
+endpatch

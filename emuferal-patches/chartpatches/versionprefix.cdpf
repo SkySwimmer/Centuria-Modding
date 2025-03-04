@@ -1,0 +1,16 @@
+setchart GlobalChart
+
+patch 7358
+	{
+		"templateClass": "GlobalTemplate",
+		"templateFormatHash": "d92f06f1add7ee72be3bec2451e9a13b",
+		"components": [
+			{
+				"componentClass": "GlobalDefComponent",
+				"componentJSON": {
+					"stringValue": "EmuFeral Online"
+				}
+			}
+		]
+	}
+endpatch
