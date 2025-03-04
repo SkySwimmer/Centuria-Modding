@@ -97,7 +97,18 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool CoreReset()
         {
             if (NetworkManager.instance == null || NetworkManager.instance._serverConnection == null || !NetworkManager.instance._serverConnection.IsConnected)
+            {
+                // Reset patches
+                lock (ChatPatches.typingStatusDisplayNames)
+                {
+                    ChatPatches.typingStatusDisplayNames.Clear();
+                }
+                lock (ChatPatches.typingStatuses)
+                {
+                    ChatPatches.typingStatuses.Clear();
+                }
                 return true;
+            }
             if (loggingOut)
                 return false;
             CoreReset(SplashError.NONE, ErrorCode.None);
@@ -168,6 +179,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             GameObject.Destroy(chat.gameObject);
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
+                        lock (ChatPatches.typingStatusDisplayNames)
+                        {
+                            ChatPatches.typingStatusDisplayNames.Clear();
+                        }
+                        lock (ChatPatches.typingStatuses)
+                        {
+                            ChatPatches.typingStatuses.Clear();
+                        }
                         CoreWindowManager.CloseAllWindows();
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
                         actionsToRun.Add(() =>
@@ -335,8 +354,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(IssClient), "Login")]
-        public static void Login(ref string name)
+        public static bool Login(ref string name, string zone, string pass, IssClient __instance)
         {
+            FeralTweaks.LoginErrorMessage = null;
+
             // Mention feraltweaks support
             name = name + "%feraltweaks%enabled%" + FeralTweaks.ProtocolVersion.ToString() + "%" + FeralTweaksLoader.GetLoadedMod<FeralTweaks>().Version + "%" + FeralTweaks.PatchConfig.GetValueOrDefault("ServerVersion", "undefined");
 
@@ -375,15 +396,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 }
                 name = name + "%end";
             }
+            return true;
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(IssServerConnection), "ProcessLoginData")]
         public static void ProcessLoginData(JsonData json)
         {
-            // Clean first
-            FeralTweaks.LoginErrorMessage = null;
-
             // If present, set error message
             if (json["params"].Contains("errorMessage"))
                 FeralTweaks.LoginErrorMessage = json["params"]["errorMessage"].ToString();

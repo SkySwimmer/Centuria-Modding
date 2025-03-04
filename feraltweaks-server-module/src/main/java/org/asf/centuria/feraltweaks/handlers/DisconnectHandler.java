@@ -6,14 +6,19 @@ import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.accounts.AccountDisconnectEvent;
 import org.asf.centuria.modules.events.updates.ServerUpdateEvent;
+import org.asf.centuria.modules.events.updates.UpdateCancelEvent;
 
 public class DisconnectHandler implements IEventReceiver {
 	private boolean updateShutdown;
 
 	@EventListener
 	public void updateServer(ServerUpdateEvent event) {
-		if (!event.hasTimer())
-			updateShutdown = true;
+		updateShutdown = true;
+	}
+
+	@EventListener
+	public void cancelUpdate(UpdateCancelEvent event) {
+		updateShutdown = false;
 	}
 
 	@EventListener
@@ -27,6 +32,11 @@ public class DisconnectHandler implements IEventReceiver {
 			pkt.button = "Quit";
 			pkt.title = "Disconnected";
 			switch (event.getType()) {
+
+			case DUPLICATE_LOGIN:
+				pkt.title = "Disconnected";
+				pkt.message = "Your account was logged into from another location.";
+				break;
 
 			case BANNED:
 				pkt.title = "Banned";
@@ -49,9 +59,11 @@ public class DisconnectHandler implements IEventReceiver {
 			case SERVER_SHUTDOWN:
 				pkt.title = "Server Closed";
 				if (updateShutdown)
-					pkt.message = "The server has been shut down for a update, will be back soon!";
+					pkt.message = "The server has been shut down for a update, we will be back soon!"
+							+ event.getReason() == null ? "" : "\n\nReason: " + event.getReason();
 				else
-					pkt.message = "The server has been temporarily shut down, hope to be back soon!";
+					pkt.message = "The server has been temporarily shut down, hope to be back soon!"
+							+ event.getReason() == null ? "" : "\n\nReason: " + event.getReason();
 				break;
 
 			case UNKNOWN:

@@ -12,12 +12,15 @@ import org.asf.centuria.feraltweaks.handlers.handshake.ChatHandshakeHandler;
 import org.asf.centuria.feraltweaks.managers.PlayerNameManager;
 import org.asf.centuria.feraltweaks.managers.ScheduledMaintenanceManager;
 import org.asf.centuria.feraltweaks.networking.chat.MarkConvoReadPacket;
+import org.asf.centuria.feraltweaks.networking.chat.SubscribeTypingStatusPacket;
+import org.asf.centuria.feraltweaks.networking.chat.TypingStatusPacket;
 import org.asf.centuria.feraltweaks.networking.game.FtModPacket;
 import org.asf.centuria.feraltweaks.networking.game.YesNoPopupPacket;
 import org.asf.centuria.feraltweaks.networking.http.DataProcessor;
 import org.asf.centuria.modules.ICenturiaModule;
 import org.asf.centuria.modules.eventbus.EventBus;
 import org.asf.centuria.modules.eventbus.EventListener;
+import org.asf.centuria.modules.events.accounts.MiscModerationEvent;
 import org.asf.centuria.modules.events.servers.APIServerStartupEvent;
 import org.asf.centuria.modules.events.servers.ChatServerStartupEvent;
 import org.asf.centuria.modules.events.servers.GameServerStartupEvent;
@@ -68,12 +71,11 @@ public class FeralTweaksModule implements ICenturiaModule {
 			// Write config
 			try {
 				Files.writeString(configFile.toPath(), ""
-
 						+ "enable-by-default=false\n" //
 						+ "prevent-non-ft-clients=true\n" //
 						+ "data-path=feraltweaks/content\n" //
 						+ "cache-path=feraltweaks/cache\n" //
-						+ "upstream-server-json=https://emuferal.ddns.net:6970/data/server.json\n" //
+						+ "upstream-server-json-source=https://emuferal.ddns.net:6970/\n" //
 						+ "error-unauthorized=\\nFeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.\n" //
 						+ "error-outdated=Incompatible client!\\nYour client is currently out of date, restart the game to update the client mods.\n" //
 						+ "mod-data-version=1\n"
@@ -111,8 +113,8 @@ public class FeralTweaksModule implements ICenturiaModule {
 		preventNonFTClients = properties.getOrDefault("prevent-non-ft-clients", "false").equalsIgnoreCase("true");
 		ftDataPath = properties.getOrDefault("data-path", "feraltweaks/content");
 		ftCachePath = properties.getOrDefault("cache-path", "feraltweaks/cache");
-		upstreamServerJsonURL = properties.getOrDefault("upstream-server-json",
-				"https://emuferal.ddns.net:6970/data/server.json");
+		upstreamServerJsonURL = properties.getOrDefault("upstream-server-json-source",
+				"https://emuferal.ddns.net:6970/");
 		ftOutdatedErrorMessage = properties.getOrDefault("error-outdated",
 				"\nIncompatible client!\nYour client is currently out of date, restart the game to update the client mods.")
 				.replaceAll("\\\\n", "\n");
@@ -158,5 +160,17 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public void chatStartup(ChatServerStartupEvent event) {
 		// Register custom chat packets
 		event.registerPacket(new MarkConvoReadPacket());
+		event.registerPacket(new TypingStatusPacket());
+		event.registerPacket(new SubscribeTypingStatusPacket());
+	}
+
+	@EventListener
+	public void miscModeration(MiscModerationEvent event) {
+		// Check type
+		if (event.getModerationEventID() == "permissions.update" && event.getTarget() != null)
+		{
+			// Update target's display
+			PlayerNameManager.updatePlayer(event.getTarget());
+		}
 	}
 }

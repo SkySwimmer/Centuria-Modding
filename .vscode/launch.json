@@ -61,6 +61,104 @@
             "request": "attach"
         },
         {
+            "name": "Debug BetterGliding Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build BetterGliding mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/better-gliding/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug MoreWinglessFliers Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build MoreWinglessFliers mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/more-wingless-fliers/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug LeglessDragons Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build LeglessDragons mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/legless-dragons-mod/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug MoreEyeTypes Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build MoreEyeTypes mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/more-eye-types/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug MultiClothingEquip Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build MultiClothingEquip mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/multi-clothing-equip/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug AvatarScaleUnlocker Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build AvatarScaleUnlocker mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/avatar-scale-unlocker/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
+            "name": "Debug LivelyAvatarsBlinking Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build LivelyAvatarsBlinking mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/lively-avatars-blinking/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
             "name": "Debug UnityExplorer support mod",
             "type": "coreclr",
             "processName": "Fer.al.exe",
@@ -73,6 +171,43 @@
                 "quoteArgs": true
             },
             "request": "attach"
+        },
+        {
+            "type": "java",
+            "name": "Centuria Server Environment (FeralTweaks)",
+            "request": "launch",
+            "mainClass": "org.asf.centuria.Centuria",
+            "cwd": "${workspaceFolder}/feraltweaks-server-module/server",
+            "classPaths": [    
+                "$Auto",
+                "$Runtime",                
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//asm-tree.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//jackson-core.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//javassist.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//xz.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//stax2-api.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//asm-analysis.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//jackson-annotations.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//reflections.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//gson.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//exp4j.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//asm.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//jackson-databind.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//slf4j-api.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//activation.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//jackson-dataformat-xml.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//log4j-core.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//woodstox-core.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//joml.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//log4j-api.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//commons-compress.jar",
+                "/${workspaceFolder}/feraltweaks-server-module/server/libs//Fluid.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//asm-commons.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/libs//jsr305.jar",
+                "${workspaceFolder}/feraltweaks-server-module/server/Centuria.jar"
+            ],
+            "vmArgs" : "-DdebugMode -DaddCpModules=org.asf.centuria.feraltweaks.FeralTweaksModule",
+            "projectName": "feraltweaks-server-module"
         }
     ]
 }

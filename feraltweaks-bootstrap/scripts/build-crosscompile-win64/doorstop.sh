@@ -1,14 +1,5 @@
 #!/bin/bash
 
-if [ -f scriptdir ]; then
-    cd ..
-elif [ -f ../scriptdir ]; then
-    cd ../..
-elif [ -d launcher/feraltweaks-launcher ]; then
-    cd feraltweaks-bootstrap
-fi
-cd build/work
-
 
 # Settings
 version=4.0.0

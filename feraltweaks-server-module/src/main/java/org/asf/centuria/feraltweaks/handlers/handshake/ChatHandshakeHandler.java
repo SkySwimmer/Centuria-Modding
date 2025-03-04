@@ -11,6 +11,7 @@ import org.asf.centuria.modules.eventbus.EventListener;
 import org.asf.centuria.modules.eventbus.IEventReceiver;
 import org.asf.centuria.modules.events.chat.ChatLoginEvent;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class ChatHandshakeHandler implements IEventReceiver {
@@ -47,11 +48,17 @@ public class ChatHandshakeHandler implements IEventReceiver {
 			event.getClient().addObject(new FeralTweaksClientObject(true,
 					event.getLoginRequest().get("feraltweaks_version").getAsString(), mods));
 
+			// Create convo lists
+			JsonArray convoIDs = new JsonArray();
+			JsonObject unreads = UnreadMessageManager.getUnreadMessageCounts(event.getAccount(), event.getClient());
+			for (String convoID : unreads.keySet())
+				convoIDs.add(convoID);
+
 			// Send unreads
 			JsonObject pkt = new JsonObject();
 			pkt.addProperty("eventId", "feraltweaks.unreadconversations");
-			pkt.add("conversations",
-					UnreadMessageManager.getUnreadConversations(event.getAccount(), event.getClient()));
+			pkt.add("conversations", convoIDs);
+			pkt.add("messageCounts", unreads);
 			event.getClient().sendPacket(pkt);
 		} else {
 			// Non-FT client, check if support is enabled

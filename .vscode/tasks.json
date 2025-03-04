@@ -95,6 +95,146 @@
                 "Build feraltweaks",
                 "Build FTL"
             ]
+        },
+        {
+            "label": "Build BetterGliding mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "better-gliding",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build MoreWinglessFliers mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "more-wingless-fliers",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build LeglessDragons mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "legless-dragons-mod",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build MoreEyeTypes mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "more-eye-types",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build MultiClothingEquip mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "multi-clothing-equip",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build AvatarScaleUnlocker mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "avatar-scale-unlocker",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build LivelyAvatarsBlinking mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "lively-avatars-blinking",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
         }
     ]
 }

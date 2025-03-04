@@ -15,6 +15,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "discord-rpc-mod", "discord-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unityexplorer-ftl-support", "unityexplorer-ftl-support\unityexplorer-ftl-support.csproj", "{118F3B27-6D01-4307-90F1-7982E4B04016}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "better-gliding", "better-gliding\better-gliding.csproj", "{D59BA605-C69C-4B26-B165-E50162648DA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "more-wingless-fliers", "more-wingless-fliers\more-wingless-fliers.csproj", "{BAF5108E-CD44-4404-B076-C343A4A9262E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "legless-dragons-mod", "legless-dragons-mod\legless-dragons-mod.csproj", "{9F93E576-8935-4348-8360-380B28225608}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "more-eye-types", "more-eye-types\more-eye-types.csproj", "{DD055BAF-6C6F-4996-98DC-A81E916322B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "multi-clothing-equip", "multi-clothing-equip\multi-clothing-equip.csproj", "{2E107150-1CBD-4B22-BBAB-BEB541F4491E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "avatar-scale-unlocker", "avatar-scale-unlocker\avatar-scale-unlocker.csproj", "{8508749E-8C11-42B7-99EE-9643A5248E69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lively-avatars-blinking", "lively-avatars-blinking\lively-avatars-blinking.csproj", "{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +59,34 @@ Global
 		{118F3B27-6D01-4307-90F1-7982E4B04016}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{118F3B27-6D01-4307-90F1-7982E4B04016}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{118F3B27-6D01-4307-90F1-7982E4B04016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D59BA605-C69C-4B26-B165-E50162648DA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D59BA605-C69C-4B26-B165-E50162648DA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D59BA605-C69C-4B26-B165-E50162648DA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D59BA605-C69C-4B26-B165-E50162648DA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAF5108E-CD44-4404-B076-C343A4A9262E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAF5108E-CD44-4404-B076-C343A4A9262E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAF5108E-CD44-4404-B076-C343A4A9262E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAF5108E-CD44-4404-B076-C343A4A9262E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F93E576-8935-4348-8360-380B28225608}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F93E576-8935-4348-8360-380B28225608}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F93E576-8935-4348-8360-380B28225608}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F93E576-8935-4348-8360-380B28225608}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD055BAF-6C6F-4996-98DC-A81E916322B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD055BAF-6C6F-4996-98DC-A81E916322B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD055BAF-6C6F-4996-98DC-A81E916322B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD055BAF-6C6F-4996-98DC-A81E916322B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E107150-1CBD-4B22-BBAB-BEB541F4491E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E107150-1CBD-4B22-BBAB-BEB541F4491E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E107150-1CBD-4B22-BBAB-BEB541F4491E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E107150-1CBD-4B22-BBAB-BEB541F4491E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8508749E-8C11-42B7-99EE-9643A5248E69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8508749E-8C11-42B7-99EE-9643A5248E69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8508749E-8C11-42B7-99EE-9643A5248E69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8508749E-8C11-42B7-99EE-9643A5248E69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

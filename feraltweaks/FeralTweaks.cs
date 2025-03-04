@@ -133,6 +133,7 @@ namespace feraltweaks
 
             // Patch with harmony
             LogInfo("Applying patches...");
+            ApplyPatch(typeof(DisplayNameManagerPatches));
             ApplyPatch(typeof(BaseDefPatch));
             ApplyPatch(typeof(CoreChartDataManagerPatch));
             ApplyPatch(typeof(UI_Window_AccountCreationPatch));
@@ -152,6 +153,10 @@ namespace feraltweaks
             ApplyPatch(typeof(GlobalSettingsManagerPatch));
             ApplyPatch(typeof(BundlePatches));
             ApplyPatch(typeof(InitialLoadingPatches));
+            ApplyPatch(typeof(DecreePatches));
+            ApplyPatch(typeof(InventoryPatches));
+            ApplyPatch(typeof(ActionWheelPatches));
+            ApplyPatch(typeof(ActorScalingPatch));
 
             // Scan mods for assets
             LogInfo("Scanning for mod assets...");
@@ -768,6 +773,21 @@ namespace feraltweaks
                             ShowWorldJoinChatUnreadPopup = true;
                             break;
                         }
+                    case "typing":
+                        // Update display name
+                        lock (ChatPatches.typingStatusDisplayNames)
+                        {
+                            ChatPatches.typingStatusDisplayNames[(string)packet["uuid"]] = (string)packet["displayName"];
+                        }
+
+                        // Typing status
+                        lock (ChatPatches.typingStatuses)
+                        {
+                            if (!ChatPatches.typingStatuses.ContainsKey((string)packet["conversationId"]))
+                                ChatPatches.typingStatuses[(string)packet["conversationId"]] = new Dictionary<string, long>();
+                            ChatPatches.typingStatuses[(string)packet["conversationId"]][(string)packet["uuid"]] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        break;
                     default:
                         {
                             FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Unhandled FeralTweaks chat packet: " + id + ": " + JsonMapper.ToJson(packet));

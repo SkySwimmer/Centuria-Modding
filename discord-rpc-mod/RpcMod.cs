@@ -60,6 +60,7 @@ namespace FeralDiscordRpcMod
 
         private class Conf
         {
+            public bool enabled = true;
             public int pipe = -1;
             public bool joiningEnabled;
             public string joinExecutableLinux;
@@ -70,6 +71,7 @@ namespace FeralDiscordRpcMod
             public bool disableAskToJoin;
             public int partySize;
             public BtnConf[] buttons;
+            public bool enableLogging = false;
         }
 
         public override void PostInit()
@@ -79,6 +81,7 @@ namespace FeralDiscordRpcMod
             {
                 Directory.CreateDirectory(ConfigDir);
                 File.WriteAllText(ConfigDir + "/config.json", "{\n"
+                    + "    \"enabled\": true,\n"
                     + "    \"pipe\": -1,\n"
                     + "    \"joiningEnabled\": " + (Environment.GetEnvironmentVariable("CENTURIA_LAUNCHER_PATH") != null ? "true" : "false") + ",\n"
                     + "    \"joinExecutableWindows\": \"\",\n"
@@ -87,7 +90,8 @@ namespace FeralDiscordRpcMod
                     + "    \"joinExecutableIOS\": \"\",\n"
                     + "    \"joinExecutableAndroid\": \"\",\n"
                     + "    \"partySize\": 10,\n"
-                    + "    \"buttons\": []\n"
+                    + "    \"buttons\": [],\n"
+                    + "    \"enableLogging\": false\n"
                     + "}\n");
             }
 
@@ -100,6 +104,10 @@ namespace FeralDiscordRpcMod
                 File.WriteAllText(ConfigDir + "/config.json", JsonConvert.SerializeObject(config, Formatting.Indented));
             }
 
+            // Check enabled
+            if (!config.enabled)
+                return; // Not enabled
+ 
             // Check platform
             if (OperatingSystem.IsWindows())
             {
@@ -118,8 +126,18 @@ namespace FeralDiscordRpcMod
                 }
                 if (wine)
                 {
+                    // Get system name
+                    string sys = WineUnixPipeClient.WineUtils.GetHostSysName();
+
+                    // Handle result
+                    string pipeFileName = ModBaseDirectory + "/winepipebridge.dll.so";
+                    if (sys.ToLower().Contains("linux"))
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.dll.so";
+                    else
+                        pipeFileName = ModBaseDirectory + "/winepipebridge.dll.dylib";
+
                     // Check
-                    if (!File.Exists(ModBaseDirectory + "/winepipebridge.dll.so"))
+                    if (!File.Exists(pipeFileName))
                     {
                         LogError("Unable to load wine compatibility layer for Rich Presence!");
                         client = new DiscordRpcClient(clientid, config.pipe);
@@ -127,7 +145,7 @@ namespace FeralDiscordRpcMod
                     else
                     {
                         // Wine
-                        NativeLibrary.Load(Path.GetFullPath(ModBaseDirectory + "/winepipebridge.dll.so"));
+                        NativeLibrary.Load(Path.GetFullPath(pipeFileName));
                         client = new DiscordRpcClient(clientid, config.pipe, client: new WineUnixPipeClient());
                     }
                     joinExe = config.joinExecutableLinux;
@@ -158,7 +176,7 @@ namespace FeralDiscordRpcMod
             }
 
             // Init RPC logging
-            client.Logger = new ModLogger() { mod = this };
+            client.Logger = new ModLogger() { mod = this, enabled = config.enableLogging };
 
             // Bind updates
             client.OnReady += (sender, e) =>
@@ -727,6 +745,10 @@ namespace FeralDiscordRpcMod
 
         internal void HandleJoinRequest(RpcJoinPlayerRequestPacket packet)
         {
+            // Check enabled
+            if (!config.enabled)
+                return; // Not enabled
+ 
             // Check party id
             if (partyID == packet.partyID && currentSecret != null)
             {
@@ -751,6 +773,10 @@ namespace FeralDiscordRpcMod
 
         internal void HandleJoinResult(RpcJoinPlayerResultPacket packet)
         {
+            // Check enabled
+            if (!config.enabled)
+                return; // Not enabled
+ 
             lock (pendingResults)
             {
                 if (pendingResults.ContainsKey(packet.playerID))

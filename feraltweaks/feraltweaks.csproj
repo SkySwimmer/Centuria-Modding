@@ -71,11 +71,4 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	<Copy
-		SourceFiles="assets\clientmod.json"
-		DestinationFolder="run\FeralTweaks\mods\feraltweaks"
-	/>
-  </Target>
 </Project>

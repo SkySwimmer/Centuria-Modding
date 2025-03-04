@@ -1,0 +1,113 @@
+
+#
+# No eye shape
+#
+
+setchart CraftableItemChart
+
+def decals.eyes.shapes:emuferal:no_eye_shape
+	{
+    "templateClass": "ActorEyeShapeTemplate",
+    "templateFormatHash": "7b6a920c9517bf5f60edf478a43eb6c1",
+    "components": [
+        {
+            "componentClass": "ItemDefComponent",
+            "componentJSON": {
+                "itemType": 4
+            }
+        },
+        {
+            "componentClass": "LocalizedNameDefComponent",
+            "componentJSON": {
+                "localizedDefID": "decals.eyes.shapes:emuferal:no_eye_shape.name.text"
+            }
+        },
+        {
+            "componentClass": "LocalizedDescriptionDefComponent",
+            "componentJSON": {
+                "localizedDefID": ""
+            }
+        },
+        {
+            "componentClass": "PurchaseableDefComponent",
+            "componentJSON": {
+                "_cost": [],
+                "_defaultYield": true,
+                "_yields": []
+            }
+        },
+        {
+            "componentClass": "BundleIDDefComponent",
+            "componentJSON": {
+                "bundle": {
+                    "bundlePath": "EmuFeral/Decals/Eyes/NoEyes/NoEyesShape"
+                }
+            }
+        },
+        {
+            "componentClass": "AvailabilityDefComponent",
+            "componentJSON": {
+                "dateOverrideRef": {
+                    "_defID": "-1"
+                },
+                "chartDateAvailability": {
+                    "_ignoreYear": true,
+                    "_repeatMode": 1,
+                    "_dateStart": "",
+                    "_dateEnd": ""
+                }
+            }
+        }
+    ]
+}
+enddef
+
+setchart LocalizationChart
+
+def decals.eyes.shapes:emuferal:no_eye_shape.name.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "None",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# List expansion
+#
+
+setchart ListChart
+
+merge 24865 ListDefComponent
+	{
+		"mode": "insertbefore",
+		"defIDs": [
+			"decals.eyes.shapes:emuferal:no_eye_shape"
+		]
+	}
+endmerge
+
+merge 695 ListDefComponent
+	{
+		"mode": "insertbefore",
+		"defIDs": [
+			"decals.eyes.shapes:emuferal:no_eye_shape"
+		]
+	}
+endmerge
