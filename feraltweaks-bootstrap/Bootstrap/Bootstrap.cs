@@ -1156,11 +1156,11 @@ namespace FeralTweaksBootstrap
                 // Handle it ourselves
                 if (File.Exists("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"))
                 {
-                    return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"));
+                    return Assembly.LoadFrom(Path.GetFullPath("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"));
                 }
                 else if (File.Exists("FeralTweaks/cache/unity/" + nm.Name + ".dll"))
                 {
-                    return Assembly.LoadFile(Path.GetFullPath("FeralTweaks/cache/unity/" + nm.Name + ".dll"));
+                    return Assembly.LoadFrom(Path.GetFullPath("FeralTweaks/cache/unity/" + nm.Name + ".dll"));
                 }
                 return null;
             };

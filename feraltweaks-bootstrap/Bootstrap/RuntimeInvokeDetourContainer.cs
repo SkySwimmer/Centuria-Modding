@@ -55,21 +55,29 @@ namespace FeralTweaksBootstrap
                     // Init logging
                     if (Bootstrap.logUnityToConsole || Bootstrap.logUnityToFile)
                     {
-                        if (!Bootstrap.logUnityToConsole)
-                            unityLogger = new FileLoggerImpl("Unity");
-                        else if (!Bootstrap.logUnityToFile)
-                            unityLogger = new ConsoleLoggerImpl("Unity");
-                        else
-                            unityLogger = Logger.GetLogger("Unity");
+                        try
+                        {
+                            if (!Bootstrap.logUnityToConsole)
+                                unityLogger = new FileLoggerImpl("Unity");
+                            else if (!Bootstrap.logUnityToFile)
+                                unityLogger = new ConsoleLoggerImpl("Unity");
+                            else
+                                unityLogger = Logger.GetLogger("Unity");
 
-                        // Add logger
-                        ClassInjector.RegisterTypeInIl2Cpp<LogHandler>();
+                            // Add logger
+                            ClassInjector.RegisterTypeInIl2Cpp<LogHandler>();
 
-                        // Create FTL container
-                        GameObject objC = new GameObject();
-                        objC.name = "~FTL";
-                        objC.AddComponent<LogHandler>();
-                        GameObject.DontDestroyOnLoad(objC);
+                            // Create FTL container
+                            GameObject objC = new GameObject();
+                            objC.name = "~FTL";
+                            objC.AddComponent<LogHandler>();
+                            GameObject.DontDestroyOnLoad(objC);
+                        }
+                        catch
+                        {
+                            // Error
+                            FeralTweaksLoader.LogError("Failed to bind Unity logging, could there be missing Unity methods? Try adding unstripped unity assemblies to FeralTweaks/cache/unity folder to rebuild the bindings with unstripped assemblies.");
+                        }
                     }
 
                     // Log finish
