@@ -982,13 +982,15 @@ public class LauncherMain {
 										"native,builtin", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
 										"native", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
 										"native", "/f");
@@ -1000,13 +1002,15 @@ public class LauncherMain {
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d", "native",
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 							} catch (Exception e) {
 								prefix.delete();
 								SwingUtilities.invokeAndWait(() -> {
@@ -1249,6 +1253,24 @@ public class LauncherMain {
 		th.setDaemon(true);
 		th.start();
 
+	}
+
+	private void prefixConfigureError(File prefix, ServerSocket serverSock) {
+		prefix.delete();
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				JOptionPane.showMessageDialog(frmCenturiaLauncher,
+						"Failed to configure wine, please contact support, an error occurred while setting up the wine prefix.",
+						"Launcher Error", JOptionPane.ERROR_MESSAGE);
+				try {
+					serverSock.close();
+				} catch (IOException e2) {
+				}
+				System.exit(1);
+			});
+		} catch (InvocationTargetException | InterruptedException e) {
+			;
+		}
 	}
 
 	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo,

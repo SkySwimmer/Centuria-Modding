@@ -29,7 +29,7 @@ namespace FeralTweaksBootstrap
 {
     public static class Bootstrap
     {
-        public const string VERSION = "v1.0.0-alpha-a4";
+        public const string VERSION = "v1.0.0-alpha-a5";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
         private static string GameAssemblyPath;
