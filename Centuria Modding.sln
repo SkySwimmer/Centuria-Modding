@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "avatar-scale-unlocker", "av
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lively-avatars-blinking", "lively-avatars-blinking\lively-avatars-blinking.csproj", "{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "customization-chat", "customization-chat\customization-chat.csproj", "{D1EC80E9-3A9B-40EA-80BA-4CE5DAF71094}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AF98DAF-1E48-4313-B87C-D2A64721E9C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1EC80E9-3A9B-40EA-80BA-4CE5DAF71094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1EC80E9-3A9B-40EA-80BA-4CE5DAF71094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1EC80E9-3A9B-40EA-80BA-4CE5DAF71094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1EC80E9-3A9B-40EA-80BA-4CE5DAF71094}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -159,6 +159,20 @@
             "request": "attach"
         },
         {
+            "name": "Debug CustomizationChat Mod",
+            "type": "coreclr",
+            "processName": "Fer.al.exe",
+            "preLaunchTask": "Build CustomizationChat mod",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/feraltweaks-bootstrap/run",
+                "pipeProgram": "bash",
+                "pipeArgs": [ "${workspaceFolder}/customization-chat/run/debug.sh" ],
+                "debuggerPath": "vsdbg/vsdbg.exe",
+                "quoteArgs": true
+            },
+            "request": "attach"
+        },
+        {
             "name": "Debug UnityExplorer support mod",
             "type": "coreclr",
             "processName": "Fer.al.exe",

@@ -235,6 +235,26 @@
                 "Build feraltweaks",
                 "Build FTL"
             ]
+        },
+        {
+            "label": "Build CustomizationChat mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "customization-chat",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
         }
     ]
 }
