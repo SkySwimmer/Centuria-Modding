@@ -55,6 +55,10 @@
       <HintPath>..\feraltweaks\lib\feral\Il2CppSystem.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ACTk.Runtime">
+      <HintPath>..\feraltweaks\lib\feral\ACTk.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
