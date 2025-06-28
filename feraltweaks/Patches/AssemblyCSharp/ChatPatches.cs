@@ -28,6 +28,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         private static string typingStatusString = ".  ";
 
+        
+        internal static Dictionary<string, int> unreadMessagesPerConversation = new Dictionary<string, int>();
+
 
         [HarmonyReversePatch]
         [HarmonyPatch(typeof(UI_LazyItemList<ChatConversationData>), nameof(UI_LazyItemList<ChatConversationData>.Setup))]
@@ -87,6 +90,65 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_UnreadConversationCount), "OnConversationReadStateChanged")]
+        public static bool OnConversationReadStateChanged(ref UI_UnreadConversationCount __instance, ConversationReadStateChangedMessage inMessage)
+        {
+            // Check room
+            if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
+            {
+                // Prevent SFX
+                __instance.RefreshText(inMessage.UnreadCount);
+                return false;
+            }
+
+            // Allow
+            return true;
+        }
+
+        public static void OnConversationMessage(ChatConversationMessage inMessage)
+        {
+            // Verify
+            if (inMessage.ConversationId == null || ChatManager.instance == null)
+                return;
+
+            // Check if open
+            if (ChatManager.instance.ConversationBeingRead != null && ChatManager.instance.ConversationBeingRead.id != null  && ChatManager.instance.ConversationBeingRead.id == inMessage.ConversationId)
+                return;
+
+            // Check if its the room chat
+            if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
+            {
+                // Check if open
+                UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
+                if (chat != null && chat._tabGroup.CurrentSelected == 0 && chat.gameObject.active)
+                    return; // Public chat is open
+            }
+
+            // Mark unread
+            if (!ChatManager.instance._unreadConversations.Contains(inMessage.ConversationId))
+            {
+                // Add to unreads and dispatch event
+				ChatManager.instance._unreadConversations.Add(inMessage.ConversationId);
+				CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(inMessage.ConversationId, false, ChatManager.instance._unreadConversations.Count));
+            }
+
+            // Increase unread counter
+            unreadMessagesPerConversation[inMessage.ConversationId] = unreadMessagesPerConversation.GetValueOrDefault(inMessage.ConversationId, 0) + 1;
+            CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(inMessage.ConversationId, false, ChatManager.instance._unreadConversations.Count));
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ChatManager), "SetConversationUnreadState")]
+        public static void SetConversationUnreadState(string inConversationId, bool inIsRead)
+        {
+            if (inIsRead && unreadMessagesPerConversation.ContainsKey(inConversationId))
+            {
+                // Remove
+                unreadMessagesPerConversation.Remove(inConversationId);
+            }
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "Setup")]
         public static bool SetupConvoList(ref UI_LazyItemList_ChatConversation __instance)
         {
@@ -126,6 +188,25 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_Window_Chat), "OnOpen")]
         public static void OnOpen(ref UI_Window_Chat __instance)
         {
+            // Check if the room chat is open
+            if (__instance._tabGroup == null || __instance._tabGroup.CurrentSelected <= 0)
+            {
+                // Clear room unreads
+                ChatConversationData room = ChatManager.instance._roomConversation;
+                if (room != null)
+                {
+                    // Remove unreads
+                    if (unreadMessagesPerConversation.ContainsKey(room.id))
+                        unreadMessagesPerConversation.Remove(room.id);
+                    if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Contains(room.id))
+                        ChatManager.instance._unreadConversations.Remove(room.id);
+
+                    // Refresh
+                    CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(room.id, false, ChatManager.instance._unreadConversations != null ? ChatManager.instance._unreadConversations.Count : 0));
+                }
+            }
+
+            // UI edits
             if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
             {
                 // Enable GC tab button
@@ -198,38 +279,117 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     m_MethodName = "BtnClicked_SubmitChat"
                 });
             }
+
+            // Add unread label to room chat
+            GameObject lblContainer2 = __instance._tabGroup._tabs[0].button._targetTransform.gameObject;
+            GameObject lblOriginalContainer2 = __instance._tabGroup._tabs[1].button._targetTransform.gameObject;
+            if (GetChild(lblContainer2, "NotificationCount_Room") == null)
+            {
+                GameObject lbl2 = GameObject.Instantiate(GetChild(lblOriginalContainer2, "NotificationCount"));
+                lbl2.transform.parent = lblContainer2.transform;
+                lbl2.name = "NotificationCount_Room";
+                lbl2.transform.localScale = new Vector3(1, 1, 1);
+
+                // Load it
+                lbl2.GetComponent<UI_UnreadConversationCount>().Start();
+                __instance._tabGroup._tabs[0].button.transform.SetAsLastSibling();
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UI_Window_Chat), "RecalculateLayouts")]
+        public static void RecalculateLayouts(ref UI_Window_Chat __instance)
+        {
+            GameObject gcPanel = GetChild(__instance._conversationsPanel.gameObject.transform.parent.gameObject, "Panel_GC");
+            if (gcPanel != null)
+            {
+                // Recalculate
+                UI_ChatPanel_Conversations cont = gcPanel.GetComponent<UI_ChatPanel_Conversations>();
+                cont.RecalculateLayout();
+            }
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "RefreshText")]
         public static void RefreshText(ref UI_UnreadConversationCount __instance, ref int inUnreadCount)
         {
+            if (__instance.gameObject == null || __instance.gameObject.transform == null || __instance.gameObject.transform.parent == null || __instance.gameObject.transform.parent.parent == null)
+                return;
             GameObject obj = __instance.gameObject.transform.parent.parent.gameObject;
             if (obj.name == "Button_Chat")
-                return; // Main UI
-            if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+            {
+                // General unreads
+                inUnreadCount = 0;
+                if (ChatManager.instance._roomConversation != null)
+                {
+                    if (ChatManager.instance._unreadConversations.Contains(ChatManager.instance._roomConversation.id))
+                    {
+                        // Add unread
+                        inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(ChatManager.instance._roomConversation.id, 1);
+                    }
+                }
+                if (ChatManager.instance._unreadConversations != null)
+                {
+                    foreach (string convoI in ChatManager.instance._unreadConversations)
+                    {
+                        bool isRoom = false;
+                        if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == convoI)
+                            continue;
+                        if (ChatManager.instance._cachedConversations != null)
+                        {
+                            foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                            {
+                                if (convo.IsRoomChat && convo.id == convoI)
+                                {
+                                    isRoom = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!isRoom)
+                            inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(convoI, 1);
+                    }
+                }
+            }
+            else if (obj.name == "Tab_Private" || __instance.gameObject.name == "NotificationCount_GC")
+            {
+                if (FeralTweaks.PatchConfig.GetValueOrDefault("EnableGroupChatTab", "false").ToLower() == "true")
+                {
+                    // Filter it
+                    inUnreadCount = 0;
+                    if (ChatManager.instance._cachedConversations != null)
+                    {
+                        foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                        {
+                            if (!convo.IsRoomChat && ChatManager.instance._unreadConversations.Contains(convo.id))
+                            {
+                                if (convo.participants.Count > 0 && convo.participants[0].StartsWith("plaintext:[GC] "))
+                                {
+                                    // GC
+                                    if (__instance.gameObject.name.EndsWith("_GC"))
+                                        inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(convo.id, 1);
+                                }
+                                else
+                                {
+                                    // DM
+                                    if (!__instance.gameObject.name.EndsWith("_GC"))
+                                        inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(convo.id, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (__instance.gameObject.name == "NotificationCount_Room")
             {
                 // Filter it
                 inUnreadCount = 0;
-                if (ChatManager.instance._cachedConversations != null)
+                if (ChatManager.instance._roomConversation != null)
                 {
-                    foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                    if (ChatManager.instance._unreadConversations.Contains(ChatManager.instance._roomConversation.id))
                     {
-                        if (!convo.IsRoomChat && ChatManager.instance._unreadConversations.Contains(convo.id))
-                        {
-                            if (convo.participants.Count > 0 && convo.participants[0].StartsWith("plaintext:[GC] "))
-                            {
-                                // GC
-                                if (__instance.gameObject.name.EndsWith("_GC"))
-                                    inUnreadCount++;
-                            }
-                            else
-                            {
-                                // DM
-                                if (!__instance.gameObject.name.EndsWith("_GC"))
-                                    inUnreadCount++;
-                            }
-                        }
+                        // Add unread
+                        inUnreadCount += unreadMessagesPerConversation.GetValueOrDefault(ChatManager.instance._roomConversation.id, 1);
                     }
                 }
             }
@@ -290,20 +450,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
-        public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
-        {
-            if (__instance.ToString() == "ChatServiceConnection")
-            {
-                // Override encryption if needed
-                if (FeralTweaks.EncryptedChat != -1)
-                {
-                    isSecured = FeralTweaks.EncryptedChat == 1;
-                }
-            }
-        }
-
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_LazyListItem_ChatConversation), "RefreshReadState")]
         public static void RefreshReadState(ref UI_LazyListItem_ChatConversation __instance, bool inIsRead)
@@ -321,22 +467,61 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        public static bool ChatInitializing = false;
+        public static bool ChatReadyForConnFixer = false;
+        private static bool ChatFixerBusy = false;
+        private static bool ChatLoadingScreenWantedToHide = false;
+
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
-        public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
+        [HarmonyPatch(typeof(PersistentServiceConnection), "Init")]
+        public static void Init(ref PersistentServiceConnection __instance, ref bool isSecured)
         {
-            if (inData == null || inFromSetup)
-                return;
-            ChatConversationData inConv = inData;
-            if (ChatManager.instance._unreadConversations.Contains(inConv.id))
+            if (__instance.ToString() == "ChatServiceConnection")
             {
-                // Send packet
-                Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
-                pkt["cmd"] = "feraltweaks.markread";
-                pkt["conversation"] = inConv.id;
-                string msg = JsonMapper.ToJson(pkt);
-                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+                // Override encryption if needed
+                if (FeralTweaks.EncryptedChat != -1)
+                {
+                    isSecured = FeralTweaks.EncryptedChat == 1;
+                }
             }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PersistentServiceConnection), "OnConnectionLost")]
+        public static void OnDisconnect(ref PersistentServiceConnection __instance)
+        {
+            if (__instance.TryCast<ChatServiceConnection>() != null)
+            {
+                // On client disconnect
+                if (ChatInitializing)
+                {
+                    // Stop initializing
+                    ChatInitializing = false;
+
+                    // Close loading sceen if needed
+                    if (ChatLoadingScreenWantedToHide)
+                        UI_ProgressScreen.instance.Hide();
+                    ChatLoadingScreenWantedToHide = false;
+                }
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
+        public static bool HideProg()
+        {
+            // Check chat initializing
+            if (ChatInitializing)
+            {
+                // Mark as wanting to hide
+                ChatLoadingScreenWantedToHide = true;
+
+                // Prevent hide
+                return false;
+            }
+
+            // Allow hide
+            return true;
         }
 
         [HarmonyPostfix]
@@ -353,9 +538,21 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     if (FeralTweaks.ShowWorldJoinChatUnreadPopup)
                     {
                         FeralTweaks.ShowWorldJoinChatUnreadPopup = false;
-                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0)
+                        if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Count > 0 && !DisplayedUnreads)
                         {
-                            NotificationManager.instance.AddNotification(new Notification("You have " + ChatManager.instance._unreadConversations.Count + " unread message(s)"));
+                            int unreads = 0;
+                            foreach (string convo in ChatManager.instance._unreadConversations)
+                            {
+                                // Check if room
+                                if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == convo)
+                                    continue;
+                                unreads += unreadMessagesPerConversation.GetValueOrDefault(convo, 1);
+                            }
+                            if (unreads != 0)
+                            {
+                                NotificationManager.instance.AddNotification(new Notification("You have " + unreads + " unread message(s)"));
+                                DisplayedUnreads = true;
+                            }
                         }
                     }
                 });
@@ -372,7 +569,19 @@ namespace feraltweaks.Patches.AssemblyCSharp
             string evt = (string)packet["eventId"];
 
             // Check event
-            if (evt == "chat.postMessage")
+            if (evt == "users.conversations")
+            {
+                // Mark received
+                ExpectedChatConvoCount = packet["conversations"].Count;
+                ChatConvosReceived = true;
+            }
+            else if (evt == "conversations.addParticipant" && LastRoomJoinMessage != null)
+            {
+                // Mark received
+                if (((string)packet["conversationId"]) == LastRoomJoinMessage.RoomConversationId)
+                    ChatConvoJoinReceived = true;
+            }
+            else if (evt == "chat.postMessage")
             {
                 // Check if a author string is present
                 if (packet.Contains("author") && packet.Contains("source") && packet.Contains("message") && packet.Contains("conversationId") && packet.Contains("conversationType"))
@@ -490,7 +699,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             __result = inChatText;
             return false;
         }
-
+        
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreMessageManager), "SendMessageToRegisteredListeners")]
         public static void SendMessageToRegisteredListeners(CoreMessageManager __instance, string tag, IMessage inMessage)
@@ -508,25 +717,55 @@ namespace feraltweaks.Patches.AssemblyCSharp
             ChatConversationGetResponse chCMsg = inMessage.TryCast<ChatConversationGetResponse>();
             if (chCMsg != null)
                 OnChatConvo(chCMsg);
+            ConversationAddResponse chAMsg = inMessage.TryCast<ConversationAddResponse>();
+            if (chAMsg != null)
+                OnChatAdded(chAMsg);
             ChatSessionStartMessage chSt = inMessage.TryCast<ChatSessionStartMessage>();
             if (chSt != null)
                 OnChatStart(chSt);
+            RoomJoinSuccessMessage rjMsg = inMessage.TryCast<RoomJoinSuccessMessage>();
+            if (rjMsg != null)
+                OnRoomJoin(rjMsg);
+        }
+        
+        public static void OnRoomJoin(RoomJoinSuccessMessage rjMsg)
+        {   
+            // Clear current unreads
+            ChatConversationData room = ChatManager.instance._roomConversation;
+            if (room != null)
+            {
+                // Remove unreads
+                if (unreadMessagesPerConversation.ContainsKey(room.id))
+                    unreadMessagesPerConversation.Remove(room.id);
+                if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Contains(room.id))
+                    ChatManager.instance._unreadConversations.Remove(room.id);
+
+                // Refresh
+                CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(room.id, false, ChatManager.instance._unreadConversations != null ? ChatManager.instance._unreadConversations.Count : 0));
+            }
+
+            // Set last room
+            LastRoomJoinMessage = rjMsg;
         }
 
         public static void OnChatStart(ChatSessionStartMessage sMsg)
         {
+            // Mark initializing 
+            ChatInitializing = true;
+            ChatReadyForConnFixer = true;
+            lock (typingStatusDisplayNames)
+            {
+                typingStatusDisplayNames.Clear();
+            }
+            lock (typingStatuses)
+            {
+                typingStatuses.Clear();
+            }
+
             // Protocol post-hansdhake
             if (FeralTweaksServer.IsModLoaded("feraltweaks"))
             {
                 // Protocol Revision 2 Support
-                lock (typingStatusDisplayNames)
-                {
-                    typingStatusDisplayNames.Clear();
-                }
-                lock (typingStatuses)
-                {
-                    typingStatuses.Clear();
-                }
 
                 // Send typing status init    
                 Dictionary<string, object> pkt = new Dictionary<string, object>();
@@ -536,41 +775,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
-        public static void OnChatConvo(ChatConversationGetResponse msg)
-        {
-            foreach (ChatEntry entry in msg.Conversation.messages)
-            {
-                if (entry._message != null)
-                    entry._message = ChatFormatter.Format(entry._message, true);
-                if (entry._filteredMessage != null)
-                    entry._filteredMessage = ChatFormatter.Format(entry._filteredMessage, true);
-                entry.RefreshDisplayData();
-            }
-            
-            // If present in cache, update
-            if (ChatManager.instance._cachedConversations != null)
-            {
-                foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
-                {
-                    // Check convo
-                    if (convo.id == msg.Conversation.id)
-                    {
-                        // Update
-                        convo._mostRecentMessage = msg.Conversation._mostRecentMessage;
-                        convo._cacheStartIndex = msg.Conversation._cacheStartIndex;
-                        convo._cursors = msg.Conversation._cursors;
-                        convo._hasOldestMessages = msg.Conversation._hasOldestMessages;
-                        convo.messages = msg.Conversation.messages;
-                        convo.participants = msg.Conversation.participants;
-                        convo.title = msg.Conversation.title;
-                        break;
-                    }
-                }
-            }
-        }
-
         public static void OnChatMessage(ChatConversationMessage msg)
         {
+            // Handle
+            OnConversationMessage(msg);
+
             // Chat formatting
             if (msg.ChatEntry._message != null)
                 msg.ChatEntry._message = ChatFormatter.Format(msg.ChatEntry._message, true);
@@ -605,6 +814,58 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+        public static void OnChatConvo(ChatConversationGetResponse msg)
+        {
+            foreach (ChatEntry entry in msg.Conversation.messages)
+            {
+                if (entry._message != null)
+                    entry._message = ChatFormatter.Format(entry._message, true);
+                if (entry._filteredMessage != null)
+                    entry._filteredMessage = ChatFormatter.Format(entry._filteredMessage, true);
+                entry.RefreshDisplayData();
+            }
+
+            // If initializing, set room chat
+            if (ChatConnFixerRunning && LastRoomJoinMessage != null && msg.Conversation.id == LastRoomJoinMessage.RoomConversationId)
+            {
+                // Update
+                ChatManager.instance._roomConversation = msg.Conversation;
+                msg.Conversation.RequestAdditionalChats(true);
+                CoreMessageManager.SendMessage<RoomConversationChangedMessage>(new RoomConversationChangedMessage(msg.Conversation));
+            }
+            
+            // If present in cache, update
+            if (ChatManager.instance._cachedConversations != null)
+            {
+                foreach (ChatConversationData convo in ChatManager.instance._cachedConversations)
+                {
+                    // Check convo
+                    if (convo.id == msg.Conversation.id)
+                    {
+                        // Update
+                        convo._mostRecentMessage = msg.Conversation._mostRecentMessage;
+                        convo._cacheStartIndex = msg.Conversation._cacheStartIndex;
+                        convo._cursors = msg.Conversation._cursors;
+                        convo._hasOldestMessages = msg.Conversation._hasOldestMessages;
+                        convo.messages = msg.Conversation.messages;
+                        convo.participants = msg.Conversation.participants;
+                        convo.title = msg.Conversation.title;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public static void OnChatAdded(ConversationAddResponse msg)
+        {
+            // If initializing, fetch conversation
+            if (ChatConnFixerRunning && LastRoomJoinMessage != null && msg.ConversationId == LastRoomJoinMessage.RoomConversationId)
+            {
+                // Update
+                ChatSrvHandler.RequestConversation(msg.ConversationId);
+            }
+        }
+
         public static void OnChatConvos(ChatConversationListResponse msg)
         {
             // Update convos
@@ -627,6 +888,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 CoreMessageManager.SendMessage<CachedConversationAddedMessage>(new CachedConversationAddedMessage(convo));
             }
         }
+
+        public static bool DisplayedUnreads = false;
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ChatConnectMessage))]
@@ -660,10 +923,133 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return true;
         }
 
+        private static bool ChatConnFixerRunning = false;
+        private static bool ChatConvosReceived = false;
+        private static bool ChatConvoJoinReceived = false;
+        private static bool ConvoSortRequired = false;
+        private static int ExpectedChatConvoCount = 0;
+        private static long ChatConnFixerLastAttempt;
+        private static int ChatConnFixerAttempt;
+        private static RoomJoinSuccessMessage LastRoomJoinMessage;
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(WaitController), "Update")]
         public static void Update()
         {
+            // Check if initializing
+            if (ChatInitializing)
+            {
+                // Chat's being inited
+                // The fixer runs every frame update until its ready
+                // It does this by checking the chat manager and if its not in a room or if there was no convo cache received, it re-transmits the packets for room join up to 5 times until giving up
+
+                // Check if ready
+                if (ChatReadyForConnFixer)
+                {
+                    // Run fixer
+                    ChatConnFixerLastAttempt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    ChatConnFixerRunning = true;
+                    ChatReadyForConnFixer = false;
+                    ConvoSortRequired = false;
+                    ChatConnFixerAttempt = 0;
+                    ExpectedChatConvoCount = 0;
+                    ChatConvosReceived = false;
+                    ChatConvoJoinReceived = false;
+                }
+
+                // Check running
+                if (ChatConnFixerRunning && LastRoomJoinMessage != null)
+                {
+                    // Check if chat convos are received
+                    bool allReady = true;
+                    if (!ChatConvosReceived || ChatManager.instance._cachedConversations == null || ChatManager.instance._cachedConversations.Count < ExpectedChatConvoCount)
+                    {
+                        // Need conversation list update
+                        // Check last attempt
+                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ChatConnFixerLastAttempt >= 12000)
+                        {
+                            // Send packet
+                            Dictionary<string, object> pkt = new Dictionary<string, object>();
+                            pkt["cmd"] = "users.conversations";
+                            pkt["pageSize"] = 20;
+                            pkt["cursor"] = "";
+                            string msg = JsonConvert.SerializeObject(pkt);
+                            NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+                        }
+                        if (!ChatConvosReceived)
+                            ConvoSortRequired = true;
+                        allReady = false;
+                    }
+                    else if (ConvoSortRequired)
+                    {
+                        // Sort
+                        ChatManager.instance.SortCachedConversations();
+                        ConvoSortRequired = false;
+                    }
+
+                    // Check room
+                    if (ChatManager.instance._roomConversation == null && LastRoomJoinMessage != null)
+                    {
+                        // Need room conversation update
+                        // Check last attempt
+                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ChatConnFixerLastAttempt >= 12000)
+                        {
+                            // Send packet
+                            Dictionary<string, string> pkt = new Dictionary<string, string>();
+                            pkt["cmd"] = "conversations.get";
+                            pkt["conversationId"] = LastRoomJoinMessage.RoomConversationId;
+                            string msg = JsonConvert.SerializeObject(pkt);
+                            NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+                        }
+                        allReady = false;
+                    }
+
+                    // Check ready
+                    if (!allReady)
+                    {
+                        // Check last attempt
+                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ChatConnFixerLastAttempt >= 12000)
+                        {
+                            // Check chat status and if needed, retry
+                            if (ChatConnFixerAttempt < 5)
+                            {
+                                // Increase attempt
+                                ChatConnFixerAttempt++;
+                                ChatConnFixerLastAttempt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            }
+                            else
+                            {
+                                // Reset
+                                ChatConnFixerRunning = false;
+                                ChatInitializing = false;
+                                LastRoomJoinMessage = null;
+
+                                // Close loading sceen if needed
+                                if (ChatLoadingScreenWantedToHide)
+                                    UI_ProgressScreen.instance.Hide();
+                                ChatLoadingScreenWantedToHide = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Chat is ready!
+                        ChatConnFixerRunning = false;
+                        ChatInitializing = false;
+                        LastRoomJoinMessage = null;
+
+                        // Close loading sceen if needed
+                        if (ChatLoadingScreenWantedToHide)
+                            UI_ProgressScreen.instance.Hide();
+                        ChatLoadingScreenWantedToHide = false;
+                    }
+                }
+            }
+            else
+            {
+                ChatReadyForConnFixer = false;
+            }
+
             // Check time since last typing status list update
             if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - timeLastTypingStatusCheck >= 200)
             {
@@ -1072,6 +1458,24 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return true;
         }
         
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_ChatPanel_Conversations), "SetSelectedConversation")]
+        public static void SetSelectedConversation(ChatConversationData inData, bool inFromSetup)
+        {
+            if (inData == null || inFromSetup)
+                return;
+            ChatConversationData inConv = inData;
+            if (ChatManager.instance._unreadConversations.Contains(inConv.id) && NetworkManager.ChatServiceConnection != null && NetworkManager.ChatServiceConnection.IsConnected)
+            {
+                // Send packet
+                Il2CppSystem.Collections.Generic.Dictionary<string, string> pkt = new Il2CppSystem.Collections.Generic.Dictionary<string, string>();
+                pkt["cmd"] = "feraltweaks.markread";
+                pkt["conversation"] = inConv.id;
+                string msg = JsonMapper.ToJson(pkt);
+                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
+            }
+        }
+        
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_ChatPanel), "OnEnable")]
         public static void OnEnableChatPanelGeneric(ref UI_ChatPanel __instance)
@@ -1107,8 +1511,33 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 RectTransform transChatPanel = __instance._scrollRect.gameObject.transform.Cast<RectTransform>();
                 transChatPanel.offsetMin = new Vector2(0.0001f, 0);
             }
-        }
 
+            // Check tab
+            if (__instance.TryCast<UI_ChatPanel_Room>() != null)
+            { 
+                // Mark read
+                ChatConversationData room = ChatManager.instance._roomConversation;
+                if (room != null)
+                {
+                    // Remove unreads
+                    if (unreadMessagesPerConversation.ContainsKey(room.id))
+                        unreadMessagesPerConversation.Remove(room.id);
+                    if (ChatManager.instance._unreadConversations != null && ChatManager.instance._unreadConversations.Contains(room.id))
+                        ChatManager.instance._unreadConversations.Remove(room.id);
+
+                    // Refresh
+                    CoreMessageManager.SendMessage(new ConversationReadStateChangedMessage(room.id, false, ChatManager.instance._unreadConversations != null ? ChatManager.instance._unreadConversations.Count : 0));
+                }                
+            }
+        }
+        
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(UI_ChatPanel_Private), "OnEnable")]
+        public static void OnEnableChatPanelPrivate(ref UI_ChatPanel __instance)
+        {
+            OnEnableChatPanelGeneric(ref __instance);
+        }
+        
         private static GameObject GetChild(GameObject parent, string name)
         {
             if (name.Contains("/"))

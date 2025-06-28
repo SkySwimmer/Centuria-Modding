@@ -179,6 +179,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             GameObject.Destroy(chat.gameObject);
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
+                        ChatPatches.unreadMessagesPerConversation.Clear();
+                        ChatPatches.ChatInitializing = false;
                         lock (ChatPatches.typingStatusDisplayNames)
                         {
                             ChatPatches.typingStatusDisplayNames.Clear();
