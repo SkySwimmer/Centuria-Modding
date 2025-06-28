@@ -126,22 +126,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(UI_UnreadConversationCount), "OnConversationReadStateChanged")]
-        public static bool OnConversationReadStateChanged(ref UI_UnreadConversationCount __instance, ConversationReadStateChangedMessage inMessage)
-        {
-            // Check room
-            if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
-            {
-                // Prevent SFX
-                __instance.RefreshText(inMessage.UnreadCount);
-                return false;
-            }
-
-            // Allow
-            return true;
-        }
-
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(UI_LazyItemList_ChatConversation), "OnConversationRemoved")]
         public static bool OnConversationRemoved(ref UI_LazyItemList_ChatConversation __instance, CachedConversationRemovedMessage inMessage)
         {
@@ -164,6 +148,22 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     }
                 }
             }
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UI_UnreadConversationCount), "OnConversationReadStateChanged")]
+        public static bool OnConversationReadStateChanged(ref UI_UnreadConversationCount __instance, ConversationReadStateChangedMessage inMessage)
+        {
+            // Check room
+            if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
+            {
+                // Prevent SFX
+                __instance.RefreshText(inMessage.UnreadCount);
+                return false;
+            }
+
+            // Allow
             return true;
         }
 
@@ -372,6 +372,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Load it
                 lbl2.GetComponent<UI_UnreadConversationCount>().Start();
+                __instance._tabGroup._tabs[0].button.transform.SetAsLastSibling();
             }
         }
 
@@ -908,10 +909,20 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 Dictionary<string, object> pkt = new Dictionary<string, object>();
                 pkt["cmd"] = "feraltweaks.typingstatus.subscribe";
                 string msg = JsonConvert.SerializeObject(pkt);
-                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);       
+                NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
             }
             else
+            {
                 ChatReadyForConnFixer = true;
+                lock (typingStatusDisplayNames)
+                {
+                    typingStatusDisplayNames.Clear();
+                }
+                lock (typingStatuses)
+                {
+                    typingStatuses.Clear();
+                }
+            }
         }
 
         public static void OnChatMessage(ChatConversationMessage msg)
