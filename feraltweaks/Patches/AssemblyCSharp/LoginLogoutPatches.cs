@@ -180,6 +180,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             chat.SaveWindowSize();
                             GameObject.Destroy(chat.gameObject);
                         }
+                        UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
+                        if (vchat != null)
+                        {
+                            vchat.SaveWindowSize();
+                            GameObject.Destroy(chat.gameObject);
+                        }
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
                         ChatPatches.unreadMessagesPerConversation.Clear();
