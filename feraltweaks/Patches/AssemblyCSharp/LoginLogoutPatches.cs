@@ -176,7 +176,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                         if (chat != null)
+                        {
+                            chat.SaveWindowSize();
                             GameObject.Destroy(chat.gameObject);
+                        }
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
                         ChatPatches.unreadMessagesPerConversation.Clear();
