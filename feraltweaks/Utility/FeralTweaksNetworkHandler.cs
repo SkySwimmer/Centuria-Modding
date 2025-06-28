@@ -129,12 +129,16 @@ namespace feraltweaks
                                         {
                                             if (UI_ProgressScreen.instance.IsVisible)
                                                 UI_ProgressScreen.instance.Hide();
-                                            UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message), ChartDataManager.instance.localizationChartData.Get(button, button), (Il2CppSystem.Action)new System.Action(() =>
+                                            CoreWindowManager.OpenWindow<UI_Window_OkErrorPopup>(new Action<UI_Window_OkErrorPopup>(window =>
                                             {
-                                                LoginLogoutPatches.loggingOut = false;
-                                                LoginLogoutPatches.doLogout = true;
-                                                CoreSharedUtils.CoreReset(SplashError.NONE, ErrorCode.None);
-                                            }));
+                                                window.Setup(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message), ChartDataManager.instance.localizationChartData.Get(button, button));
+                                                window.OnCloseEvent.AddListener(new Action<UI_Window>((win) =>
+                                                {
+                                                    LoginLogoutPatches.loggingOut = false;
+                                                    LoginLogoutPatches.doLogout = true;
+                                                    CoreSharedUtils.CoreReset(SplashError.NONE, ErrorCode.None);
+                                                }));
+                                            }), true);
                                         });
 
                                         return true;

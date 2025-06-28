@@ -62,7 +62,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 
 	@Override
 	public String version() {
-		return "beta-1.0.0-b5";
+		return "beta-1.0.0-b6";
 	}
 
 	@Override

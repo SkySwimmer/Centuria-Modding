@@ -132,7 +132,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         public static void CleanConnection()
         {
-            if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+            if (NetworkManager.instance != null && NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
             {
                 NetworkManager.instance._serverConnection.Disconnect();
                 if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
@@ -234,17 +234,20 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     WantsToQuit = true;
 
                     // Disconnect
-                    if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
-                        NetworkManager.instance._serverConnection.Disconnect();
-                    if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
-                        NetworkManager.instance._chatServiceConnection.Disconnect();
-                    if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
-                        NetworkManager.instance._voiceChatServiceConnection.Disconnect();
-                    NetworkManager.instance._serverConnection = null;
-                    NetworkManager.instance._chatServiceConnection = null;
-                    NetworkManager.instance._voiceChatServiceConnection = null;
-                    NetworkManager.instance._jwt = null;
-                    NetworkManager.instance._uuid = null;
+                    if (NetworkManager.instance != null)
+                    {
+                        if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+                            NetworkManager.instance._serverConnection.Disconnect();
+                        if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                            NetworkManager.instance._chatServiceConnection.Disconnect();
+                        if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                            NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                        NetworkManager.instance._serverConnection = null;
+                        NetworkManager.instance._chatServiceConnection = null;
+                        NetworkManager.instance._voiceChatServiceConnection = null;
+                        NetworkManager.instance._jwt = null;
+                        NetworkManager.instance._uuid = null;
+                    }
 
                     // Return
                     return true;
@@ -314,7 +317,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 serverMods.Clear();
                 UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                 if (chat != null)
+                {
+                    chat.SaveWindowSize();
                     GameObject.Destroy(chat.gameObject);
+                }
                 UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
                 if (vchat != null)
                     GameObject.Destroy(vchat.gameObject);
@@ -472,7 +478,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                     if (chat != null)
+                    {
+                        chat.SaveWindowSize();
                         GameObject.Destroy(chat.gameObject);
+                    }
                     UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
                     if (vchat != null)
                         GameObject.Destroy(vchat.gameObject);
