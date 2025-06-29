@@ -16,6 +16,8 @@ echo Building...
 goto execute
 
 :execute
+mkdir deps
+git clone https://github.com/SkySwimmer/connective-http deps/connective-http
 cmd /c java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain installation
 
 if NOT EXIST "%dir%\server" mkdir "%dir%\server"
