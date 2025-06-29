@@ -51,6 +51,8 @@ dependencies {
 	implementation name: "feraltweaks-server-module", version: '1.0.0-b3'
 }
 
+project.configurations.implementation.canBeResolved = true
+
 // createEclipseLaunches {
 // 	name "Launch Centuria Server (${project.name})"
 
