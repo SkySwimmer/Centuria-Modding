@@ -24,6 +24,8 @@ function exitmeth() {
 
 function execute() {
     chmod +x gradlew
+    mkdir deps
+    git clone https://github.com/SkySwimmer/connective-http deps/connective-http
     ./gradlew installation || return $?
     if [ ! -d "$dir/server" ]; then
         mkdir "$dir/server"

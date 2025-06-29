@@ -46,10 +46,12 @@ dependencies {
 	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 
 	implementation name: "Centuria"
-	implementation name: "ConnectiveHTTP"
+	implementation name: "connective-http"
 
 	implementation name: "feraltweaks-server-module", version: '1.0.0-b4'
 }
+
+project.configurations.implementation.canBeResolved = true
 
 // createEclipseLaunches {
 // 	name "Launch Centuria Server (${project.name})"
