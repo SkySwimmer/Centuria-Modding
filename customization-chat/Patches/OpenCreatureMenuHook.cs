@@ -549,102 +549,102 @@ namespace CustomizationChat.Patches
                     UI_Window_VoiceChat chatController = vchatWin.GetComponent<UI_Window_VoiceChat>();
                     SetupVoiceChatWin(controller, chatController);
                 }
-            }
 
-            // Bring windows to front
-            GameObject chatWindow = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
-            if (chatWindow != null)
-            {
-                // Bring to front
-                UI_Window_Chat chatController = chatWindow.GetComponent<UI_Window_Chat>();
-                chatController.Hide();
-                Transform canvas = chatWindow.transform.parent;
-                chatWindow.transform.SetParent(null);
-                chatWindow.transform.SetParent(canvas);
-                chatController.Show();
-            }
-            GameObject vchatWindow = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_VoiceChat");
-            if (vchatWindow != null)
-            {
-                // Bring to front
-                UI_Window_VoiceChat vchatController = vchatWindow.GetComponent<UI_Window_VoiceChat>();
-                vchatController.Hide();
-                Transform canvas = vchatWindow.transform.parent;
-                vchatWindow.transform.SetParent(null);
-                vchatWindow.transform.SetParent(canvas);
-                vchatController.Show();
-            }
-
-            // Create new buttons
-            GameObject safeArea = GetChild(__instance.gameObject, "Body_SafeArea");
-            GameObject chatButton = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_HUD/Group_HUD/Body/StandaloneOnly/Button_Chat");
-            if (chatButton != null)
-            {
-                // Create new
-                GameObject copy = GameObject.Instantiate(chatButton);
-                copy.name = "Button_Chat";
-                copy.transform.SetParent(safeArea.transform);
-                copy.transform.localPosition = chatButton.transform.localPosition;
-                copy.transform.localScale = chatButton.transform.localScale;
-                copy.transform.localRotation = chatButton.transform.localRotation;
-                RectTransform transf = copy.transform.Cast<RectTransform>();
-                transf.anchoredPosition = new Vector2(-60, 80);
-                transf.anchorMax = new Vector2(1, 0);
-                transf.anchorMin = new Vector2(1, 0);
-                copy.SetActive(true);
-                GetChild(copy, "ButtonGraphics/NotificationCount").SetActive(true);
-                copy.GetComponent<FeralButton>().onClick.AddListener(new Action(() =>
+                // Bring windows to front
+                GameObject chatWindow = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
+                if (chatWindow != null)
                 {
-                    GameObject chatWindowz = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
-                    if (chatWindowz != null)
+                    // Bring to front
+                    UI_Window_Chat chatController = chatWindow.GetComponent<UI_Window_Chat>();
+                    chatController.Hide();
+                    Transform canvas = chatWindow.transform.parent;
+                    chatWindow.transform.SetParent(null);
+                    chatWindow.transform.SetParent(canvas);
+                    chatController.Show();
+                }
+                GameObject vchatWindow = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_VoiceChat");
+                if (vchatWindow != null)
+                {
+                    // Bring to front
+                    UI_Window_VoiceChat vchatController = vchatWindow.GetComponent<UI_Window_VoiceChat>();
+                    vchatController.Hide();
+                    Transform canvas = vchatWindow.transform.parent;
+                    vchatWindow.transform.SetParent(null);
+                    vchatWindow.transform.SetParent(canvas);
+                    vchatController.Show();
+                }
+
+                // Create new buttons
+                GameObject safeArea = GetChild(__instance.gameObject, "Body_SafeArea");
+                GameObject chatButton = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_HUD/Group_HUD/Body/StandaloneOnly/Button_Chat");
+                if (chatButton != null)
+                {
+                    // Create new
+                    GameObject copy = GameObject.Instantiate(chatButton);
+                    copy.name = "Button_Chat";
+                    copy.transform.SetParent(safeArea.transform);
+                    copy.transform.localPosition = chatButton.transform.localPosition;
+                    copy.transform.localScale = chatButton.transform.localScale;
+                    copy.transform.localRotation = chatButton.transform.localRotation;
+                    RectTransform transf = copy.transform.Cast<RectTransform>();
+                    transf.anchoredPosition = new Vector2(-60, 80);
+                    transf.anchorMax = new Vector2(1, 0);
+                    transf.anchorMin = new Vector2(1, 0);
+                    copy.SetActive(true);
+                    GetChild(copy, "ButtonGraphics/NotificationCount").SetActive(true);
+                    copy.GetComponent<FeralButton>().onClick.AddListener(new Action(() =>
                     {
-                        UI_Window_Chat chatController = chatWindowz.GetComponent<UI_Window_Chat>();
-                        chatController.Show();
-                        if (!controller.ChatHasBeenOpened)
+                        GameObject chatWindowz = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
+                        if (chatWindowz != null)
                         {
-                            chatController._publicChatPanel.SnapToBottom(true);
-                            chatController._privateChatPanel.SnapToBottom(true);
+                            UI_Window_Chat chatController = chatWindowz.GetComponent<UI_Window_Chat>();
+                            chatController.Show();
+                            if (!controller.ChatHasBeenOpened)
+                            {
+                                chatController._publicChatPanel.SnapToBottom(true);
+                                chatController._privateChatPanel.SnapToBottom(true);
+                                controller.ChatHasBeenOpened = true;
+                            }
                             controller.ChatHasBeenOpened = true;
                         }
-                        controller.ChatHasBeenOpened = true;
-                    }
-                    else
-                    {
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        else
                         {
-                            GameObject chatWindowz = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
-                            if (chatWindowz != null)
+                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                             {
-                                UI_Window_Chat chatController = chatWindowz.GetComponent<UI_Window_Chat>();
-                                if (!controller.ChatHasBeenOpened)
+                                GameObject chatWindowz = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_Chat");
+                                if (chatWindowz != null)
                                 {
-                                    chatController._publicChatPanel.SnapToBottom(true);
-                                    chatController._privateChatPanel.SnapToBottom(true);
-                                    controller.ChatHasBeenOpened = true;
+                                    UI_Window_Chat chatController = chatWindowz.GetComponent<UI_Window_Chat>();
+                                    if (!controller.ChatHasBeenOpened)
+                                    {
+                                        chatController._publicChatPanel.SnapToBottom(true);
+                                        chatController._privateChatPanel.SnapToBottom(true);
+                                        controller.ChatHasBeenOpened = true;
+                                    }
+                                    chatController.Show();
+                                    return true;
                                 }
-                                chatController.Show();
-                                return true;
-                            }
-                            return false;
-                        });
-                    }
-                }));
-            }
-            GameObject vchatButton = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_HUD/Group_HUD/Body/StandaloneOnly/Button_Voice");
-            if (vchatButton != null)
-            {
-                // Create new
-                GameObject copy = GameObject.Instantiate(vchatButton);
-                copy.name = "Button_Voice";
-                copy.transform.SetParent(safeArea.transform);
-                copy.transform.localPosition = vchatButton.transform.localPosition;
-                copy.transform.localScale = vchatButton.transform.localScale;
-                copy.transform.localRotation = vchatButton.transform.localRotation;
-                RectTransform transf = copy.transform.Cast<RectTransform>();
-                transf.anchoredPosition = new Vector2(-60, 20);
-                transf.anchorMax = new Vector2(1, 0);
-                transf.anchorMin = new Vector2(1, 0);
-                copy.SetActive(true);
+                                return false;
+                            });
+                        }
+                    }));
+                }
+                GameObject vchatButton = GameObject.Find("CanvasRoot/WindowCanvas/UI_Window_HUD/Group_HUD/Body/StandaloneOnly/Button_Voice");
+                if (vchatButton != null)
+                {
+                    // Create new
+                    GameObject copy = GameObject.Instantiate(vchatButton);
+                    copy.name = "Button_Voice";
+                    copy.transform.SetParent(safeArea.transform);
+                    copy.transform.localPosition = vchatButton.transform.localPosition;
+                    copy.transform.localScale = vchatButton.transform.localScale;
+                    copy.transform.localRotation = vchatButton.transform.localRotation;
+                    RectTransform transf = copy.transform.Cast<RectTransform>();
+                    transf.anchoredPosition = new Vector2(-60, 20);
+                    transf.anchorMax = new Vector2(1, 0);
+                    transf.anchorMin = new Vector2(1, 0);
+                    copy.SetActive(true);
+                }
             }
         }
 
