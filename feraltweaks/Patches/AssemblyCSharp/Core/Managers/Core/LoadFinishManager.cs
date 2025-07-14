@@ -54,9 +54,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 t.Execute(ctx =>
                 {
-                    // Mark safe to use quit popup
-                    LoginLogoutPatches._quitPopupSafe = true;
-
                     // Post-load
                     // FIXME: implement fully
                     ctx = ctx;

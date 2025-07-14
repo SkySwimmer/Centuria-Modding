@@ -978,6 +978,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
             Message m = inMessage.TryCast<Message>();
             if (m != null && m.EventId == "LevelLoaded")
                 levelLoadedCalled = true;
+            else if (m != null && m.EventId == "CoreLoaded")
+            {
+                // Check core type
+                Core core = Core.instance;
+                if (core != null)
+                    _quitPopupSafe = true;
+            }
         }
 
         [HarmonyPrefix]
@@ -1010,13 +1017,26 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     avatar._nextActionBreakLoop = true;
                     
                     // Hide avatar
+                    Dictionary<GameObject, bool> oldStates = new Dictionary<GameObject, bool>();
+                    foreach (GameObject child in GetChildren(avatar.BodyTransform.gameObject))
+                    {
+                        // Avoid the skeletons
+                        if (avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                            continue;
+                        if (avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                            continue;
+                        oldStates[child] = child.activeSelf;
+                        child.SetActive(false);
+                    }
+
+                    // Wait
                     FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                     {
                         // Wait for window to close
                         UI_Window_OkPopup popup = CoreWindowManager.GetWindow<UI_Window_OkPopup>();
                         if (popup != null && (!popup.IsClosing || popup.IsOpenOrOpening))
                             return false;
-                            
+
                         if (WantsToQuit)
                         {
                             // Game's quitting, skip teleport
@@ -1032,18 +1052,39 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                         // Teleport in
                         GCR.instance.StartCoroutine(avatar.TransitionArrival(false, false, "teleport"));
+                        int ticks = 0;
                         FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                         {
+                            if (avatar == null || avatar.transform == null)
+                                return true; // Crashed
+                                
                             // Wait for transition
                             if (!avatar.IsTransitionArriving)
                                 return false;
 
                             // Run
+                            ticks++;
                             FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                             {
                                 // Wait for transition
-                                if (avatar.IsTransitionArriving)
+                                if (ticks < 2)
+                                {
+                                    ticks++;
                                     return false;
+                                }
+
+                                // Show avatar
+                                foreach (GameObject child in GetChildren(avatar.BodyTransform.gameObject))
+                                {
+                                    if (avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                                        continue;
+                                    if (avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                                        continue;
+                                    if (!oldStates.ContainsKey(child))
+                                        continue;
+                                    child.SetActive(oldStates[child]);
+                                }
+                                oldStates.Clear();
 
                                 // Return
                                 return true;
@@ -1202,6 +1243,48 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Error
                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleClientModCount"].ToString() + " incompatible CLIENT mod" + (json["params"]["incompatibleClientModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleClientMods"].ToString() + "]");
             }
+        }
+        
+        private static GameObject GetChild(GameObject parent, string name)
+        {
+            if (name.Contains("/"))
+            {
+                string pth = name.Remove(name.IndexOf("/"));
+                string ch = name.Substring(name.IndexOf("/") + 1);
+                foreach (GameObject obj in GetChildren(parent))
+                {
+                    if (obj.name == pth)
+                    {
+                        GameObject t = GetChild(obj, ch);
+                        if (t != null)
+                            return t;
+                    }
+                }
+                return null;
+            }
+            Transform tr = parent.transform;
+            Transform[] trs = parent.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in trs)
+            {
+                if (t.name == name && t.parent == tr.gameObject.transform)
+                {
+                    return t.gameObject;
+                }
+            }
+            return null;
+        }
+
+        private static GameObject[] GetChildren(GameObject parent)
+        {
+            Transform tr = parent.transform;
+            List<GameObject> children = new List<GameObject>();
+            Transform[] trs = parent.GetComponentsInChildren<Transform>(true);
+            foreach (Transform trCh in trs)
+            {
+                if (trCh.parent == tr.gameObject.transform)
+                    children.Add(trCh.gameObject);
+            }
+            return children.ToArray();
         }
     }
 }

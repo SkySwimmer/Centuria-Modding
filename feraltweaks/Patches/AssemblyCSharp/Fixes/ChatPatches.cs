@@ -1825,7 +1825,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return null;
         }
 
-        private static GameObject[] GetChildren(this GameObject parent)
+        private static GameObject[] GetChildren(GameObject parent)
         {
             Transform tr = parent.transform;
             List<GameObject> children = new List<GameObject>();

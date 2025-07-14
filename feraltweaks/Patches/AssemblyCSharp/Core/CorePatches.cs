@@ -112,7 +112,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "Update")]
-        private static bool Update(ref ManagerBase __instance)
+        public static bool Update(ref ManagerBase __instance)
         {
             // Init
             Init();
@@ -231,7 +231,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "UpdateInternal")]
-        private static bool UpdateInternal(ref ManagerBase __instance)
+        public static bool UpdateInternal(ref ManagerBase __instance)
         {
             // Init
             Init();
@@ -290,7 +290,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "RegisterManagedBehaviour")]
-        private static bool RegisterManagedBehaviour(ManagerBase __instance, ManagedBehaviour inManagedBehaviour)
+        public static bool RegisterManagedBehaviour(ManagerBase __instance, ManagedBehaviour inManagedBehaviour)
         {
             // Init
             Init();
@@ -422,7 +422,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
          
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "UnregisterManagedBehaviour")]
-        private static bool UnregisterManagedBehaviour(ManagerBase __instance, ManagedBehaviour inManagedBehaviour)
+        public static bool UnregisterManagedBehaviour(ManagerBase __instance, ManagedBehaviour inManagedBehaviour)
         {
             // Init
             Init();
@@ -528,7 +528,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
          
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagedBehaviour), "UnregisterWithManager")]
-        private static bool UnregisterWithManager(ref ManagedBehaviour __instance)
+        public static bool UnregisterWithManager(ref ManagedBehaviour __instance)
         {
             // Init
             Init();
@@ -545,7 +545,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
          
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagedBehaviour), "OnDisable")]
-        private static bool OnDisable(ref ManagedBehaviour __instance)
+        public static bool OnDisable(ref ManagedBehaviour __instance)
         {
             // Init
             Init();
@@ -569,7 +569,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "registeredBehaviours", MethodType.Getter)]
-        private static bool RegisteredBehaviours(ref ManagerBase __instance, ref Il2CppSystem.Collections.Generic.List<ManagedBehaviour> __result)
+        public static bool RegisteredBehaviours(ref ManagerBase __instance, ref Il2CppSystem.Collections.Generic.List<ManagedBehaviour> __result)
         {
             // Init
             Init();
@@ -586,7 +586,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "registeredDisableBehaviours", MethodType.Getter)]
-        private static bool RegisteredDisableBehaviours(ref ManagerBase __instance, ref Il2CppSystem.Collections.Generic.List<ManagedBehaviour> __result)
+        public static bool RegisteredDisableBehaviours(ref ManagerBase __instance, ref Il2CppSystem.Collections.Generic.List<ManagedBehaviour> __result)
         {
             // Init
             Init();
@@ -667,7 +667,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "AddInstanceToDictInternal")]
-        private static bool AddInstanceToDictInternal(ref ManagerBase __instance)
+        public static bool AddInstanceToDictInternal(ref ManagerBase __instance)
         {
             // Init
             Init();
@@ -695,7 +695,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ManagerBase), "UnsetInstance")]
-        private static bool UnsetInstance(ref ManagerBase __instance)
+        public static bool UnsetInstance(ref ManagerBase __instance)
         {
             // Init
             Init();
@@ -738,7 +738,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ManagerBase), "SetInstance")]
-        private static void SetInstance(ref ManagerBase __instance)
+        public static void SetInstance(ref ManagerBase __instance)
         {
             // Init
             Init();
@@ -768,7 +768,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreBase<SplashCore>), "GetManagerField")]
-        private static bool GetManagerField(ref Il2CppSystem.Object __instance, ManagerBase inManager, ref FieldInfo __result)
+        public static bool GetManagerField(ref Il2CppSystem.Object __instance, ManagerBase inManager, ref FieldInfo __result)
         {
             // Init
             Init();
@@ -886,7 +886,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreBase<SplashCore>), "GetManagerInstance", new System.Type[] { typeof(Type) })]
-        private static bool GetManagerInstance(Type inType, ref ManagerBase __result)
+        public static bool GetManagerInstance(Type inType, ref ManagerBase __result)
         {
             // FIXME: due to no access to generic types, theres a lot of limitation here, we cant determine which core we are on, so we have to check both for a match
 
@@ -953,7 +953,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(FieldInfo), "SetValue", new System.Type[] { typeof(Il2CppSystem.Object), typeof(Il2CppSystem.Object) })]
-        private static void SetValue(ref FieldInfo __instance, ref Il2CppSystem.Object obj, ref Il2CppSystem.Object value)
+        public static void SetValue(ref FieldInfo __instance, ref Il2CppSystem.Object obj, ref Il2CppSystem.Object value)
         {
             // Init
             Init();
@@ -1034,7 +1034,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CoreBase<SplashCore>), "GetManagerList")]
-        private static void GetManagerList(ref Il2CppSystem.Object __instance, ref Il2CppSystem.Collections.Generic.IEnumerable<ManagerBase> __result)
+        public static void GetManagerList(ref Il2CppSystem.Object __instance, ref Il2CppSystem.Collections.Generic.IEnumerable<ManagerBase> __result)
         {
             // Init
             Init();
