@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace FeralTweaksBootstrap
 {
-    internal class Il2CppDetour<TDelegate> : Il2CppInterop.Runtime.Injection.IDetour where TDelegate : Delegate
+    internal class Il2CppInteropDetour<TDelegate> : Il2CppInterop.Runtime.Injection.IDetour where TDelegate : Delegate
     {
         private static List<object> detourLock = new List<object>();
         private TDelegate target;
@@ -20,7 +20,7 @@ namespace FeralTweaksBootstrap
         private IntPtr trampolinePtr;
         private IntPtr funchook;
 
-        public Il2CppDetour(nint original, TDelegate target)
+        public Il2CppInteropDetour(nint original, TDelegate target)
         {
             this.origPtr = original;
             this.target = target;
@@ -64,6 +64,7 @@ namespace FeralTweaksBootstrap
         public void Dispose()
         {
             // Unhook
+            // FIXME: can cause issues with generic types as ultimately they share one method, ultimately Dispose() would unhook both even if they are supposed to be separate
             if (applied)
                 Funchook.FunchookUninstall(funchook, 0);
             if (trampolineCreated)

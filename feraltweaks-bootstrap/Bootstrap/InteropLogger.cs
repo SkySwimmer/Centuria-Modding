@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using FeralTweaks.Logging;
 using Microsoft.Extensions.Logging;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -72,6 +74,10 @@ namespace FeralTweaksBootstrap
                     LogError(msg);
                     break;
             }
+
+            // Throw if needed
+            if (Debugger.IsAttached && exception != null)
+                ExceptionDispatchInfo.Capture(exception).Throw();
         }
     }
 

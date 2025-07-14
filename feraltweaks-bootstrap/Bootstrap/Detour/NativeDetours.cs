@@ -16,7 +16,7 @@ namespace FeralTweaksBootstrap.Detour
     public static class NativeDetours
     {
         /// <summary>
-        /// Creates a detour (TODO: running original code)
+        /// Creates a detour
         /// </summary>
         /// <param name="location">Target pointer</param>
         /// <param name="detourMethod">Detour method container</param>

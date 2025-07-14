@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FeralTweaks.Logging;
+using FeralTweaksBootstrap;
+using FeralTweaksBootstrap.Detour;
 
 namespace FeralTweaks.Mods
 {
@@ -15,11 +17,24 @@ namespace FeralTweaks.Mods
     /// </summary>
     public abstract class FeralTweaksMod
     {
+        /// <summary>
+        /// Raw injector delegate
+        /// </summary>
+        /// <param name="methodName">Method name</param>
+        /// <param name="clsPointer">Class pointer</param>
+        /// <param name="objPointer">Object pointer</param>
+        /// <param name="methodPointer">Method object pointer</param>
+        /// <param name="methodParametersPointer">Method parameters pointer</param>
+        /// <param name="originalMethod">Original method call pointer</param>
+        /// <returns>Detour to execute or null if invalid</returns>
+        public delegate RuntimeInvokeDetour RawInjectionHandler(string methodName, IntPtr clsPointer, IntPtr objPointer, IntPtr methodPointer, IntPtr methodParametersPointer, RuntimeInvokeDetour originalMethod);
+
         internal int _priority = 0;
         internal List<string> _depends = new List<string>();
         internal List<string> _optDepends = new List<string>();
         internal List<string> _conflicts = new List<string>();
         internal List<string> _loadBefore = new List<string>();
+        internal List<RawInjectionHandler> _rawDetours = new List<RawInjectionHandler>();
         internal Dictionary<string, string> _dependencyVersions = new Dictionary<string, string>();
         private static List<Assembly> modAssemblies = new List<Assembly>();
         private bool locked;
@@ -241,6 +256,26 @@ namespace FeralTweaks.Mods
                 throw new ArgumentException("Locked registry");
             if (!_conflicts.Contains(id))
                 _conflicts.Add(id);
+        }
+
+        /// <summary>
+        /// Registers a low-level runtime invoke detour
+        /// </summary>
+        /// <param name="handler">Injection handler (a method called to compare if the injected method is compatible)</param>
+        protected void RegisterLowlevelRuntimeInvokeDetour(RawInjectionHandler handler)
+        {
+            if (!_rawDetours.Contains(handler))
+                _rawDetours.Add(handler);
+        }
+
+        /// <summary>
+        /// Removes a low-level runtime invoke detour
+        /// </summary>
+        /// <param name="handler">Injection handler to remove</param>
+        protected void DeregisterLowlevelRuntimeInvokeDetour(RawInjectionHandler handler)
+        {
+            if (_rawDetours.Contains(handler))
+                _rawDetours.Remove(handler);
         }
 
         /// <summary>

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using FeralTweaks.Logging;
 using FeralTweaks.Mods;
@@ -16,7 +18,7 @@ namespace FeralTweaks
     /// </summary>
     public static class FeralTweaksLoader
     {
-        public const string VERSION = "v1.0.0-alpha-a5";
+        public const string VERSION = "v1.0.0-alpha-a6";
         private static List<FeralTweaksMod> mods;
 
         private static Logger logger;
@@ -186,7 +188,30 @@ namespace FeralTweaks
             RunForMods(mod =>
             {
                 LogInfo("Post-initializing mod: " + mod.ID);
-                mod.PostInit();
+                if (FeralTweaksBootstrap.Bootstrap.EnableExceptionCatcher)
+                {
+                    try
+                    {
+                        mod.PostInit();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                        {
+                            FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                            Directory.CreateDirectory("FeralTweaks");
+                            File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                            mod.Logger.Fatal("Uncaught exception during mod post-init!", e);
+                        }
+                        if (Debugger.IsAttached)
+                            ExceptionDispatchInfo.Capture(e).Throw();
+                        Environment.Exit(1);
+                    }
+                }
+                else
+                {
+                    mod.PostInit();
+                }
             });
         }
         
@@ -197,7 +222,30 @@ namespace FeralTweaks
             RunForMods(mod =>
             {
                 LogInfo("Finalizing loading mod: " + mod.ID);
-                mod.FinalizeLoad();
+                if (FeralTweaksBootstrap.Bootstrap.EnableExceptionCatcher)
+                {
+                    try
+                    {
+                        mod.FinalizeLoad();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                        {
+                            FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                            Directory.CreateDirectory("FeralTweaks");
+                            File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                            mod.Logger.Fatal("Uncaught exception during mod finalizeload!", e);
+                        }
+                        if (Debugger.IsAttached)
+                            ExceptionDispatchInfo.Capture(e).Throw();
+                        Environment.Exit(1);
+                    }
+                }
+                else
+                {
+                    mod.FinalizeLoad();
+                }
             });
         }
 
@@ -503,7 +551,30 @@ namespace FeralTweaks
             RunForMods(mod =>
             {
                 LogInfo("Loading mod: " + mod.ID + ", version " + mod.Version + "...");
-                mod.PreInit();
+                if (FeralTweaksBootstrap.Bootstrap.EnableExceptionCatcher)
+                {
+                    try
+                    {
+                        mod.PreInit();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                        {
+                            FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                            Directory.CreateDirectory("FeralTweaks");
+                            File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                            mod.Logger.Fatal("Uncaught exception during mod pre-init!", e);
+                        }
+                        if (Debugger.IsAttached)
+                            ExceptionDispatchInfo.Capture(e).Throw();
+                        Environment.Exit(1);
+                    }
+                }
+                else
+                {
+                    mod.PreInit();
+                }
             });
 
             // Initialize mods
@@ -520,7 +591,30 @@ namespace FeralTweaks
                 mod.CacheDir = Path.GetFullPath("FeralTweaks/cache/" + mod.ID);
 
                 // Init
-                mod.Init();
+                if (FeralTweaksBootstrap.Bootstrap.EnableExceptionCatcher)
+                {
+                    try
+                    {
+                        mod.Init();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                        {
+                            FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                            Directory.CreateDirectory("FeralTweaks");
+                            File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                            mod.Logger.Fatal("Uncaught exception during mod init!", e);
+                        }
+                        if (Debugger.IsAttached)
+                            ExceptionDispatchInfo.Capture(e).Throw();
+                        Environment.Exit(1);
+                    }
+                }
+                else
+                {
+                    mod.Init();
+                }
             });
         }
 
@@ -653,10 +747,10 @@ namespace FeralTweaks
             }
         }
 
-        private static void RunForMods(Action<FeralTweaksMod> ex)
+        internal static void RunForMods(Action<FeralTweaksMod> ex)
         {
             List<string> loading = new List<string>();
-            foreach (FeralTweaksMod mod in mods.OrderBy(t => t._priority))
+            foreach (FeralTweaksMod mod in mods.OrderBy(t => -t._priority))
             {
                 RunFor(mod, loading, ex);
             }
@@ -724,7 +818,7 @@ namespace FeralTweaks
                 }
             }
 
-            // Check load-after of other mods
+            // Check load-before of other mods
             foreach (FeralTweaksMod md in mods)
             {
                 if (md._loadBefore.Contains(mod.ID))
@@ -741,7 +835,7 @@ namespace FeralTweaks
         private static void RunForMods(Action<ModInfo> ex, List<ModInfo> mods)
         {
             List<string> loading = new List<string>();
-            foreach (ModInfo mod in mods.OrderBy(t => t.loadPriority))
+            foreach (ModInfo mod in mods.OrderBy(t => -t.loadPriority))
             {
                 RunFor(mod, mods, loading, ex);
             }
@@ -815,7 +909,7 @@ namespace FeralTweaks
                 }
             }
 
-            // Check load-after of other mods
+            // Check load-before of other mods
             foreach (ModInfo md in mods)
             {
                 if (md.loadBefore.Contains(mod.id))

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -9,6 +10,8 @@ namespace FeralTweaks.Logging.Impl
     {
         private string Source;
         private StreamWriter FileWriter;
+
+        private static Dictionary<string, StreamWriter> writerMemory = new Dictionary<string, StreamWriter>();
 
         public FileLoggerImpl(string source) {
             Source = source;
@@ -21,7 +24,16 @@ namespace FeralTweaks.Logging.Impl
                 // Create log file
                 try
                 {
-                    FileWriter = new StreamWriter("FeralTweaks/logs/" + source.ToLower() + ".log");
+                    lock (writerMemory)
+                    {
+                        if (writerMemory.ContainsKey(source))
+                            FileWriter = writerMemory[source];
+                        else
+                        {
+                            FileWriter = new StreamWriter("FeralTweaks/logs/" + source.ToLower() + ".log");
+                            writerMemory[source] = FileWriter;
+                        }
+                    }
                 }
                 catch
                 {
@@ -61,17 +73,20 @@ namespace FeralTweaks.Logging.Impl
                 return;
             if (Level != LogLevel.QUIET && Level >= level) {
                 string msg = "[" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToString("HH:mm:ss") + "] [" + level.ToString() + "] " + GlobalMessagePrefix + message;
-                FileWriter.WriteLine(msg);
-                FileWriter.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
-                FileWriter.WriteLine(exception.StackTrace);
-                Exception e = exception.InnerException;
-                while (e != null)
+                lock (FileWriter)
                 {
-                    FileWriter.WriteLine("Caused by: " + exception.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                    FileWriter.WriteLine(msg);
+                    FileWriter.WriteLine("Exception: " + exception.GetType().FullName + (exception.Message != null ? ": " + exception.Message : ""));
                     FileWriter.WriteLine(exception.StackTrace);
-                    e = e.InnerException;
+                    Exception e = exception.InnerException;
+                    while (e != null)
+                    {
+                        FileWriter.WriteLine("Caused by: " + e.GetType().FullName + (e.Message != null ? ": " + e.Message : ""));
+                        FileWriter.WriteLine(exception.StackTrace);
+                        e = e.InnerException;
+                    }
+                    FileWriter.Flush();
                 }
-                FileWriter.Flush();
             }
         }
     }

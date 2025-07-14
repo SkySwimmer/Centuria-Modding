@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Doorstop
@@ -9,11 +10,20 @@ namespace Doorstop
         {
             try
             {
+                FeralTweaksBootstrap.Bootstrap.EnableExceptionCatcher = true;
                 FeralTweaksBootstrap.Bootstrap.Start();
             }
             catch (Exception e)
             {
-                File.WriteAllText("exceptionlog.log", "Uncaught exception: " + e);
+                if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                {
+                    FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                    Directory.CreateDirectory("FeralTweaks");
+                    File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                    FeralTweaks.Logging.Logger.GetLogger("Preloader").Fatal("Uncaught exception!", e);
+                }
+                if (Debugger.IsAttached)
+                    throw;
                 Environment.Exit(1);
             }
         }

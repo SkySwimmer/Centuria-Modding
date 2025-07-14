@@ -5,15 +5,19 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using AsmResolver.DotNet;
 using AssetRipper.VersionUtilities;
 using FeralTweaks;
 using FeralTweaks.Logging;
 using FeralTweaksBootstrap.Detour;
+using FeralTweaksBootstrap.Patches;
+using HarmonyLib;
 using HarmonyLib.Public.Patching;
 using Il2CppDumper;
 using Il2CppInterop.Common;
@@ -29,10 +33,13 @@ namespace FeralTweaksBootstrap
 {
     public static class Bootstrap
     {
-        public const string VERSION = "v1.0.0-alpha-a5";
+        internal static bool EnableExceptionCatcher;
+        internal static bool FatalExceptionLogged;
+        public const string VERSION = "v1.0.0-alpha-a6";
         private static Il2CppInteropRuntime runtime;
         private static RuntimeInvokeDetourContainer runtimeInvokeDetour;
-        private static string GameAssemblyPath;
+        public static string GameAssemblyPath { get; internal set; }
+        public static IntPtr GameAssemblyHandle { get; internal set; }
         private static Logger logger;
         internal static bool loaderReady;
         internal static bool logUnityToFile;
@@ -144,7 +151,10 @@ namespace FeralTweaksBootstrap
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 // Log
-                LogError("Caught an unhandled exception! Thread name: " + Thread.CurrentThread.Name + "\nException: " + args.ExceptionObject + ":\n" + ((Exception)args.ExceptionObject).StackTrace);
+                if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                    LogError("Caught an unhandled exception! Thread name: " + Thread.CurrentThread.Name + "\nException: " + args.ExceptionObject + ":\n" + ((Exception)args.ExceptionObject).StackTrace);
+                else
+                    FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = false;
             };
 
             // Handle arguments
@@ -1113,7 +1123,7 @@ namespace FeralTweaksBootstrap
                 LogInfo("Unhollowing assemblies...");
                 GeneratorOptions opts = new GeneratorOptions();
                 opts.GameAssemblyPath = gameAssemblyPath;
-                opts.Source = new AltDirCecilAssemblyResolver("FeralTweaks/cache/dummy").ToList();
+                opts.Source = new DirectoryInfo("FeralTweaks/cache/dummy").GetFiles().Select(t => AssemblyDefinition.FromFile(t.FullName)).ToList();
                 opts.OutputDir = "FeralTweaks/cache/assemblies";
                 if (unstrip)
                     opts.UnityBaseLibsDir = "FeralTweaks/cache/unity";
@@ -1175,7 +1185,7 @@ namespace FeralTweaksBootstrap
             runtime = Il2CppInteropRuntime.Create(new RuntimeConfiguration()
             {
                 UnityVersion = new Version(uver.Major, uver.Minor, uver.Build),
-                DetourProvider = new Il2CppDetourProvider()
+                DetourProvider = new Il2CppInteropDetourProvider()
             });
 
             // Load funchook for the current platform
@@ -1210,7 +1220,11 @@ namespace FeralTweaksBootstrap
             IntPtr handle = NativeLibrary.Load(gameAssemblyPath, typeof(Il2CppInteropRuntime).Assembly, null);
             IntPtr invokePtr = NativeLibrary.GetExport(handle, "il2cpp_runtime_invoke");
             runtimeInvokeDetour = new RuntimeInvokeDetourContainer();
+            GameAssemblyHandle = handle;
             NativeDetours.CreateDetour(invokePtr, runtimeInvokeDetour);
+
+            // Hook own patches
+            // Harmony.CreateAndPatchAll(typeof(HarmonySupportPatch)); // FIXME: disabled since unfinished and not functional yet
 
             // Start
             LogInfo("Preloader finished!");
@@ -1218,7 +1232,7 @@ namespace FeralTweaksBootstrap
             StartLoader();
 
             // Exit if needed
-            if (loadMods)
+            if (dumpOnly && loadMods)
             {
                 LogInfo("EXITING! Dry run finished!");
                 Environment.Exit(0);
@@ -1234,8 +1248,32 @@ namespace FeralTweaksBootstrap
 
         private static void StartLoader()
         {
-            loaderReady = true;
-            FeralTweaksLoader.Start();
+            if (EnableExceptionCatcher)
+            {
+                try
+                {
+                    loaderReady = true;
+                    FeralTweaksLoader.Start();
+                }
+                catch (Exception e)
+                {
+                    if (!FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged)
+                    {
+                        FeralTweaksBootstrap.Bootstrap.FatalExceptionLogged = true;
+                        Directory.CreateDirectory("FeralTweaks");
+                        File.WriteAllText("FeralTweaks/exceptionlog.log", "Uncaught exception: " + e);
+                        FeralTweaks.Logging.Logger.GetLogger("Loader").Fatal("Uncaught exception!", e);
+                    }
+                    if (Debugger.IsAttached)
+                        ExceptionDispatchInfo.Capture(e).Throw();
+                    Environment.Exit(1);
+                }
+            }
+            else
+            {
+                loaderReady = true;
+                FeralTweaksLoader.Start();
+            }
         }
     }
 }

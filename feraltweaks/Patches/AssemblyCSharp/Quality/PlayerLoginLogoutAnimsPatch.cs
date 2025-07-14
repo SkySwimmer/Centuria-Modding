@@ -76,6 +76,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 GCR.instance.StartCoroutine(avatar.TransitionArrival(false, false, "teleport"));
                 FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                 {
+                    if (avatar == null || avatar.transform == null)
+                        return true; // Crashed
+                        
                     avatar.transform.rotation = rotOriginal;
                     if (!readyToShow && (avatar.transform.position.x != 0 || avatar.transform.position.y != -10000 || avatar.transform.position.z != 0))
                     {
@@ -91,6 +94,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
                     {
+                        if (avatar == null || avatar.transform == null)
+                            return true; // Crashed
+
                         if (!readyToShow && DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start >= 500)
                         {
                             readyToShow = true;

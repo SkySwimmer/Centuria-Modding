@@ -107,6 +107,12 @@
             </summary>
             <param name="message">Message to log</param>
         </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogTrace(System.String)">
+            <summary>
+            Logs a trace message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
         <member name="M:FeralTweaks.FeralTweaksLoader.LogWarn(System.String)">
             <summary>
             Logs a warning message
@@ -119,10 +125,201 @@
             </summary>
             <param name="message">Message to log</param>
         </member>
+        <member name="M:FeralTweaks.FeralTweaksLoader.LogFatal(System.String)">
+            <summary>
+            Logs a fatal error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.GetLogger(System.String)">
+            <summary>
+            Creates a new logger instance
+            </summary>
+            <param name="name">Logger name</param>
+            <returns>New Logger instance</returns>
+        </member>
+        <member name="F:FeralTweaks.Logging.Logger.GlobalLogLevel">
+            <summary>
+            Defines the global log level
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.Logger.GlobalConsoleLogLevel">
+            <summary>
+            Defines the global console log level
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.Logging.Logger.Level">
+            <summary>
+            Defines the log level
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Log(FeralTweaks.Logging.LogLevel,System.String)">
+            <summary>
+            Prints a message to the log
+            </summary>
+            <param name="level">Log level</param>
+            <param name="message">Log message</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Log(FeralTweaks.Logging.LogLevel,System.String,System.Exception)">
+            <summary>
+            Prints a message to the log
+            </summary>
+            <param name="level">Log level</param>
+            <param name="message">Log message</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Debug(System.String)">
+            <summary>
+            Logs a new debug message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Debug(System.String,System.Exception)">
+            <summary>
+            Logs a new debug message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Trace(System.String)">
+            <summary>
+            Logs a new trace message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Trace(System.String,System.Exception)">
+            <summary>
+            Logs a new trace message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Info(System.String)">
+            <summary>
+            Logs a new info message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Info(System.String,System.Exception)">
+            <summary>
+            Logs a new info message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Warn(System.String)">
+            <summary>
+            Logs a new warning message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Warn(System.String,System.Exception)">
+            <summary>
+            Logs a new warning message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Error(System.String)">
+            <summary>
+            Logs a new error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Error(System.String,System.Exception)">
+            <summary>
+            Logs a new error message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Fatal(System.String)">
+            <summary>
+            Logs a new atal error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.Logger.Fatal(System.String,System.Exception)">
+            <summary>
+            Logs a new fatal error message
+            </summary>
+            <param name="message">Message to log</param>
+            <param name="exception">Exception to log</param>
+        </member>
+        <member name="M:FeralTweaks.Logging.ILoggerImplementationProvider.CreateInstance(System.String)">
+            <summary>
+            Creates a logger instance
+            </summary>
+            <param name="name">Logger name</param>
+            <returns>New Logger instance</returns>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.QUIET">
+            <summary>
+            No messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.FATAL">
+            <summary>
+            Fatal error log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.ERROR">
+            <summary>
+            Error log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.WARN">
+            <summary>
+            Warning log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.INFO">
+            <summary>
+            Info log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.TRACE">
+            <summary>
+            Trace log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.DEBUG">
+            <summary>
+            Debug log messages
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.GLOBAL">
+            <summary>
+            Use global logging
+            </summary>
+        </member>
+        <member name="F:FeralTweaks.Logging.LogLevel.GLOBAL_CONSOLE">
+            <summary>
+            Use global console logging
+            </summary>
+        </member>
         <member name="T:FeralTweaks.Mods.FeralTweaksMod">
             <summary>
             FeralTweaks Mod Abstract
             </summary>
+        </member>
+        <member name="T:FeralTweaks.Mods.FeralTweaksMod.RawInjectionHandler">
+            <summary>
+            Raw injector delegate
+            </summary>
+            <param name="methodName">Method name</param>
+            <param name="clsPointer">Class pointer</param>
+            <param name="objPointer">Object pointer</param>
+            <param name="methodPointer">Method object pointer</param>
+            <param name="methodParametersPointer">Method parameters pointer</param>
+            <param name="originalMethod">Original method call pointer</param>
+            <returns>Detour to execute or null if invalid</returns>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogInfo(System.String)">
+            <summary>
+            Logs an info message
+            </summary>
+            <param name="message">Message to log</param>
         </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogDebug(System.String)">
             <summary>
@@ -130,9 +327,9 @@
             </summary>
             <param name="message">Message to log</param>
         </member>
-        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogInfo(System.String)">
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogTrace(System.String)">
             <summary>
-            Logs an info message
+            Logs a trace message
             </summary>
             <param name="message">Message to log</param>
         </member>
@@ -148,6 +345,12 @@
             </summary>
             <param name="message">Message to log</param>
         </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.LogFatal(System.String)">
+            <summary>
+            Logs a fatal error message
+            </summary>
+            <param name="message">Message to log</param>
+        </member>
         <member name="P:FeralTweaks.Mods.FeralTweaksMod.ID">
             <summary>
             Mod ID
@@ -156,6 +359,11 @@
         <member name="P:FeralTweaks.Mods.FeralTweaksMod.Version">
             <summary>
             Mod version
+            </summary>
+        </member>
+        <member name="P:FeralTweaks.Mods.FeralTweaksMod.Assemblies">
+            <summary>
+            Retrieves all mod assemblies
             </summary>
         </member>
         <member name="P:FeralTweaks.Mods.FeralTweaksMod.CacheDir">
@@ -189,7 +397,7 @@
             Defines dependency versions (applies to both dependencies and optional dependencies)
             </summary>
             <param name="id">Dependency ID</param>
-            <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, spaces are stripped during parsing)</param>
+            <param name="version">Dependency version (start with '>=', '>', '&lt;', '&lt;=' or '!=' to define minimal/maximal versions, '&amp;' allows for multiple version rules, '||' functions as the OR operator, spaces are stripped during parsing)</param>
         </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.DefineDependency(System.String)">
             <summary>
@@ -221,6 +429,18 @@
             </summary>
             <param name="id">Mod ID</param>
         </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.RegisterLowlevelRuntimeInvokeDetour(FeralTweaks.Mods.FeralTweaksMod.RawInjectionHandler)">
+            <summary>
+            Registers a low-level runtime invoke detour
+            </summary>
+            <param name="handler">Injection handler (a method called to compare if the injected method is compatible)</param>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.DeregisterLowlevelRuntimeInvokeDetour(FeralTweaks.Mods.FeralTweaksMod.RawInjectionHandler)">
+            <summary>
+            Removes a low-level runtime invoke detour
+            </summary>
+            <param name="handler">Injection handler to remove</param>
+        </member>
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.PreInit">
             <summary>
             Pre-initializes the mod
@@ -234,6 +454,11 @@
         <member name="M:FeralTweaks.Mods.FeralTweaksMod.PostInit">
             <summary>
             Post-initializes the mod
+            </summary>
+        </member>
+        <member name="M:FeralTweaks.Mods.FeralTweaksMod.FinalizeLoad">
+            <summary>
+            Called at the very end of the mod loading process
             </summary>
         </member>
         <member name="P:Il2CppDumper.Il2CppType.Union.klassIndex">

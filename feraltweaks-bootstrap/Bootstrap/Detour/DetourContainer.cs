@@ -17,11 +17,11 @@ namespace FeralTweaksBootstrap.Detour
     {
         private T orig;
         private T detour;
-        private IntPtr location;
-        private IntPtr detourPtr;
-        private IntPtr trampoline;
-        private IntPtr funchook;
-        private static List<object> detourLock = new List<object>();
+        internal IntPtr location;
+        internal IntPtr detourPtr;
+        internal IntPtr trampoline;
+        internal IntPtr funchook;
+        internal static List<object> detourLock = new List<object>();
 
         internal void Setup(IntPtr funchook, IntPtr loc, IntPtr trampoline)
         {

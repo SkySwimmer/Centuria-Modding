@@ -144,6 +144,7 @@ namespace feraltweaks
         private void ApplyPatches()
         {
             // Patches
+            ApplyPatch(typeof(CorePatches));
             ApplyPatch(typeof(ActionWheelPatches));
             ApplyPatch(typeof(ChartPatches));
             ApplyPatch(typeof(InventoryPatches));
@@ -158,6 +159,7 @@ namespace feraltweaks
             ApplyPatch(typeof(VersionLabelPatch));
             ApplyPatch(typeof(ServerMessageHandlingPatches));
             ApplyPatch(typeof(ChatPatches));
+            ApplyPatch(typeof(AvatarSoundAndAnimPatches));
             ApplyPatch(typeof(DOTweenAnimatorPatch));
             ApplyPatch(typeof(AssetEndpointPatches));
             ApplyPatch(typeof(BundlePatches));
@@ -175,12 +177,21 @@ namespace feraltweaks
             ApplyPatch(typeof(PlayerJoinNotifPatch));
             ApplyPatch(typeof(DisplayNameManagerPatches));
             ApplyPatch(typeof(NotificationPatches));
+
+            // Low-level patches
+            ApplyLowLevelPatch(typeof(LoginLogoutPatches), LoginLogoutPatches.OnApplicationQuitHook, "OnApplicationQuitHook");
         }
 
         public static void ApplyPatch(Type type)
         {
             FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying patch: " + type.FullName);
             Harmony.CreateAndPatchAll(type);
+        }
+
+        public static void ApplyLowLevelPatch(Type type, RawInjectionHandler handler, string methodName)
+        {
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Applying low-level patch " + type.FullName + ":" + methodName + "...");
+            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().RegisterLowlevelRuntimeInvokeDetour(handler);
         }
 
         /// <summary>

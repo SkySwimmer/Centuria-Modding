@@ -155,6 +155,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "OnConversationReadStateChanged")]
         public static bool OnConversationReadStateChanged(ref UI_UnreadConversationCount __instance, ConversationReadStateChangedMessage inMessage)
         {
+            if (__instance == null)
+                return true;
+
             // Check room
             if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
             {
@@ -393,7 +396,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_UnreadConversationCount), "RefreshText")]
         public static void RefreshText(ref UI_UnreadConversationCount __instance, ref int inUnreadCount)
         {
-            if (__instance.gameObject == null || __instance.gameObject.transform == null || __instance.gameObject.transform.parent == null || __instance.gameObject.transform.parent.parent == null)
+            if (__instance == null || __instance.gameObject == null || __instance.gameObject.transform == null || __instance.gameObject.transform.parent == null || __instance.gameObject.transform.parent.parent == null)
                 return;
             GameObject obj = __instance.gameObject.transform.parent.parent.gameObject;
             if (obj.name == "Button_Chat")

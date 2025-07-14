@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using FeralTweaks.Logging;
 
 namespace FeralTweaks.Actions
 {
@@ -20,9 +22,20 @@ namespace FeralTweaks.Actions
                 actionsUA = uiRepeatingActions.ToArray();
             foreach (Func<bool> ac in actionsUA)
             {
-                if (ac == null || ac())
+                try
+                {
+                    if (ac == null || ac())
+                        lock (uiRepeatingActions)
+                            uiRepeatingActions.Remove(ac);
+                }
+                catch (Exception e)
+                { 
                     lock (uiRepeatingActions)
                         uiRepeatingActions.Remove(ac);
+                    
+                    // Log error
+                    Logger.GetLogger("Interop").Error("An exception occurred while handling an on-unity update action", e);
+                }
             }
 
             Action[] actionsU;
@@ -33,7 +46,17 @@ namespace FeralTweaks.Actions
                 lock (uiActions)
                     uiActions.Remove(ac);
                 if (ac != null)
-                    ac.Invoke();
+                {
+                    try
+                    {
+                        ac();
+                    }
+                    catch (Exception e)
+                    {                        
+                        // Log error
+                        Logger.GetLogger("Interop").Error("An exception occurred while handling an on-unity update action", e);
+                    }
+                }
             }
         }
 

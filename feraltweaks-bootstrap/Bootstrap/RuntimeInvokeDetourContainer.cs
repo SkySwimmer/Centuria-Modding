@@ -9,6 +9,7 @@ using FeralTweaks.Logging.Impl;
 using Logger = FeralTweaks.Logging.Logger;
 using System.IO;
 using System.Reflection;
+using static FeralTweaks.Mods.FeralTweaksMod;
 
 namespace FeralTweaksBootstrap
 {
@@ -28,15 +29,42 @@ namespace FeralTweaksBootstrap
   
         public override RuntimeInvokeDetour run()
         {
+            bool done = false;
             return (method, obj, parameters, except) =>
             {
-                string cls = Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_method_get_class(method)));
+                IntPtr clsP = IL2CPP.il2cpp_method_get_class(method);
+                string cls = Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(clsP));
                 string methodName = Marshal.PtrToStringAnsi(IL2CPP.il2cpp_method_get_name(method));
+                if (done)
+                {
+                    // Handle differently
+                    // Check any mods intercepting the raw method
+                    // And build the execution chain
+                    RuntimeInvokeDetour chain = Original;
+                    FeralTweaksLoader.RunForMods(mod =>
+                    {
+                        // Check if mod registered any handlers
+                        foreach (RawInjectionHandler detour in mod._rawDetours)
+                        {
+                            RuntimeInvokeDetour d = detour(methodName, clsP, obj, method, parameters, chain);
+                            if (d != null)
+                            {
+                                chain = (method, obj, parameters, except) =>
+                                {
+                                    return d(method, obj, parameters, except);
+                                };
+                            }
+                        }
+                    });
+
+                    // Return
+                    return chain(method, obj, parameters, except);
+                }
                 if (methodName == "Internal_ActiveSceneChanged")
                 {
                     // Wrap up and unhook
                     IntPtr res = Original(method, obj, parameters, except);
-                    Unhook();
+                    done = true;
 
                     // Finish loading
                     FeralTweaksLoader.LoadFinish();

@@ -37,12 +37,25 @@ namespace feraltweaks.Patches.AssemblyCSharp
             public Il2CppSystem.Collections.Generic.Dictionary<string, AssetBundleCreateRequest> assetBundleLoadCache = new Il2CppSystem.Collections.Generic.Dictionary<string, AssetBundleCreateRequest>();
         }
 
+        // FIXME: support full assetbundle API
+        // FIXME: make sure to store loaded bundles, unity might break down if the same bundle is loaded twice without unload
+        // FIXME: this class is a fucking mess, need full reimplementation
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(AssetBundle), "LoadFromFile", new Type[] { typeof(string) })]
+        public static bool LoadFromFile(string path, ref AssetBundle __result)
+        {
+            // FIXME: implement hook
+            return true;
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(AssetBundle), "LoadFromFileAsync", new Type[] { typeof(string) })]
         public static bool LoadFromFileAsync(string path, ref AssetBundleCreateRequest __result)
         {
             // Fix for 10-XXX, since we cant patch the bundle manager, we'll patch unity instead
             // The bug is caused by concurrent loading of asset bundles, we will block that and return the currently loading bundle instead
+            // FIXME: doesnt work, may be caused by concurrent calls to LoadFromFile until its closed???? not sure
 
             // Check if in cache
             path = Path.GetFullPath(path);
@@ -69,6 +82,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Fix for 10-XXX, since we cant patch the bundle manager, we'll patch unity instead
             // The bug is caused by concurrent loading of asset bundles, we will block that and return the currently loading bundle instead
+            // FIXME: doesnt work
+
+            // This part of the patch also hooks into the final loaded file
 
             // Check if in cache
             path = Path.GetFullPath(path);
@@ -86,6 +102,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         __result.add_completed((Il2CppSystem.Action<AsyncOperation>)new Action<AsyncOperation>(op =>
                         {
+                            // FIXME: may hook too late
                             AssetBundle bundle = op.Cast<AssetBundleCreateRequest>().assetBundle;
                             OnLoadComplete(bundle, path);
                         }));
@@ -168,6 +185,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 __result.add_completed((Il2CppSystem.Action<AsyncOperation>)new Action<AsyncOperation>(op =>
                 {
                     // Call onload
+                    // FIXME: may hook too late
                     OnLoadAssetFrom(__instance, name, op.Cast<AssetBundleRequest>().asset);
                 }));
             }
@@ -217,12 +235,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     foreach (string defID in AddedManifestDefs.Keys)
                     {
                         // Load assets into multi bundle
+                        // FIXME: it can be done better. dont load all.
                         AssetBundle sourceBundle = AssetBundle.LoadFromFile(AssetBundlePaths[defID]);
 
                         // Find helper
                         string[] assets = sourceBundle.GetAllAssetNames();
                         if (assets.Any(t => Path.GetFileNameWithoutExtension(t).ToLower() == "ft_multibundlehelper"))
                         {
+                            // FIXME: make sure unity-generated bundles work with this, it was tested via a custom made via UABEA
                             TextAsset helperAs = null;
                             UnityEngine.Object[] asl = sourceBundle.LoadAllAssets();
                             foreach (UnityEngine.Object assetObj in asl)
@@ -393,8 +413,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             }
                         }
                     }
-                }
-        
+                }        
             }
         }
 
@@ -403,7 +422,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void GetAllAssetNames(AssetBundle __instance, ref Il2CppStringArray __result)
         {
             // Inject assets
-            // TODO: support
+            // FIXME: support
         }
 
         [HarmonyPostfix]
@@ -411,7 +430,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void LoadAllAssets(AssetBundle __instance, Il2CppSystem.Type type, ref Il2CppReferenceArray<UnityEngine.Object> __result)
         {
             // Inject assets
-            // TODO: support
+            // FIXME: support
         }
 
         [HarmonyPostfix]
@@ -419,7 +438,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void LoadAllAssetsAsync(AssetBundle __instance, Type type, ref AssetBundleRequest __result)
         {
             // Inject assets into result
-            // TODO: support
+            // FIXME: support
         }
 
         [HarmonyPrefix]
@@ -427,7 +446,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool LoadAsset(AssetBundle __instance, string name, Type type, ref UnityEngine.Object __result)
         {
             // Inject assets
-            // TODO: support
+            // FIXME: support
 
             // Allow load
             return true;
@@ -438,7 +457,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void LoadAssetAsync(AssetBundle __instance, string name, Type type, ref AssetBundleRequest __result)
         {
             // Inject assets into result
-            // TODO: support
+            // FIXME: support
         }
 
         [HarmonyPostfix]
@@ -446,6 +465,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static void Update()
         {
             // Prevent cached charts from removing
+            if (CoreChartDataManager.coreInstance == null)
+                return;
             ManifestChartData chart = CoreChartDataManager.coreInstance.manifestChartData;
             foreach (ManifestDef def in AddedManifestDefs.Values)
             {

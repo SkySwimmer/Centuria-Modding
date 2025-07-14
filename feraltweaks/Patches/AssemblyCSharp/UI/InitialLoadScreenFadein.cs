@@ -13,9 +13,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public static class InitialLoadScreenFadein
     {
-        private static bool _doneLoadingPatch;
+        internal static bool _doneLoadingPatch;
         private static long _timeInitialFadeStart;
         private static long _timeLastFrame;
+
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(UI_ProgressScreen), "Update")]
@@ -26,6 +27,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
             long timeBetweenFrames = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _timeLastFrame;
             if (_timeInitialFadeStart == 0)
             {
+                UI_ProgressScreen.instance.labelListProgressBar[1].color = new UnityEngine.Color(0.8f, 0.8f, 0.8f, 1f);
+                UI_ProgressScreen.instance.labelListProgressBar[2].color = new UnityEngine.Color(0.8f, 0.8f, 0.8f, 1f);
                 UI_ProgressScreen.instance._backgroundImage.color = UI_ProgressScreen.instance._transparent;
                 _timeInitialFadeStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 500;
             }
