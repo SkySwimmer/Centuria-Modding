@@ -25,6 +25,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static bool waitingUserInputQuit = false;
 
         private static bool AllowOnQuit = false;
+        private static bool _skipTeleportAwayLogout = false;
 
         public static RuntimeInvokeDetour OnApplicationQuitHook(string methodName, IntPtr clsPointer, IntPtr objPointer, IntPtr methodPointer, IntPtr methodParametersPointer, RuntimeInvokeDetour originalMethod)
         {
@@ -538,7 +539,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Check if avatar can be transitioned
             Avatar_Local avatar = Avatar_Local.instance;
-            if (avatar != null && !UI_ProgressScreen.instance.IsVisibleOrFading)
+            if (avatar != null && !UI_ProgressScreen.instance.IsVisibleOrFading && !_skipTeleportAwayLogout)
             {
                 // Clear action
                 avatar._nextActionType = ActorActionType.None;
@@ -1017,6 +1018,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     avatar._nextActionBreakLoop = true;
                     
                     // Hide avatar
+                    _skipTeleportAwayLogout = true;
                     Dictionary<GameObject, bool> oldStates = new Dictionary<GameObject, bool>();
                     foreach (GameObject child in GetChildren(avatar.BodyTransform.gameObject))
                     {
@@ -1085,6 +1087,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     child.SetActive(oldStates[child]);
                                 }
                                 oldStates.Clear();
+                                _skipTeleportAwayLogout = false;
 
                                 // Return
                                 return true;
