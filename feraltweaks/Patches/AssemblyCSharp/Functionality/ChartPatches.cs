@@ -37,7 +37,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 if (!loading)
                     delegateList.Add(item.Cast<T2>());
             }
-
         }
 
         private class MirrorDict : Dictionary<string, BaseDef>
@@ -105,7 +104,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 if (!loading)
                     adder.Add(item, value);
             }
-
         }
 
         private delegate BaseDef DefCreator();
@@ -538,7 +536,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     Dictionary<string, BaseDef> list = DefCacheIdLists[def.defID];
                     if (!list.ContainsKey(def.defID))
-                        list.Add(def.defID, def);
+                        list.Add(def.defID, def); // FIXME: just change lastAccessTime
                 }
             }
         }
@@ -1163,7 +1161,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             defData = "";
 
                             // Get def
-                            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Patching " + defID + " in chart " + chart.ChartName);
+                            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Patching def " + defID + " in chart " + chart.ChartName);
                             BaseDef def = chart.GetDef(defID, true);
                             if (def == null)
                                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Definition not found!");
@@ -1182,7 +1180,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             defData = "";
 
                             // Get def
-                            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Creating " + defID + " in chart " + chart.ChartName);
+                            FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Creating def " + defID + " in chart " + chart.ChartName);
                             BaseDef def = chart.GetDef(defID, true);
                             if (def != null)
                                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Error! Chart definition already exists");

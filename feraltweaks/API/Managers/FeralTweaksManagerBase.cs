@@ -12,7 +12,7 @@ namespace FeralTweaks.Managers
     /// <summary>
     /// FeralTweaks base manager class, for use with <see cref="FeralTweaks.Managers.CoreManagerInjectors"/>
     /// 
-    /// Note: when implementing, do NOT override Awake, Start, Update or OnDestroy, instead use MAwake, MStart, MStart, MUpdate and MOnDestroy like the vanilla game does, otherwise core logic will be lost
+    /// <para>Note: when implementing, do NOT override Awake, Start, Update or OnDestroy, instead use MAwake, MStart, MStart, MUpdate and MOnDestroy like the vanilla game does, otherwise core logic will be lost</para>
     /// </summary>
     public abstract class FeralTweaksManagerBase : ManagerBase
     {
@@ -176,6 +176,7 @@ namespace FeralTweaks.Managers
         /// Retrieves all linked behaviours (both directly registered and interception link)
         /// </summary>
         /// <returns>Array of ManagedBehaviour instances</returns>
+        [HideFromIl2Cpp]
         public ManagedBehaviour[] GetAllLinkedBehaviours()
         {
             return GetAllLinkedBehaviours<ManagedBehaviour>();
@@ -186,6 +187,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <typeparam name="T">Behaviour type</typeparam>
         /// <returns>Array of ManagedBehaviour instances</returns>
+        [HideFromIl2Cpp]
         public T[] GetAllLinkedBehaviours<T>() where T : ManagedBehaviour
         {
             return GetAllLinkedBehaviours(Il2CppType.Of<T>()).Select(t => t.Cast<T>()).ToArray();
@@ -196,6 +198,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <param name="type">Behaviour type</param>
         /// <returns>Array of ManagedBehaviour instances</returns>
+        [HideFromIl2Cpp]
         public ManagedBehaviour[] GetAllLinkedBehaviours(Il2CppSystem.Type type)
         {
             System.Collections.Generic.List<ManagedBehaviour> behaviours = new System.Collections.Generic.List<ManagedBehaviour>();

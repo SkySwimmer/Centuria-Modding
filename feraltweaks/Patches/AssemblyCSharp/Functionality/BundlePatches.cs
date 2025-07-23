@@ -471,7 +471,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             foreach (ManifestDef def in AddedManifestDefs.Values)
             {
                 if (!chart._parsedDefsByID.ContainsKey(def.defID))
-                    chart._parsedDefsByID.Add(def.defID, def);
+                    chart._parsedDefsByID.Add(def.defID, def); // FIXME: just change lastAccessTime
             }
         }
 

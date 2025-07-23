@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using FeralTweaks.Mods;
 using FeralTweaks;
-using FeralTweaks.Actions;
 using FeralTweaks.BundleInjection;
 
 namespace feraltweaks
@@ -50,9 +49,6 @@ namespace feraltweaks
         {
             // Load config
             LoadConfig();
-
-            // Start action thread
-            FeralTweaksActionManager.StartActionThread();
 
             // Patch with harmony
             LogInfo("Applying patches...");

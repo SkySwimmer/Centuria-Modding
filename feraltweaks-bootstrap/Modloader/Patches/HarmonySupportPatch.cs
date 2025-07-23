@@ -21,13 +21,13 @@ namespace FeralTweaksBootstrap.Patches
         [HarmonyPatch("Il2CppInterop.HarmonySupport.Il2CppDetourMethodPatcher", "GenerateNativeToManagedTrampoline")]
         private static void GenerateNativeToManagedTrampolineHook(MethodPatcher __instance, ref DynamicMethodDefinition __result, MethodInfo targetManagedMethodInfo)
         {
-            if (__instance.Original.DeclaringType.IsGenericType && !__instance.Original.IsStatic)
+            if (__instance.Original.ReflectedType.IsGenericType && !__instance.Original.IsStatic)
             {
                 // Check stack, dont recurse please
                 // YES VERY UGLY IM AWARE
                 // Ive run out of ideas is the issue
                 StackTrace stack = new StackTrace();
-                if (stack.GetFrames().Count(t => t.HasMethod() && t.GetMethod().DeclaringType != null && t.GetMethod().DeclaringType.IsAssignableTo(typeof(HarmonySupportPatch)) && t.GetMethod().Name == "GenerateNativeToManagedTrampolineHook") > 1)
+                if (stack.GetFrames().Count(t => t.HasMethod() && t.GetMethod().ReflectedType != null && t.GetMethod().ReflectedType.IsAssignableTo(typeof(HarmonySupportPatch)) && t.GetMethod().Name == "GenerateNativeToManagedTrampolineHook") > 1)
                     return;
 
                 // Fix issues with generic types by implementing a workaround
@@ -47,7 +47,7 @@ namespace FeralTweaksBootstrap.Patches
                 // FIXME: cannot deal with cases where the method being patched is static          
 
                 // Check type
-                Il2CppSystem.Type type = Il2CppType.From(__instance.Original.DeclaringType);
+                Il2CppSystem.Type type = Il2CppType.From(__instance.Original.ReflectedType);
                 if (type == null)
                     return;
                 if (!KnownTypes.ContainsKey(type.FullName))

@@ -74,7 +74,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Teleport in
                 GCR.instance.StartCoroutine(avatar.TransitionArrival(false, false, "teleport"));
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     if (avatar == null || avatar.transform == null)
                         return true; // Crashed
@@ -92,7 +92,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                     // Run
                     long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         if (avatar == null || avatar.transform == null)
                             return true; // Crashed
@@ -266,14 +266,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Teleport away
                 GCR.instance.StartCoroutine(avatar.TransitionDeparture(false, false, "teleport"));
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     // Wait for transition
                     if (!avatar.IsTransitionDeparting)
                         return false;
 
                     // Run
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         // Wait for transition
                         if (avatar.IsTransitionDeparting)
@@ -293,7 +293,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         bool readyToShow = false;
                         long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         avatar.transform.position = new Vector3(0, -10000, 0);
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             if (!readyToShow && DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start >= 1000)
                             {

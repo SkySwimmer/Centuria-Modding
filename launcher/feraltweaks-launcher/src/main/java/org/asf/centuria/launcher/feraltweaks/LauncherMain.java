@@ -1211,7 +1211,7 @@ public class LauncherMain {
 									for (StackTraceElement ele : e.getStackTrace())
 										stackTrace += "\n     At: " + ele;
 									try {
-										serverSock.close();
+										sendCommand(cl, "crash");
 									} catch (IOException e2) {
 									}
 									JOptionPane.showMessageDialog(frmCenturiaLauncher,
@@ -1219,6 +1219,16 @@ public class LauncherMain {
 													+ e + stackTrace
 													+ "\nPlease report this error to the server operators.",
 											"Launcher Error", JOptionPane.ERROR_MESSAGE);
+									try {
+										cl.close();
+									} catch (IOException e2) {
+									}
+									try {
+										serverSock.close();
+									} catch (IOException e2) {
+									}
+									if (proc != null && proc.isAlive())
+										proc.destroyForcibly();
 									System.exit(1);
 								});
 							} catch (InvocationTargetException | InterruptedException e1) {

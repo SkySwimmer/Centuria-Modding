@@ -3,13 +3,14 @@ using Il2CppInterop.Runtime.Injection;
 using System;
 using Il2CppInterop.Runtime;
 using System.Linq;
+using Il2CppInterop.Runtime.Attributes;
 
 namespace FeralTweaks.Managers
 {
     /// <summary>
     /// FeralTweaks managed behaviour class, a MonoBehaviour managed by a Feral game Manager, for use with <see cref="FeralTweaks.Managers.FeralTweaksManagedBehaviour"/> as well as any vanilla <see cref="ManagerBase"/> instance, annotate with <see cref="FeralTweaks.Managers.ManagedBehaviourFTManagerAttribute"/> to automatically register to a manager.
     /// 
-    /// Note: when implementing, do NOT override Awake, OnEnable, Start, Update or OnDestroy, instead use MStart, MAwake, MStart, MUpdate and MOnDestroy like the vanilla game does, otherwise core logic will be lost
+    /// <para>Note: when implementing, do NOT override Awake, OnEnable, Start, Update or OnDestroy, instead use MStart, MAwake, MStart, MUpdate and MOnDestroy like the vanilla game does, otherwise core logic will be lost</para>
     /// </summary>
     public abstract class FeralTweaksManagedBehaviour : ManagedBehaviour
     {
@@ -100,7 +101,7 @@ namespace FeralTweaks.Managers
         /// <summary>
         /// Retrieves the active manager
         /// 
-        /// Note: its recommended to use GetLinkedManager&amp;lt;T&gt;() instead to make sure the behaviour uses the intended manager instead of a manager that took control, use GetLinkedManager() to retrieve any of the ManagerBase class (including the current owner), and GetLinkedManager&amp;lt;T&gt;() to retrieve based on type
+        /// <para>Note: its recommended to use GetLinkedManager&amp;lt;T&gt;() instead to make sure the behaviour uses the intended manager instead of a manager that took control, use GetLinkedManager() to retrieve any of the ManagerBase class (including the current owner), and GetLinkedManager&amp;lt;T&gt;() to retrieve based on type</para>
         /// </summary>
         public new ManagerBase Manager
         {
@@ -114,7 +115,7 @@ namespace FeralTweaks.Managers
         /// <summary>
         /// Retrieves the original owning manager, itll always be assigned to the manager initially used as parent
         /// 
-        /// Note: its recommended to use GetLinkedManager&amp;lt;T&gt;() instead to make sure the behaviour uses the intended manager instead of a manager that took control, use GetLinkedManager() to retrieve any of the ManagerBase class (including the current owner), and GetLinkedManager&amp;lt;T&gt;() to retrieve based on type
+        /// <para>Note: its recommended to use GetLinkedManager&amp;lt;T&gt;() instead to make sure the behaviour uses the intended manager instead of a manager that took control, use GetLinkedManager() to retrieve any of the ManagerBase class (including the current owner), and GetLinkedManager&amp;lt;T&gt;() to retrieve based on type</para>
         /// </summary>
         public ManagerBase OriginalManager
         {
@@ -129,6 +130,7 @@ namespace FeralTweaks.Managers
         /// Retrieves the current active manager
         /// </summary>
         /// <returns>ManagerBase instance</returns>
+        [HideFromIl2Cpp]
         public ManagerBase GetLinkedManager()
         {
             return GetLinkedManager<ManagerBase>();
@@ -139,6 +141,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <typeparam name="T">Manager type</typeparam>
         /// <returns>Manager instance or null</returns>
+        [HideFromIl2Cpp]
         public T GetLinkedManager<T>() where T : ManagerBase
         {
             return (T)GetLinkedManager(Il2CppType.Of<T>());
@@ -149,6 +152,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <type name="type">Manager type</type>
         /// <returns>Manager instance or null</returns>
+        [HideFromIl2Cpp]
         public ManagerBase GetLinkedManager(Il2CppSystem.Type type)
         {
             // Check owner
@@ -175,6 +179,7 @@ namespace FeralTweaks.Managers
         /// Retrieves all linked managers
         /// </summary>
         /// <returns>All linked manager instances</returns>
+        [HideFromIl2Cpp]
         public ManagerBase[] GetAllLinkedManagers()
         {
             return GetAllLinkedManagers<ManagerBase>();
@@ -185,6 +190,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <typeparam name="T">Manager type</typeparam>
         /// <returns>Array of linked managers matching the type</returns>
+        [HideFromIl2Cpp]
         public T[] GetAllLinkedManagers<T>() where T : ManagerBase
         {
             return GetAllLinkedManagers(Il2CppType.Of<T>()).Select(t => t.Cast<T>()).ToArray();
@@ -195,6 +201,7 @@ namespace FeralTweaks.Managers
         /// </summary>
         /// <param name="type">Manager type</param>
         /// <returns>Array of linked managers matching the type</returns>
+        [HideFromIl2Cpp]
         public ManagerBase[] GetAllLinkedManagers(Il2CppSystem.Type type)
         {
             List<ManagerBase> mgrs = new List<ManagerBase>();

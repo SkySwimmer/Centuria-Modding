@@ -4,11 +4,11 @@ using LitJson;
 using FeralTweaks.Mods;
 using FeralTweaks;
 using FeralTweaks.Networking;
-using FeralTweaks.Actions;
 using feraltweaks.Patches.AssemblyCSharp;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System;
+using FeralTweaks.Actions;
 
 namespace feraltweaks
 {
@@ -34,7 +34,7 @@ namespace feraltweaks
                         if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Remove manually
-                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            FeralTweaksActions.Unity.Oneshot(() =>
                             {
                                 global::FeralTweaks.FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogInfo("Destroying object: " + msg.ObjectId);
                                 if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
@@ -70,7 +70,7 @@ namespace feraltweaks
                         if ((FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) && FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() == "true") || (FeralTweaks.PatchConfig.ContainsKey("EnableReplication") && FeralTweaks.PatchConfig["EnableReplication"].ToLower() == "true" && (!FeralTweaks.PatchConfig.ContainsKey("OverrideReplicate-" + msg.ObjectId) || FeralTweaks.PatchConfig["OverrideReplicate-" + msg.ObjectId].ToLower() != "false")))
                         {
                             // Move manually
-                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            FeralTweaksActions.Unity.Oneshot(() =>
                             {
                                 if (WorldObjectManager.instance._objects._objectsById.ContainsKey(msg.ObjectId))
                                 {
@@ -122,10 +122,10 @@ namespace feraltweaks
                                     }
 
                                     // Show window and log out
-                                    FeralTweaksActionManager.ScheduleDelayedNonUnityAction(() =>
+                                    FeralTweaksActions.EventQueue.Oneshot(() =>
                                     {
                                         // Show window
-                                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                        FeralTweaksActions.Unity.Oneshot(() =>
                                         {
                                             if (UI_ProgressScreen.instance.IsVisible)
                                                 UI_ProgressScreen.instance.Hide();
@@ -156,7 +156,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         NotificationManager.instance.AddNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -174,7 +174,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         NotificationManager.instance.AddSystemNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -192,7 +192,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         NotificationManager.instance.AddCriticalNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -210,7 +210,7 @@ namespace feraltweaks
                                         icon = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         NotificationManager.instance.AddGameplayNotification(new Notification(ChartDataManager.instance.localizationChartData.Get(message, message), icon));
                                     });
@@ -226,7 +226,7 @@ namespace feraltweaks
                                     string message = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         UI_Window_OkErrorPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
                                     });
@@ -241,7 +241,7 @@ namespace feraltweaks
                                     string message = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         UI_Window_OkPopup.OpenWindow(ChartDataManager.instance.localizationChartData.Get(title, title), ChartDataManager.instance.localizationChartData.Get(message, message));
                                     });
@@ -259,7 +259,7 @@ namespace feraltweaks
                                     string noBtn = reader.ReadString();
 
                                     // Handle packet
-                                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                    FeralTweaksActions.Unity.Oneshot(() =>
                                     {
                                         try
                                         {
@@ -438,7 +438,7 @@ namespace feraltweaks
                             ChatPatches.ShowWorldJoinChatUnreadPopup = true;
 
                             // Schedule reload of
-                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            FeralTweaksActions.Unity.Oneshot(() =>
                             {
                                 if (NetworkManager.ChatServiceConnection == null || NetworkManager.ChatServiceConnection._client == null || !NetworkManager.ChatServiceConnection._client.connected)
                                     return true;
@@ -446,7 +446,7 @@ namespace feraltweaks
                                     return false;
 
                                 // Schedule
-                                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                FeralTweaksActions.Unity.Oneshot(() =>
                                 {
                                     // Check unreads
                                     if (ChatPatches.ShowWorldJoinChatUnreadPopup && !UI_ProgressScreen.instance.IsVisibleOrFading)

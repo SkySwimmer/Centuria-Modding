@@ -270,7 +270,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             else
                             {
                                 // Schedule load for when the other eye decal thats currently loading is done
-                                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                FeralTweaksActions.Unity.Oneshot(() =>
                                 {
                                     // Check destroyed
                                     if (destroyed)

@@ -1,5 +1,4 @@
-﻿using FeralTweaks.Actions;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem.Threading.Tasks;
@@ -11,6 +10,7 @@ using Il2CppSystem.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using FeralTweaks.Actions;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -84,7 +84,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             ls.Add(name);
                         Task<WWWResponse<IdentityDisplayNamesResponse>> task = IdentityService.GetDisplayNames(ls, NetworkManager.JWT);
                         TaskAwaiter<WWWResponse<IdentityDisplayNamesResponse>> awaiter = task.GetAwaiter();
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             // Wait for completion
                             if (!awaiter.IsCompleted)

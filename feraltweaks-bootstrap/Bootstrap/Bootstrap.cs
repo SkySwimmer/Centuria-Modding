@@ -1265,7 +1265,7 @@ namespace FeralTweaksBootstrap
                         FeralTweaks.Logging.Logger.GetLogger("Loader").Fatal("Uncaught exception!", e);
                     }
                     if (Debugger.IsAttached)
-                        ExceptionDispatchInfo.Capture(e).Throw();
+                        throw;
                     Environment.Exit(1);
                 }
             }

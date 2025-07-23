@@ -105,7 +105,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             return FeralTweaksCoroutines.CreateNew(t =>
             {
-                t.Execute(ctx =>
+                // First phase: action
+                CoroutineResultReference<Il2CppSystem.Object> ac1 = t.Execute(ctx =>
                 {
                     ctx = ctx;
 
@@ -115,9 +116,34 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     GameObject.DontDestroyOnLoad(test);
                     test = test;
 
+
+
                     // FIXME: remove manager
                 });
+
+                // Next phase: coroutine
+                CoroutineResultReference<System.Collections.IEnumerator> ac2CR = t.Execute(InitCoroutineCustom(ac1));
+
+                // Next phase: FT action
+                CoroutineResultReference<FeralTweaksAction<string>> acFtA = t.Execute(() => FeralTweaksActions.Async.AfterSecs<string>(10, ctx =>
+                {
+                    return "test";
+                }));
+
+                // Next phase: action
+                t.Execute(ctx =>
+                {
+                    string s = acFtA.ReturnValue.GetResult();
+                    ctx = ctx;
+                });
+
             });
+        }
+
+        [HideFromIl2Cpp]
+        public System.Collections.IEnumerator InitCoroutineCustom(CoroutineResultReference<Il2CppSystem.Object> ac1)
+        {
+            yield break;
         }
     }
 }

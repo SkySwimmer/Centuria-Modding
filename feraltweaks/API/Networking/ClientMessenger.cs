@@ -85,7 +85,7 @@ namespace FeralTweaks.Networking
             try
             {
                 // Send packet
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => NetworkManager.instance._serverConnection.Send(wr));
+                FeralTweaksActions.Unity.Oneshot(() => NetworkManager.instance._serverConnection.Send(wr));
             }
             catch
             {

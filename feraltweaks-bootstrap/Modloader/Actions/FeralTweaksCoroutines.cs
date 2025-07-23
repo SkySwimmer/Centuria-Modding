@@ -26,12 +26,20 @@ namespace FeralTweaks.Actions
         {
             if (_inited)
                 return;
+            _inited = true;
             Il2CppInterfaceCollection col = new Il2CppInterfaceCollection(new System.Type[] { typeof(IEnumerator) });
             ClassInjector.RegisterTypeInIl2Cpp<FTCoroutine>(new RegisterTypeOptions()
             {
                 Interfaces = col
             });
-            _inited = true;
+        }
+
+        private static void CheckSafety()
+        {
+            if (FeralTweaksActions.unityThread == null || FeralTweaksActions.unityThread.ManagedThreadId != System.Environment.CurrentManagedThreadId)
+            {
+                throw new System.InvalidOperationException("Unable to safely call FeralTweaksCoroutines from non-il2cpp thread");
+            }
         }
 
         /// <summary>
@@ -42,6 +50,7 @@ namespace FeralTweaks.Actions
         /// <returns>Altered coroutine</returns>
         public static IEnumerator InjectAtHead(IEnumerator coroutine, IEnumerator target)
         {
+            CheckSafety();
             Init();
             return CreateNew(t =>
             {
@@ -58,6 +67,7 @@ namespace FeralTweaks.Actions
         /// <returns>Altered coroutine</returns>
         public static IEnumerator InjectAtTail(IEnumerator coroutine, IEnumerator target)
         {
+            CheckSafety();
             Init();
             return CreateNew(t =>
             {
@@ -74,6 +84,7 @@ namespace FeralTweaks.Actions
         /// <returns>Altered coroutine</returns>
         public static IEnumerator InjectAtHead(System.Collections.IEnumerator coroutine, IEnumerator target)
         {
+            CheckSafety();
             Init();
             return CreateNew(t =>
             {
@@ -90,6 +101,7 @@ namespace FeralTweaks.Actions
         /// <returns>Altered coroutine</returns>
         public static IEnumerator InjectAtTail(System.Collections.IEnumerator coroutine, IEnumerator target)
         {
+            CheckSafety();
             Init();
             return CreateNew(t =>
             {
@@ -101,10 +113,11 @@ namespace FeralTweaks.Actions
         /// <summary>
         /// Creates a new coroutine
         /// </summary>
-        /// <param name="func">Coroutine to initialize</param>
+        /// <param name="func">Coroutine initializer</param>
         /// <returns>Altered coroutine</returns>
         public static IEnumerator CreateNew(System.Action<FTCoroutine.CoroutineBuilder> func)
         {
+            CheckSafety();
             Init();
             FTCoroutine.CoroutineBuilder b = new FTCoroutine.CoroutineBuilder();
             func(b);
@@ -114,13 +127,14 @@ namespace FeralTweaks.Actions
         /// <summary>
         /// Creates a new coroutine from a managed coroutine
         /// </summary>
-        /// <param name="func">Coroutine instance</param>
+        /// <param name="coroutine">Coroutine instance</param>
         /// <returns>Altered coroutine</returns>
-        public static IEnumerator CreateNew(System.Collections.IEnumerator func)
+        public static IEnumerator CreateNew(System.Collections.IEnumerator coroutine)
         {
+            CheckSafety();
             Init();
             FTCoroutine.CoroutineBuilder b = new FTCoroutine.CoroutineBuilder();
-            b.Execute(func);
+            b.Execute(coroutine);
             return CastFT(new FTCoroutine(b));
         }
 

@@ -1,8 +1,8 @@
 ﻿using FeralTweaks;
-using FeralTweaks.Actions;
 using FeralTweaks.Mods;
 using FeralTweaks.Versioning;
 using FeralTweaksBootstrap;
+using FeralTweaks.Actions;
 using HarmonyLib;
 using Il2CppInterop.Runtime;
 using Il2CppSystem.Runtime.CompilerServices;
@@ -27,10 +27,15 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static bool AllowOnQuit = false;
         private static bool _skipTeleportAwayLogout = false;
 
-        public static RuntimeInvokeDetour OnApplicationQuitHook(string methodName, IntPtr clsPointer, IntPtr objPointer, IntPtr methodPointer, IntPtr methodParametersPointer, RuntimeInvokeDetour originalMethod)
+        public static RuntimeInvokeDetour OnApplicationQuitHook(string methodName, string clsName, IntPtr clsPointer, IntPtr objPointer, IntPtr methodPointer, IntPtr methodParametersPointer, RuntimeInvokeDetour originalMethod)
         {
             if (methodName == "OnApplicationQuit")
             {
+                // Check type
+                if (!Il2CppType.Of<UnityEngine.Component>().IsAssignableFrom(Il2CppType.TypeFromPointer(clsPointer)))
+                    return null;               
+
+                // Return
                 return (method, obj, parameters, except) =>
                 {
                     // Check quit
@@ -84,14 +89,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public static bool initialWorldJoin = false;
         public static bool pendingInitialWorldJoin = false;
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(WaitController), "Update")]
-        private static void Update(ref WaitController __instance)
-        {
-            // Call update
-            FeralTweaksActionManager.CallUpdate();
-        }
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CoreSharedUtils), "CoreReset", new Type[] { })]
         public static bool CoreReset()
@@ -132,7 +129,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             if (CalledManually)
             {
                 // Close window and quit app
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     AllowOnQuit = true;
                     clickedClose = true;
@@ -411,14 +408,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
         private static void LogoutWithError(string title, string errorMessage, ErrorCode inErrorCode)
         {
             // Schedule error
-            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 // Wait for loading screen to be loaded up and visible
                 if (UI_ProgressScreen.instance == null || !UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
                 // Schedule error for when the loading screen goes away
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     // Wait for loading screen to go away and login screen to load
                     if (UI_ProgressScreen.instance.IsVisibleOrFading || WindowManager.GetWindow<UI_Window_Login>() == null || !WindowManager.GetWindow<UI_Window_Login>().IsOpen)
@@ -554,14 +551,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                 // Teleport away
                 GCR.instance.StartCoroutine(avatar.TransitionDeparture(true, true, "teleport"));
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     // Wait for transition
                     if (!avatar.IsTransitionDeparting)
                         return false;
 
                     // Run
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         // Wait for transition
                         if (avatar.IsTransitionDeparting)
@@ -594,7 +591,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             // Wait half a second
             long closeStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 // Wait
                 if ((DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - closeStart < 300 && hud != null) || (UI_ProgressScreen.instance.IsVisibleOrFading && NetworkManager.instance != null && NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected && loadingWasOpen && !hideCalled && DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - closeStart < 10000))
@@ -615,7 +612,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 // Schedule
                 bool faded = false;
                 long start2 = 0;
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     // Check fade
                     if (UI_ProgressScreen.instance.IsFading || !UI_ProgressScreen.instance.IsVisible)
@@ -646,7 +643,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         CameraFader.current.FadeOut(1f);
                         start2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         { 
                             if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start2 < 1000)
                                 return false;
@@ -685,7 +682,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     serverSoftwareName = "fer.al";
                     serverSoftwareVersion = "unknown";
                     serverMods.Clear();
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         ChatManager.instance._cachedConversations = null;
                         ChatManager.instance._unreadConversations.Clear();
@@ -729,7 +726,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                         // If needed, open title screen 
                         CoreWindowManager.OpenWindow<UI_Window_Login>(null, false);
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             if (WindowManager.GetWindow<UI_Window_Login>() != null && WindowManager.GetWindow<UI_Window_Login>().IsOpen && !WindowManager.GetWindow<UI_Window_Login>().IsOpening)
                             {
@@ -772,11 +769,11 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     // Show window when loading closes
                     UI_Window_OkPopup.CloseWindow();
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         if (UI_ProgressScreen.instance.IsVisibleOrFading)
                             return false;
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             // Show popup
                             UI_Window_OkErrorPopup.QueueWindow("Login Failed!", LoginHelper.GetLoginStatusErrorMessage(LoginResultStatus), "");
@@ -953,7 +950,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             loggingOut = false;
             doLogout = false;
             ignoreUpdateLevel = false;
-            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 if (errorDisplayed)
                     return true;
@@ -1032,7 +1029,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     }
 
                     // Wait
-                    FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         // Wait for window to close
                         UI_Window_OkPopup popup = CoreWindowManager.GetWindow<UI_Window_OkPopup>();
@@ -1055,7 +1052,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         // Teleport in
                         GCR.instance.StartCoroutine(avatar.TransitionArrival(false, false, "teleport"));
                         int ticks = 0;
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             if (avatar == null || avatar.transform == null)
                                 return true; // Crashed
@@ -1066,7 +1063,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                             // Run
                             ticks++;
-                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            FeralTweaksActions.Unity.Oneshot(() =>
                             {
                                 // Wait for transition
                                 if (ticks < 2)

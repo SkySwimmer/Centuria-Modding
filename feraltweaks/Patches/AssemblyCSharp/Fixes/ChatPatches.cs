@@ -1,6 +1,5 @@
 ﻿using CodeStage.AntiCheat.ObscuredTypes;
 using FeralTweaks;
-using FeralTweaks.Actions;
 using FeralTweaks.Formatters;
 using FeralTweaks.Mods;
 using HarmonyLib;
@@ -18,6 +17,7 @@ using UnityEngine.UI;
 using WW.Waiters;
 using Il2CppInterop.Runtime.Injection;
 using TMPro;
+using FeralTweaks.Actions;
 
 namespace feraltweaks.Patches.AssemblyCSharp
 {
@@ -619,12 +619,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     if (ShowWorldJoinChatUnreadPopup)
                     {
@@ -690,7 +690,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         {
                             // Get display name of character
                             var awaiter = UserManager.GetUserInfoAsync(source).GetAwaiter();
-                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                            FeralTweaksActions.Unity.Oneshot(() =>
                             {
                                 // Wait
                                 if (!awaiter.IsCompleted)
@@ -714,7 +714,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                                 // Refresh
                                 var awaiter2 = cont.ChatEntry.RefreshDisplayData().GetAwaiter();
-                                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                FeralTweaksActions.Unity.Oneshot(() =>
                                 {
                                     // Wait
                                     if (!awaiter2.IsCompleted)
@@ -869,7 +869,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.ChatServiceConnection._client.WriteToSocket(msg);
 
                 // Schedule post-init
-                FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     if (NetworkManager.ChatServiceConnection == null || NetworkManager.ChatServiceConnection._client == null || !NetworkManager.ChatServiceConnection._client.connected)
                         return true;
@@ -1099,7 +1099,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             // Check if initializing
             if (ChatInitializing)
-            {
+            { 
                 // Chat's being inited
                 // The fixer runs every frame update until its ready
                 // It does this by checking the chat manager and if its not in a room or if there was no convo cache received, it re-transmits the packets for room join up to 5 times until giving up
@@ -1420,7 +1420,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                     {
                                         // Schedule
                                         long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                        FeralTweaksActions.Unity.Oneshot(() =>
                                         {
                                             // Scroll
                                             panel.SnapToBottom(true);
@@ -1472,7 +1472,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                         {
                                             // Schedule
                                             long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                                            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                                            FeralTweaksActions.Unity.Oneshot(() =>
                                             {
                                                 // Scroll
                                                 panel.SnapToBottom(true);
@@ -1689,7 +1689,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         // Schedule
                         long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             // Wait one second
                             if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start < 250)

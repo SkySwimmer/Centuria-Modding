@@ -45,10 +45,7 @@ namespace TestFtlMod
             // Called on start
 
             // Attach listener
-            CoreMessageManager.RegisteredListener listener =
-                new CoreMessageManager.RegisteredListener(CoreMessageManager.GetTypeName(Il2CppInterop.Runtime.Il2CppType.From(typeof(LoginCompleteMessage))), "",
-                    GetIl2CppType().GetMethod("HandleLogin"), this, "", "", -1);
-            CoreMessageManager.AddStaticRegisteredListener(listener);
+            CoreMessageManager.AddListener<LoginCompleteMessage>(new Action<LoginCompleteMessage>(HandleLogin));
         }
 
         public void HandleLogin(LoginCompleteMessage msg)

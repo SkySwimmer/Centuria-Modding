@@ -19,6 +19,7 @@ namespace FeralTweaks.BundleInjection
         /// Registers asset bundle hooks
         /// </summary>
         /// <param name="hook">Asset bundle hook to register</param>
+        [System.Obsolete("Use ... instead")] // FIXME: figure out replacement
         public static void RegisterBundleHook(BundleHook hook)
         {
             if (!hook.setup)

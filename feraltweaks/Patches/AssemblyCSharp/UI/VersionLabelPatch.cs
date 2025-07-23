@@ -45,13 +45,13 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
 
             // Assign label
-            FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 try
                 {
                     if (CoreBase<Core>.Loaded)
                     {
-                        FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                        FeralTweaksActions.Unity.Oneshot(() =>
                         {
                             // Update UI
 

@@ -16,6 +16,7 @@ using feraltweaks.Patches.AssemblyCSharp;
 using TMPro;
 using System.Threading;
 using Server;
+using FeralTweaks.Actions;
 
 namespace FeralDiscordRpcMod
 {
@@ -198,7 +199,7 @@ namespace FeralDiscordRpcMod
             {
                 if (!config.disableAskToJoin)
                 {
-                    FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                    FeralTweaksActions.Unity.Oneshot(() =>
                     {
                         // Show popup
                         try
@@ -298,7 +299,7 @@ namespace FeralDiscordRpcMod
                                 if (!wait)
                                 {
                                     // Run tp now
-                                    FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() => TeleportToPlayer(playerID, tpSecret));
+                                    FeralTweaksActions.Unity.Oneshot(() => TeleportToPlayer(playerID, tpSecret));
                                 }
                                 else
                                 {
@@ -376,7 +377,7 @@ namespace FeralDiscordRpcMod
             UI_Window_LoadingRegistrationWebApp.OpenWindow();
 
             // Wait
-            FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 if (WindowManager.ExistsOrIsLoading("UI_Window_LoadingRegistrationWebApp"))
                     return false;
@@ -412,12 +413,12 @@ namespace FeralDiscordRpcMod
         [HarmonyPatch(typeof(UI_ProgressScreen), "Hide")]
         public static void Hide()
         {
-            FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+            FeralTweaksActions.Unity.Oneshot(() =>
             {
                 if (UI_ProgressScreen.instance.IsVisibleOrFading)
                     return false;
 
-                FeralTweaks.Actions.FeralTweaksActionManager.ScheduleDelayedActionForUnity(() =>
+                FeralTweaksActions.Unity.Oneshot(() =>
                 {
                     // Run action
                     if (pendingJoinRequest != null)

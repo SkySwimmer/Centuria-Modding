@@ -20,6 +20,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class CorePatches
     {
+        // FIXME: implement profiling for managers
+        // FIXME: implement profiling for managedbehaviours (by overriding the base game function)
+        
         private static bool _inited = false;
         private static bool _initedG = false;
         private static void Init()
