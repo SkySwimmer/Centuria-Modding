@@ -977,7 +977,12 @@ public class LauncherMain {
 								panel_1.repaint();
 							});
 							try {
-								ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
+								ProcessBuilder proc = new ProcessBuilder("wine", "wineboot", "--init", "-f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
+								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
 										"native,builtin", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
