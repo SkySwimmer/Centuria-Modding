@@ -732,6 +732,36 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                                     defCreator = () => new ListDef();
                                                     break;
                                                 }
+                                            case "LevelChart":
+                                                {
+                                                    chart = ChartDataManager.instance.levelChartData;
+
+                                                    // Let it load
+                                                    while (chart == null)
+                                                    {
+                                                        chart = ChartDataManager.instance.levelChartData;
+                                                        Thread.Sleep(100);
+                                                    }
+                                                    defs = ChartDataManager.instance.levelChartData.defList;
+                                                    defByIds = ChartDataManager.instance.levelChartData._parsedDefsByID;
+                                                    defCreator = () => new ListDef();
+                                                    break;
+                                                }
+                                            case "LevelOverrideChart":
+                                                {
+                                                    chart = ChartDataManager.instance.levelOverrideChartData;
+
+                                                    // Let it load
+                                                    while (chart == null)
+                                                    {
+                                                        chart = ChartDataManager.instance.levelOverrideChartData;
+                                                        Thread.Sleep(100);
+                                                    }
+                                                    defs = ChartDataManager.instance.levelOverrideChartData.defList;
+                                                    defByIds = ChartDataManager.instance.levelOverrideChartData._parsedDefsByID;
+                                                    defCreator = () => new ListDef();
+                                                    break;
+                                                }
                                             case "CalendarChart":
                                                 {
                                                     chart = ChartDataManager.instance.calendarChartData;

@@ -7,7 +7,7 @@ DisplayNameRegex=^[0-9A-Za-z\-_. ]+
 UserNameMaxLength=320
 DisplayNameMaxLength=16
 
-TradeItemLimit=1000
+TradeItemLimit=2147483646
 DisableClientChartPatches=true
 
 EnableGroupChatTab=true
