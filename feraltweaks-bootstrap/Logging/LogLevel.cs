@@ -1,4 +1,9 @@
-namespace FeralTweaks.Logging {
+namespace FeralTweaks.Logging
+{
+
+    /// <summary>
+    /// Log level definitions
+    /// </summary>
     public enum LogLevel
     {
 

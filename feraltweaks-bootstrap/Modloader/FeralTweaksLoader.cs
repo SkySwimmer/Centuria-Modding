@@ -19,6 +19,7 @@ using Il2CppInterop.Runtime.Injection;
 using Newtonsoft.Json;
 using UnityEngine;
 using Logger = FeralTweaks.Logging.Logger;
+using ScaffoldSharp.Core.Objects;
 
 namespace FeralTweaks
 {
@@ -474,6 +475,17 @@ namespace FeralTweaks
             // Log discover
             LogInfo("Discovered " + mods.Count + " mods.");
 
+            // Start Scaffold runtime
+            LogInfo("Preparing Scaffold runtime...");
+            InstanceManager.Default.TypePool.AddAllLoadedAssemblies();
+            RunForMods(mod => InstanceManager.Default.TypePool.AddAssemblies(mod.Assemblies));
+            Type[] allTypes = InstanceManager.Default.TypePool.GetAllTypes();
+            Type[] modsT = InstanceManager.Default.TypePool.GetTypesExtending(typeof(FeralTweaksMod));
+            AttributeScanner scanner = new AttributeScanner();
+            Attribute[] attrs = scanner.GetAttributesFor(typeof(TestClass));
+            modsT = modsT;
+            // FIXME: implement
+
             // Start profiler
             LogInfo("Setting up profiler...");
             FeralTweaksProfiler.SetupProfiler();
@@ -555,6 +567,36 @@ namespace FeralTweaks
             // Save list
             RunForMods(mod => modsOrdered.Add(mod));
             mods = modsOrdered;
+        }
+
+        // FIXME: remove test
+        [TestAttr2("a")]
+        [TestAttr2("ba")]
+        [TestAttr2("c")]
+        [TestAttr1("aassfassfa")]
+        private class TestClass
+        {
+
+        }
+
+        [AttributeUsage(AttributeTargets.Class)]
+        public class TestAttr1 : Attribute
+        {
+            public string test;
+            public TestAttr1(string test)
+            {
+                this.test = test;
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+        public class TestAttr2 : Attribute
+        {
+            public string test;
+            public TestAttr2(string test)
+            {
+                this.test = test;
+            }
         }
 
         internal static List<FeralTweaksMod> modsOrdered = new List<FeralTweaksMod>();

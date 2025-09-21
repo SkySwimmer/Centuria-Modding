@@ -6,16 +6,25 @@ using System.Text;
 
 namespace FeralTweaks.Logging.Impl
 {
+    /// <summary>
+    /// File logger implementation
+    /// </summary>
     public class FileLoggerImpl : Logger, ILoggerImplementationProvider
     {
-        private string Source;
         private StreamWriter FileWriter;
 
         private static Dictionary<string, StreamWriter> writerMemory = new Dictionary<string, StreamWriter>();
 
-        public FileLoggerImpl(string source) {
-            Source = source;
+        internal FileLoggerImpl()
+        {
+        }
 
+        /// <summary>
+        /// Creates a new file logger
+        /// </summary>
+        /// <param name="source">Logger source name</param>
+        public FileLoggerImpl(string source)
+        {
             if (source != null)
             {
                 // Create log folder
@@ -45,20 +54,26 @@ namespace FeralTweaks.Logging.Impl
             }
         }
 
+        /// <inheritdoc/>
         public Logger CreateInstance(string name)
         {
             return new FileLoggerImpl(name);
         }
 
         private LogLevel level = LogLevel.GLOBAL;
+
+        /// <inheritdoc/>
         public override LogLevel Level { get => (level == LogLevel.GLOBAL_CONSOLE ? (Logger.GlobalConsoleLogLevel == LogLevel.GLOBAL ? Logger.GlobalLogLevel : Logger.GlobalConsoleLogLevel) : (level == LogLevel.GLOBAL ? Logger.GlobalLogLevel : level)); set => level = value; }
 
+
+        /// <inheritdoc/>
         public override void Log(LogLevel level, string message)
         {
             if (FileWriter == null)
                 return;
-            if (Level != LogLevel.QUIET && Level >= level) {
-                lock(FileWriter)
+            if (Level != LogLevel.QUIET && Level >= level)
+            {
+                lock (FileWriter)
                 {
                     string msg = "[" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToString("HH:mm:ss") + "] [" + level.ToString() + "] " + GlobalMessagePrefix + message;
                     FileWriter.WriteLine(msg);
@@ -67,11 +82,13 @@ namespace FeralTweaks.Logging.Impl
             }
         }
 
+        /// <inheritdoc/>
         public override void Log(LogLevel level, string message, Exception exception)
         {
             if (FileWriter == null)
                 return;
-            if (Level != LogLevel.QUIET && Level >= level) {
+            if (Level != LogLevel.QUIET && Level >= level)
+            {
                 string msg = "[" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToString("HH:mm:ss") + "] [" + level.ToString() + "] " + GlobalMessagePrefix + message;
                 lock (FileWriter)
                 {

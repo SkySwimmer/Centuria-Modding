@@ -145,6 +145,9 @@ namespace FeralTweaksBootstrap
             // Set up logging
             logger = Logger.GetLogger("Preloader");
 
+            // Bind Scaffold logging
+            ScaffoldLogger.Bind();
+
             // Log
             LogInfo("Preparing...");
             LogInfo("Binding exception logger...");

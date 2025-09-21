@@ -21,7 +21,7 @@ DisableUpdraftAudioSuppressor=true
 ActorScaleMultiplier=3
 ActorScaleMultiplierLowerMost=0.25
 JumpIncreaseFactor=1.2
-TradeItemLimit=1000
+TradeItemLimit=2147483646
 
 # Gliding overhauls
 GlidingTurnSpeed=0.1

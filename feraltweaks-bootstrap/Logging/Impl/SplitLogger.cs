@@ -2,10 +2,10 @@ using System;
 
 namespace FeralTweaks.Logging.Impl
 {
-    public class SplitLoggerImpl : Logger, ILoggerImplementationProvider
+    internal class SplitLoggerImpl : Logger, ILoggerImplementationProvider
     {
         protected static ILoggerImplementationProvider ImplProvider1 = new ConsoleLoggerImpl();
-        protected static ILoggerImplementationProvider ImplProvider2 = new FileLoggerImpl(null);
+        protected static ILoggerImplementationProvider ImplProvider2 = new FileLoggerImpl();
 
         private Logger Logger1;
         private Logger Logger2;

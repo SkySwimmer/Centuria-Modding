@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using FeralTweaks.Actions.Internal.AsyncTasks;
 using UnityEngine;
+using ScaffoldSharp.Core.AsyncTasks;
 using Logger = FeralTweaks.Logging.Logger;
 using System.Diagnostics;
 
