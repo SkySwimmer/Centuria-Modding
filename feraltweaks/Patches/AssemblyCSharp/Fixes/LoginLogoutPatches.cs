@@ -318,6 +318,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     switch (inErrorCode.Code)
                     {
+                        case 2:
+                            // Server connection lost (no internet)
+                            LogoutWithError("Connection lost", "Connection to the server was lost!\nPlease check if you still have an active internet connection.", inErrorCode);
+                            return false;
 
                         case 8:
                             // Server connection lost
@@ -1020,9 +1024,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     foreach (GameObject child in GetChildren(avatar.BodyTransform.gameObject))
                     {
                         // Avoid the skeletons
-                        if (avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                        if (avatar._bodySkeletonObject != null && avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
                             continue;
-                        if (avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                        if (avatar._wingSkeletonObject != null && avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
                             continue;
                         oldStates[child] = child.activeSelf;
                         child.SetActive(false);
@@ -1075,9 +1079,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 // Show avatar
                                 foreach (GameObject child in GetChildren(avatar.BodyTransform.gameObject))
                                 {
-                                    if (avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                                    if (avatar._bodySkeletonObject != null && avatar._bodySkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
                                         continue;
-                                    if (avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
+                                    if (avatar._wingSkeletonObject != null && avatar._wingSkeletonObject.transform.gameObject.transform.GetSiblingIndex() == child.transform.GetSiblingIndex())
                                         continue;
                                     if (!oldStates.ContainsKey(child))
                                         continue;

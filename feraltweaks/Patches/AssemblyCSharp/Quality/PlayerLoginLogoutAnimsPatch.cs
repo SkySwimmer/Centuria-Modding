@@ -181,7 +181,8 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     // Queue
                     wantsToSpawn = true;
-                    addInfo(worldObjectInfo);
+                    if (worldObjectInfo != null)
+                        addInfo(worldObjectInfo);
                     return true;
                 }
 
@@ -331,7 +332,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             busy = false;
 
                             // Check if wanting to spawn
-                            if (wantsToSpawn && returningMessage != null && !wantsToDestroy)
+                            if (wantsToSpawn && !wantsToDestroy)
                             {
                                 // Spawn
                                 SpawnAvatar(returningMessage);
