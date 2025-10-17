@@ -19,6 +19,44 @@ namespace EarlyAccessPorts.MultiClothingEquip.Patches
             return false;
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(ActorInfo), "AddClothingItem", new System.Type[] { typeof(Item) })]
+        public static bool AddClothingItem(ref Item inItem, ref ActorInfo __instance, out Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>> __result)
+        {
+            // Replace implementation
+
+            // Get components
+            ColorableItemComponent colorable = inItem.GetComponent<ColorableItemComponent>();
+            ActorClothingDefComponent itemDef = inItem.GetDefComponent<ActorClothingDefComponent>();
+            if (colorable == null || itemDef == null)
+            {
+                // Missing
+                __result = new Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>>(null, null);
+                return false;
+            }
+
+            // Check if attach group is present
+            if (itemDef.AttachNodeGroupDef == null)
+            {
+                // Missing
+                __result = new Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>>(null, null);
+                return false;
+            }
+            if (itemDef.AttachNodeDefComponent == null || !itemDef.AttachNodeGroupDef.Contains(itemDef.AttachNodeDefComponent.def))
+            {
+                // Missing
+                __result = new Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>>(null, null);
+                return false;
+            }
+
+            // Add item
+            ActorInfoClothingItem attachedItem = new ActorInfoClothingItem(colorable);
+            __instance.AddClothingItem(attachedItem);
+            __result = new Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>>(attachedItem, new List<ActorInfoClothingItem>());
+
+            // Prevent original
+            return false;
+        }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ActorBase), "RemoveAttachedClothingItem")]
