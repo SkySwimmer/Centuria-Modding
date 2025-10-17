@@ -2,6 +2,22 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build Scaffold",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "deps/ScaffoldSharp",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "Build FTL",
             "command": "dotnet",
             "type": "shell",
@@ -15,6 +31,9 @@
             "presentation": {
                 "reveal": "silent"
             },
+            "dependsOn":[
+                "Build Scaffold"
+            ],
             "problemMatcher": "$msCompile"
         },
         {
@@ -83,6 +102,26 @@
             "args": [
                 "build",
                 "discord-rpc-mod",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "Build feraltweaks",
+                "Build FTL"
+            ]
+        },
+        {
+            "label": "Build CustomizationChat mod",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "customization-chat",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
