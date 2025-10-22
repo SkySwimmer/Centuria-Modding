@@ -21,8 +21,12 @@ namespace EarlyAccessPorts.MultiClothingEquip.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ActorInfo), "AddClothingItem", new System.Type[] { typeof(Item) })]
-        public static bool AddClothingItem(ref Item inItem, ref ActorInfo __instance, out Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>> __result)
+        public static bool AddClothingItem(ref Item inItem, ref ActorInfo __instance, ref Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>> __result)
         {
+            // Check if enabled
+            if (!MultiClothingEquipMod.PatchConfig.ContainsKey("AllowMultipleClothingItemsOfSameType") || MultiClothingEquipMod.PatchConfig["AllowMultipleClothingItemsOfSameType"].ToLower() == "false")
+                return true;
+
             // Replace implementation
 
             // Get components
