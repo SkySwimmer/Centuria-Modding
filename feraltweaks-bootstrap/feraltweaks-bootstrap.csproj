@@ -60,7 +60,4 @@
     </Reference>
   </ItemGroup>
   
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-  </Target>
-  
 </Project>
