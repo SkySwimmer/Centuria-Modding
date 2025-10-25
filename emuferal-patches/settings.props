@@ -8,7 +8,7 @@ UserNameMaxLength=320
 DisplayNameMaxLength=16
 
 TradeItemLimit=2147483646
-DisableClientChartPatches=true
+DisableClientChartPatches=false
 
 EnableGroupChatTab=true
 JiggleResourceInteractions=true

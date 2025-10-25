@@ -1,0 +1,380 @@
+#
+# Update announcement 1.7.3
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement1
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_173_updateannouncement1.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_173_updateannouncement1.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_173_updateannouncement1.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/03/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement1.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement1.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "1.7.3 Released!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_173_updateannouncement1.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Happy Frostfete everyone! EmuFeral 1.7.3 has been released!!!\n\nChanges in 1.7.3:\n- Removed dizzywing for now until its functional again\n- We also removed the creative restock feature since it was considered to be\n   too much clutter, however should there be demand for it we will likely\n   reintroduce it (and will try to turn it into an optional feature in 1.7.5)\n- Ported over the entirety of the 1.8 interaction\n   manager and quest managers, however we are continuing to use the 1.7\n   modules for this system apart from the quest manager\n- Fixed a few moderation-related bugs (mostly display names and a filter\n   failure, not much else other than that)\n- Fixed an issue that broke new accounts when the launcher accepted an\n   empty password while the game does not\n- Fixed snowbold warfare being broken\n\nImplemented quests:\n- Ultimate Refreshment\n- Silent but Deadly\n- Snowbold Warfare 2\n- Lost Shoes\n- Magnificent Cleanup\n\nSome changes are still in the works which will release soon via a mod update:\n- We are working on adding connection pooling (reuse of connections) and\n   automatic retry for errors in the launcher and installer to remedy\n   the increase in launcher failures\n- We are also working on trying to disable avatar animation culling to try\n   to resolve the sound loop issue due to animations not finishing for avatar,\n   this will also release fairly soon but likely a bit after the connection patch\n\nFew notes, there are some large changes to backend code in this update, there may be some bugs that can occur with quests and interactions, should you find any we request to report them via the bug report forum in the Fer.ever discord, we will try to patch them as quickly as we can.",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Update announcement 1.7.3 - 1.7.3.1 details
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement2
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_173_updateannouncement2.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_173_updateannouncement2.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_173_updateannouncement2.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/02/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement2.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement2.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Regarding the state of this update and whats next",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_173_updateannouncement2.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "As you may have realized or noticed, some parts of 1.7.3 could not be completed before the deadline of today, such as overhauls and improvements to the chat filters. While a lot was completed, some of it will take a bit longer and will be released in the two coming followup updates! \n\n\n<b><u>One of the two coming expansions upon the 1.7.3 update is 1.7.3.1, it has quite a few planned changes!</u></b>\n\n<u>First moderation-wise:</u>\n- we will try to overhaul parts of the moderation system for our staff, making\n   it easier to moderate and the bot a lil less tedious\n- there will be a bit of behind the scenes work to allow us to develop a more\n   comprehensive moderator/admin program for the emulator, more details\n   on this in the 1.7.3.2 segment since thats when this program will release\n   fully, it will however also aid staff to deal with account issues such as lost\n   looks\n- we are also adding in a way to respond to staff messages sent via the discord\n   bot such as replies to feedback and moderation messages (however\n   this update wont yet implement this as a feature via ingame chat)\n- alongside the reply feature we are also gonna be adding a way to directly\n   contact the staff via the emuferal bot's account panel, more details\n   when this update nears release on this\n\n<u>And... lag and bug fixes coming:</u>\n- we will try to improve some things related to the general item system to\n   remedy the lag spikes that occur during item operations such as unbinding\n   of items and crafting\n- this update will also remedy some bugs with the chat to actually delete your\n   messages and dms if you delete your account as well as fix a bug where\n   deleted chats remain in the unread counter permanently...\n   this is pretty annoying so we will aim to fix this asap\n- this update will also attempt to further remedy connection issues within the\n   client itself such as the \"There was an error with the server\" message,\n   the annoying 1008--1 error and similar errors\n- it will also fix a few bugs that will affect quests should we reach the point of\n   having implemented all of the og quests\n- as well as add in some profiling code to analyze the issues with the game\n   client, we all know how laggy Fer.al can be and want to figure out\n   what exactly all causes the lag so will add in profiling code to figure that\n   out and be able to fix it in the future and to do so, are making some\n   preparations through this update\n   \n<u>Overhauls related to account mangement:</u>\n- the emulator account panel will get a few overhauls to make it easier to use,\n   we will reveal details when we refine the concepts related to it, but likely\n   will be getting sub-menus and buttons instead of dropdowns\n- we are adding in account panel options to manage eg. 2 factor\n   authentication ip whitelist, unpairing and account transfer as well\n   as implementing more options regarding saves so that in the future players\n   can create more saves they wish to use (for now they wont be enabled\n   due to server storage space but will be in the future)\n- the emulator will also get an experimental feature system so players can opt\n   in/out of experimental features that are in the works for the emulator,\n   accessible via the bot and ingame commands (and later the launcher too)\n   \n<u>And content/features coming in this update:</u>\n- the emulator and its bot will get a massive new feature, an activity planner,\n   it will be a tool to allow players to schedule activities for friends and also\n   look for public ones (mostly intended for finding and hosting roleplays\n   but also other things such as hanging out)\n   \n- and finally, this update is also scheduled to implement 5 more quests!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+#
+# Update announcement 1.7.3 - 1.7.3.2 details
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement3
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_173_updateannouncement3.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_173_updateannouncement3.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_173_updateannouncement3.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/01/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement3.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_173_updateannouncement3.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "And.... 1.7.3.2",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_173_updateannouncement3.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "The second update, 1.7.3.2 is an expansion upon 1.7.3.1:\n\n<u>Firstly, moderation, administration and support-related changes:</u>\n- the admin/moderator program is intended to be finished and released for\n   staff in this update, itll mostly allow staff to moderate without being\n   ingame but also have features for our staff to more easily resolve\n   account/playerdata-related issues, and through its backup system also allow\n   restoration of eg. overwritten looks as well as overall account rollbacks\n   incase of damage or accidental changes to player progress they would like\n   reverted, which is something we see the need for quite a few times now\n- this update will also introduce a enhanced backup system allowing staff to\n   roll back server updates and player data (or just both combined), connected\n   to the moderator program mentioned above\n- we are also introducing a small server next to the larger software that is\n   used whenever the main software fails to start or crashes too often\n   allowing staff to service the software and rollback broken updates should\n   there be issues while the dev team is unavailable\n- there will also be a program in the background of the server that monitors if \n   the servers are fully reachable regardless of being online, so that the staff\n   can be more quickly informed of outages\n   \n<u>User and account related changes that are coming here:</u>\n- this update also will rework the save system a bit so that save settings can be\n   configured per-user instead of only allowing us to configure save settings\n   for the entire server\n- utilizing the above, we intend to add in a few save options allowing users to\n   customize how their saves work to a small degree, such as configuring if\n   their creative saves automatically restock overall, and what type of items\n   all restock and which do not, and some further settings too\n\n<u>Changes coming related to user support:</u>\n- next to all those servicing features for staff, there will also be a new way for\n   players to contact emuferal moderation via the ingame chat, by contacting\n   the server's dm it will forward to staff so you can easily open up tickets\n   without being in the discord\n- there will also be a way to reply to staff responses of moderation and\n   feedback via the ingame chat instead of only in discord coming in this\n   update as well, utilizing the system above but directly connecting to the\n   feedback and player report system\n- and finally, this update is also scheduled to again release 5 more quests\n\nWe have no ETAs yet on these two updates but will likely be revealing more details pretty soon!",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
