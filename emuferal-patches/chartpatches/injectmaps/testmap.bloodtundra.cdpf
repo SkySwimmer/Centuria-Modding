@@ -1,0 +1,270 @@
+setchart LocalizationChart
+
+def 910001
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "Blood Tundra (Test)",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+			"componentClass": "OldLocalizationDefComponent",
+			"componentJSON":
+				{}
+			}
+		]
+	}
+enddef
+
+
+setchart LevelChart
+
+def 910000
+	{
+		"templateClass": "LevelTemplate",
+		"templateFormatHash":"3fd59e315f33bc47286a31bc6863ebec",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON":
+					{
+						"bundle": {
+							"bundleMetaGUID": "41f43329f3e328d46bd0ee0ed6eac632",
+							"bundlePath": "Levels/Test/BloodTundra"
+						}
+					}
+				},
+			{
+				"componentClass": "LevelDefComponent",
+				"componentJSON":
+					{
+						"topLevel": true,
+						"isSecretArea": false,
+						"disabled": false,
+						"levelOverrides": {
+							"_defIDs": [
+								"910002"
+							]
+						},
+						"networkedObjects": {
+							"_defIDs": []
+						},
+						"worldMapInfos": [
+							{
+								"level": "910000",
+								"uniqueMapId": "64c9c183-716a-4a9f-8183-4339a3d7f12c",
+								"worldBlipType": 11,
+								"localization": "11253",
+								"worldMapPosition": {
+									"x": 0.7699999809265137,
+									"y": -0.5099999904632568
+								},
+								"scenePosition": {
+									"x": -99.4000015258789,
+									"y": 40.345001220703128,
+									"z": 150.10000610351563
+								},
+								"sceneRotation": {
+									"x": 3.1434593816825897e-10,
+									"y": 182.07827758789063,
+									"z": 1.6376302536258436e-9
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "dc97e56e-967a-440f-8332-6170178fe7b3",
+								"worldBlipType": 11,
+								"localization": "11252",
+								"worldMapPosition": {
+									"x": -0.3700000047683716,
+									"y": 1.6799999475479127
+								},
+								"scenePosition": {
+									"x": 336.5,
+									"y": 176.72500610351563,
+									"z": -410.3999938964844
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 266.9895324707031,
+									"z": 0.0
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "6cf58e20-1975-453f-ba90-a0c93ad50391",
+								"worldBlipType": 11,
+								"localization": "11254",
+								"worldMapPosition": {
+									"x": -1.75,
+									"y": -0.12999999523162843
+								},
+								"scenePosition": {
+									"x": 395.32000732421877,
+									"y": 52.529998779296878,
+									"z": 192.94000244140626
+								},
+								"sceneRotation": {
+									"x": 1.4203341835994366e-9,
+									"y": 211.5962677001953,
+									"z": 8.736680823240306e-10
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "45183b9f-65a8-4804-92c3-f775a3d86fa5",
+								"worldBlipType": 0,
+								"localization": "",
+								"worldMapPosition": {
+									"x": 0.0,
+									"y": 0.0
+								},
+								"scenePosition": {
+									"x": -183.779296875,
+									"y": 34.279998779296878,
+									"z": 428.5421142578125
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 153.06947326660157,
+									"z": 0.0
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "bcd1364b-842d-47cc-8c3a-13c847080f8e",
+								"worldBlipType": 0,
+								"localization": "",
+								"worldMapPosition": {
+									"x": 0.0,
+									"y": 0.0
+								},
+								"scenePosition": {
+									"x": 269.8482666015625,
+									"y": 95.94999694824219,
+									"z": -306.7422790527344
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 77.28761291503906,
+									"z": 0.0
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "9f7e802f-213b-4d7c-a315-a7105ba12dab",
+								"worldBlipType": 0,
+								"localization": "",
+								"worldMapPosition": {
+									"x": 0.0,
+									"y": 0.0
+								},
+								"scenePosition": {
+									"x": 78.86494445800781,
+									"y": 59.83000183105469,
+									"z": -338.8006286621094
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 48.0470085144043,
+									"z": 0.0
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "1df51c3a-eeef-4747-b1b3-686d75f4a52f",
+								"worldBlipType": 0,
+								"localization": "",
+								"worldMapPosition": {
+									"x": 0.0,
+									"y": 0.0
+								},
+								"scenePosition": {
+									"x": 317.1000061035156,
+									"y": 52.29999923706055,
+									"z": 9.0
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 186.21337890625,
+									"z": 0.0
+								}
+							},
+							{
+								"level": "910000",
+								"uniqueMapId": "b0b2249b-8583-4ab6-9de8-c7c3280ce0f0",
+								"worldBlipType": 0,
+								"localization": "",
+								"worldMapPosition": {
+									"x": 0.0,
+									"y": 0.0
+								},
+								"scenePosition": {
+									"x": -55.86000061035156,
+									"y": 42.630001068115237,
+									"z": 514.9400024414063
+								},
+								"sceneRotation": {
+									"x": 0.0,
+									"y": 0.0,
+									"z": 0.0
+								}
+							}
+						],
+						"_unityLevelName": "BloodTundra",
+						"levelType": 0,
+						"_socialExpanseArea": 0,
+						"tempImageBundleID": "-1",
+						"localizedNameID": "910001",
+						"calendarDefID": "-1",
+						"minimapBundleIdRef": "-1"
+					}
+				}
+		]
+	}
+enddef
+
+
+setchart LevelOverrideChart
+
+def 910002
+	{
+		"templateClass":"LevelOverrideTemplate",
+		"templateFormatHash":"3c42ba962ad09125367dedaea946f63c",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON":
+					{
+						"bundle": {
+							"bundleMetaGUID": "9b1daedb8c995b74ba5cee544ea46f5e",
+							"bundlePath": "Levels/Test/BloodTundra/Audio"
+						}
+					}
+				},
+			{
+				"componentClass": "LevelOverrideDefComponent",
+				"componentJSON":
+					{
+						"isAdditive": true,
+						"unityLevelName": "BloodTundra_Audio",
+						"musicTrackID": "Missing",
+						"socialExpanseDefId": "",
+						"calendarRefs": [],
+						"networkedObjects": {
+							"_defIDs": []
+						}
+					}
+				}
+		]
+	}
+enddef

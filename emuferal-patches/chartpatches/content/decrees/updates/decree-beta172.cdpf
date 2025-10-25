@@ -1,0 +1,126 @@
+#
+# Update announcement - Beta 1.7.2
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_172_updateannouncement1
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_172_updateannouncement1.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_172_updateannouncement1.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_172_updateannouncement1.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "11/26/2024"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_172_updateannouncement1.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/AstralShop/Icons/avatar"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_172_updateannouncement1.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "1.7.3 Update Announcement - Update coming soon",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_172_updateannouncement1.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Also another announcement, we have begun resuming work on 1.7.3, which'll overhaul some slight backend code but also add further quests (such as Ultimate Refreshment and a few others after it), we hope this can be released on the 1st/2nd of December!\n\nFurthermore, this update will attempt to patch issues in the launcher where a connection errors have been frequently increasing, we will try to remedy this issue using connection pooling (basically re-use connections that are free instead of making a new one for each file) as well as automatic reconnection attempts, to hopefully lessen the need for a vpn\n\nWe will also be trying to disable animation culling to see if it reduces annoying sound loops (like sit sound looping) for players and other such odd bugs\n\nUnfortunately we will also be shutting down the dizzywing dispatch minigame as its really non-functional and not expected to function soon, however we will try to patch it in the background while developing updates, it will however take a lot of time since we need to reverse engineer how the client processes the random numbers...which wont be easy\n\nAnd finally, we will be patching broken quests like Snowbold Warfare! This will be done alongside the new quests, which we will reveal later on which all will be implemented the next update in december.\n\nThere are a lot more changes coming, however this decree entry got a bit long, so we will reveal those another time, its mostly just bugfixes and QoL for staff tools and moderation, but some things that might be a help to players too, such as analayzing whats causing lag and memory issues in the client game, but this is still heavy wip and might take a while... But we are working on it!\n\nCheers! - Zera",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef

@@ -21,7 +21,7 @@ DisableUpdraftAudioSuppressor=true
 ActorScaleMultiplier=3
 ActorScaleMultiplierLowerMost=0.25
 JumpIncreaseFactor=1.2
-TradeItemLimit=1000
+TradeItemLimit=2147483646
 
 # Gliding overhauls
 GlidingTurnSpeed=0.1
@@ -37,5 +37,5 @@ AllowShinigamiGlidingWithNoWings=true
 
 # UI
 DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]
-VersionLabel=${global:7358}\nCenturia ${server:version}\nFer.al ${game:version} (build ${game:build}))\n\nBETA 1.8 EARLY ACCESS 1(
+VersionLabel=${global:7358}\nCenturia ${server:version}\nFer.al ${game:version} (build ${game:build})\n\nBETA 1.8 EARLY ACCESS 1
 EnableGroupChatTab=true

@@ -1,0 +1,130 @@
+setchart LocalizationChart
+
+def 900001
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+						"needsTranslation": true,
+						"en": "The Expanse",
+						"fr": "",
+						"de": "",
+						"es": "",
+						"pt": ""
+					}
+				},
+			{
+			"componentClass": "OldLocalizationDefComponent",
+			"componentJSON":
+				{}
+			}
+		]
+	}
+enddef
+
+
+setchart LevelChart
+
+def 900000
+	{
+		"templateClass": "LevelTemplate",
+		"templateFormatHash":"3fd59e315f33bc47286a31bc6863ebec",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON":
+					{
+						"bundle": {
+							"bundleMetaGUID": "41f43329f3e328d46bd0ee0ed6eac632",
+							"bundlePath": "Levels/Test/Expanse/Combo"
+						}
+					}
+				},
+			{
+				"componentClass": "LevelDefComponent",
+				"componentJSON":
+					{
+						"topLevel": true,
+						"isSecretArea": false,
+						"disabled": false,
+						"levelOverrides": {
+							"_defIDs": [
+								"900002"
+							]
+						},
+						"networkedObjects": {
+							"_defIDs": []
+						},
+						"worldMapInfos": [
+							{
+								"level": "900000",
+								"uniqueMapId": "d105a27e-e6ee-4a0d-b20f-06b3ccd9dbbe",
+								"worldBlipType": 11,
+								"localization": "900001",
+								"worldMapPosition": {
+									"x": 2.0799999237060549,
+									"y": -0.5799999833106995
+								},
+								"scenePosition": {
+									"x": 28.09000015258789,
+									"y": 0.89000004529953,
+									"z": 42.22999954223633
+								},
+								"sceneRotation": {
+									"x": -2.065672351009965e-16,
+									"y": 143.11146545410157,
+									"z": -1.4677343234886174e-16
+								}
+							}
+						],
+						"_unityLevelName": "Expanse_Combo",
+						"levelType": 0,
+						"_socialExpanseArea": 0,
+						"tempImageBundleID": "-1",
+						"localizedNameID": "900001",
+						"calendarDefID": "-1",
+						"minimapBundleIdRef": "-1"
+					}
+				}
+		]
+	}
+enddef
+
+
+setchart LevelOverrideChart
+
+def 900002
+	{
+		"templateClass":"LevelOverrideTemplate",
+		"templateFormatHash":"3c42ba962ad09125367dedaea946f63c",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON":
+					{
+						"bundle": {
+							"bundleMetaGUID": "9b1daedb8c995b74ba5cee544ea46f5e",
+							"bundlePath": "Levels/Test/Expanse/Combo/FX"
+						}
+					}
+				},
+			{
+				"componentClass": "LevelOverrideDefComponent",
+				"componentJSON":
+					{
+						"isAdditive": true,
+						"unityLevelName": "Expanse_Combo_FX",
+						"musicTrackID": "Missing",
+						"socialExpanseDefId": "",
+						"calendarRefs": [],
+						"networkedObjects": {
+							"_defIDs": []
+						}
+					}
+				}
+		]
+	}
+enddef
