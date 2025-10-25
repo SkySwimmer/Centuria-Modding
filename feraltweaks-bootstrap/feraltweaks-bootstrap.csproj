@@ -43,14 +43,6 @@
     <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
     <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.4.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <!-- <Reference Include="Il2CppInterop.Runtime">
-      <HintPath>Libaries\Il2CppInterop.Runtime.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Il2CppInterop.HarmonySupport">
-      <HintPath>Libaries\Il2CppInterop.HarmonySupport.dll</HintPath>
-      <Private>true</Private>
-    </Reference> -->
   </ItemGroup>
 
   <ItemGroup>
