@@ -32,23 +32,9 @@
     <PackageReference Include="HarmonyX" Version="2.10.1" />
     <PackageReference Include="Il2CppInterop.Common" Version="1.4.5" />
     <PackageReference Include="Il2CppInterop.Generator" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" />
+    <PackageReference Include="Il2CppInterop.HarmonySupport" Version="1.4.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <Reference Include="Il2CppInterop.Runtime">
-      <HintPath>Libaries\Il2CppInterop.Runtime.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Il2CppInterop.HarmonySupport">
-      <HintPath>Libaries\Il2CppInterop.HarmonySupport.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="MonoMod.RuntimeDetour">
-      <HintPath>Libaries\MonoMod.RuntimeDetour.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="MonoMod.Utils">
-      <HintPath>Libaries\MonoMod.Utils.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
