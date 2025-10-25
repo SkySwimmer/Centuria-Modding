@@ -58,15 +58,4 @@
     </Reference>
   </ItemGroup>
   
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	<Copy
-		SourceFiles="Libraries\MonoMod.Utils.dll"
-		DestinationFolder="run\FeralTweaks"
-	/>
-	<Copy
-		SourceFiles="Libraries\MonoMod.RuntimeDetour.dll"
-		DestinationFolder="run\FeralTweaks"
-	/>
-  </Target>
-  
 </Project>
