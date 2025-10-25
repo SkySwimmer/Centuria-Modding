@@ -1,0 +1,126 @@
+#
+# DevTest 7
+#
+
+setchart CraftableItemChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7
+	{
+		"templateClass": "DecreeTemplate",
+		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
+		"components": [
+			{
+				"componentClass": "DecreeDefComponent",
+				"componentJSON": {
+					"localizedHeaderDefId": "decreeboard:emuferal:emuferal_b18_devtest7.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:emuferal_b18_devtest7.message.text",
+					"imageDefID": "decreeboard:emuferal:emuferal_b18_devtest7.image",
+					"decreeCategory": 0,
+					"decreeLayoutType": 3
+				}
+			},
+			{
+				"componentClass": "AvailabilityDefComponent",
+				"componentJSON":
+				{
+				    "dateOverrideRef": {
+				        "_defID": "-1"
+				    },
+				    "chartDateAvailability": {
+				        "_ignoreYear": true,
+				        "_repeatMode": 1,
+				        "_dateStart": "",
+				        "_dateEnd": ""
+				    }
+				}
+			},
+			{
+				"componentClass": "DecreeDateDefComponent",
+				"componentIsCustom": true,
+				"componentJSON": {
+					"decreeDate": "12/09/2023"
+				}
+			}
+		]
+	}
+enddef
+
+setchart ImageChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7.image
+	{
+		"templateClass": "ImageTemplate",
+		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
+		"components": [
+			{
+				"componentClass": "BundleIDDefComponent",
+				"componentJSON": {
+					"bundle": {
+						"bundlePath": "Images/DecreeBoard/10_2020/Cindernoct"
+					}
+				}
+			},
+			{
+				"componentClass": "ImageDefComponent",
+				"componentJSON": {
+					"localize": false,
+					"highQualityAndLowQuality": false,
+					"bundleIDArray": [],
+					"calendarRefArray": {
+						"_defIDs": []
+					}
+				}
+			}
+		]
+	}
+enddef
+
+setchart LocalizationChart
+
+def decreeboard:emuferal:emuferal_b18_devtest7.header.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "Final Closed DevTest Build Released",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef
+
+def decreeboard:emuferal:emuferal_b18_devtest7.message.text
+	{
+		"templateClass": "LocalizationTemplate",
+		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
+		"components": [
+			{
+				"componentClass": "LocalizationDefComponent",
+				"componentJSON": {
+					"needsTranslation": true,
+					"en": "The Beta 1.8 Testing Build 7 is here! This is the final closed dev test build before we go into the application-based Early Access period of Beta 1.8!\n\nChanges in this dev test build:\n - Fixed chat formatting incorrectly rendering backslashes\n - Fixed the broken scale slider, it should no longer jump from min to max.\n - Fixed teleport animations randomly failing when players join the game\n - Fixed the Discord RPC mod crashing the game on DevTest.\n - Fixed incorrect placement of dragon head spark\n - Fixed asset bundles sometimes loading before FTL injects into them\n - Implemented closin of eyes during sleep animation\n - Reimplemented NPC head rotation\n - Added a 'no legs' option for dragons\n - Fixed camera zoom and center axis for creatures larger than OG max\n - Fixed offline unread counter not working\n - Added a public chat unread counter\n - Corrected the unread message count of the unread labels in chat buttons\n - Fixed chat window resizing glitching group message contents\n - Fixed scrolling of inactive chat tabs\n - Implemented a 'typing' status in chat\n - Improved chat bubble logic, it scrolls messages now\n - Fixed the favorite 'Player has joined you' spam bug\n - Added the Eat, Scared, Yes and No emotes for 1.8 clients\n - Made it that quest progress notifications arent marked as unreads\n - Made it that private chat message notifications are not marked as unreads\n - Made it that item reward notifications arent marked as unreads\n\n - EmuFeral/Centuria Development Team",
+					"fr": "",
+					"de": "",
+					"es": "",
+					"pt": ""
+				}
+			},
+			{
+				"componentClass": "OldLocalizationDefComponent",
+				"componentJSON": {}
+			}
+		]
+	}
+enddef

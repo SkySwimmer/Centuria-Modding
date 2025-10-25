@@ -12,9 +12,9 @@ patch 7123
 			{
 				"componentClass": "URLDefComponent",
 				"componentJSON": {
-					"dev": "https://discord.gg/ferever",
-					"stage": "https://discord.gg/ferever",
-					"prod": "https://discord.gg/ferever"
+					"dev": "https://emuferal.ddns.net/register.html",
+					"stage": "https://emuferal.ddns.net/register.html",
+					"prod": "https://emuferal.ddns.net/register.html"
 				}
 			}
 		]

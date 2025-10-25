@@ -22,8 +22,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(ActorInfo), "AddClothingItem", new System.Type[] { typeof(Item) })]
-        public static bool AddClothingItem(ref Item inItem, ref ActorInfo __instance, out Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>> __result)
+        public static bool AddClothingItem(ref Item inItem, ref ActorInfo __instance, ref Il2CppSystem.ValueTuple<ActorInfoClothingItem, List<ActorInfoClothingItem>> __result)
         {
+            // Check if enabled
+            if (!FeralTweaks.PatchConfig.ContainsKey("AllowMultipleClothingItemsOfSameType") || FeralTweaks.PatchConfig["AllowMultipleClothingItemsOfSameType"].ToLower() == "false")
+                return true;
+
             // Replace implementation
 
             // Get components

@@ -482,9 +482,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HarmonyPatch(typeof(ChatEntry), "GetTimeStampUIString")]
         public static void GetTimeStampUIString(ref ChatEntry __instance, ref string __result)
         {
-            // Return timestamp
+            // Return timestamp  // FIXME: returns incorrect
             Il2CppSystem.DateTime local = __instance.localTimeStamp;
-            Il2CppSystem.TimeSpan span = Il2CppSystem.DateTime.Now - local;
+            Il2CppSystem.TimeSpan span = NetworkManager.ServerTime.LocalDateTime - local;
 
             // Check day count
             if (span.Days >= 7)
