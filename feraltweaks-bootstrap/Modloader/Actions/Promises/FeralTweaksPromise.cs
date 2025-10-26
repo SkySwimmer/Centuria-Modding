@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using FeralTweaks.Logging;
 
 namespace FeralTweaks.Actions
@@ -38,6 +40,14 @@ namespace FeralTweaks.Actions
         /// </summary>
         /// <returns>Function result or null</returns>
         public abstract T GetResult();
+
+        /// <summary>
+        /// Waits for the function to finish completely
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown if the current thread context is unsafe to await in</exception>
+        /// <exception cref="TargetInvocationException">Thrown if the target method causes an exception</exception>
+        public abstract T AwaitResult();
 
 
         /// <summary>
@@ -226,6 +236,67 @@ namespace FeralTweaks.Actions
             handler = FeralTweaksCallbacks.CreateQueuedWrapper(queue, handler);
             ProcessAddErrorHandler((val) => handler());
             return this;
+        }
+    
+        private FeralTweaksPromiseAwaiter<T> awaiter;
+
+        /// <summary>
+        /// Retrieves the promise awaiter
+        /// </summary>
+        /// <returns>FeralTweaksPromiseAwaiter instance</returns>
+        public FeralTweaksPromiseAwaiter<T> GetAwaiter()
+        {
+            if (awaiter == null)
+                awaiter = new FeralTweaksPromiseAwaiter<T>(this);
+            return awaiter;
+        }
+    }
+
+    /// <summary>
+    /// Action awaiter
+    /// </summary>
+    /// <typeparam name="T">Result type</typeparam>
+    public class FeralTweaksPromiseAwaiter<T> : ICriticalNotifyCompletion
+    {
+        private FeralTweaksPromise<T> promise;
+
+        /// <summary>
+        /// Checks if the action completed
+        /// </summary>
+        public bool IsCompleted
+        {
+            get
+            {
+                return promise.HasCompleted;
+            }
+        }
+
+        internal FeralTweaksPromiseAwaiter(FeralTweaksPromise<T> promise)
+        {
+            this.promise = promise;
+        }
+
+        /// <summary>
+        /// Awaits function completion
+        /// </summary>
+        /// <returns>Action result</returns>
+        public T GetResult()
+        {
+            return promise.AwaitResult();
+        }
+
+        /// <inheritdoc/>
+        public void OnCompleted(Action continuation)
+        {
+            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, continuation);
+            promise.OnError(FeralTweaksTargetEventQueue.OnAction, continuation);
+        }
+
+        /// <inheritdoc/>
+        public void UnsafeOnCompleted(Action continuation)
+        {
+            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, continuation);
+            promise.OnError(FeralTweaksTargetEventQueue.OnAction, continuation);
         }
     }
 }

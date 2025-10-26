@@ -204,7 +204,7 @@ namespace FeralTweaks.Actions
         /// <summary>
         /// Retrieves the function result
         /// 
-        /// <para>Note: this does NOT await the action, use AwaitResult() instead to await the action result</para>
+        /// <para>Note: this does NOT await the action, use AwaitCompleteResult() instead to await the action result</para>
         /// </summary>
         /// <returns>Function result or null</returns>
         public override T GetResult()
@@ -299,6 +299,10 @@ namespace FeralTweaks.Actions
             {
                 lock (_lockFullComplete)
                 {
+                    // Check exception
+                    if (_hasCompleted && _ex != null)
+                        throw new TargetInvocationException("Target function has thrown an exception", _ex); // Throw exception
+
                     // Check completed
                     if (_hasCompleted)
                         return GetResult();
@@ -345,6 +349,12 @@ namespace FeralTweaks.Actions
             return res;
         }
 
+        /// <inheritDoc/>
+        public override T AwaitResult()
+        {
+            return AwaitCompleteResult();
+        }
+
         /// <summary>
         /// Waits for the function to finish completely
         /// </summary>
@@ -361,6 +371,10 @@ namespace FeralTweaks.Actions
             {
                 lock (_lockFullComplete)
                 {
+                    // Check exception
+                    if (_hasCompleted && _ex != null)
+                        throw new TargetInvocationException("Target function has thrown an exception", _ex); // Throw exception
+
                     // Check completed
                     if (_hasCompleted)
                         return GetResult();
@@ -766,7 +780,7 @@ namespace FeralTweaks.Actions
                 _ex = ex;
                 _hasCompleted = true;
             }
-            
+
             // Run actions
             RunOnError(ex);
 
@@ -777,7 +791,7 @@ namespace FeralTweaks.Actions
             }
 
             // Mark done
-            lock(_lock)
+            lock (_lock)
             {
                 _cResult = default(T);
                 _ex = ex;
@@ -806,7 +820,7 @@ namespace FeralTweaks.Actions
         /// Retrieves the action awaiter
         /// </summary>
         /// <returns>FeralTweaksActionAwaiter instance</returns>
-        public FeralTweaksActionAwaiter<T> GetAwaiter()
+        public new FeralTweaksActionAwaiter<T> GetAwaiter()
         {
             if (awaiter == null)
                 awaiter = new FeralTweaksActionAwaiter<T>(this);

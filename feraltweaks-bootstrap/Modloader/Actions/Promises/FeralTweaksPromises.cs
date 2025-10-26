@@ -1,6 +1,6 @@
 using System;
-using System.Net.NetworkInformation;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Threading;
 
 namespace FeralTweaks.Actions
 {
@@ -21,11 +21,68 @@ namespace FeralTweaks.Actions
         /// <summary>
         /// Creates a new promise
         /// </summary>
-        /// <typeparam name="T">Promise result type</typeParam>
+        /// <typeparam name="T">Promise result type</typeparam>
         /// <returns>FeralTweaksPromiseController instance with a FeralTweaksPromise instance attached</returns>
         public static FeralTweaksPromiseController<T> CreatePromise<T>()
         {
             return new FeralTweaksPromiseController<T>();
+        }
+
+
+        /// <summary>
+        /// Creates a promise from a managed Task
+        /// </summary>
+        /// <typeparam name="T">Promise type</typeparam>
+        /// <param name="task">Task to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<T> CreatePromiseFrom<T>(System.Threading.Tasks.Task<T> task)
+        {
+            return CreatePromiseFrom(task.GetAwaiter());
+        }
+
+        /// <summary>
+        /// Creates a promise from a managed Awaiter
+        /// </summary>
+        /// <typeparam name="T">Promise type</typeparam>
+        /// <param name="awaiter">Task awaiter to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<T> CreatePromiseFrom<T>(System.Runtime.CompilerServices.TaskAwaiter<T> awaiter)
+        {
+            FeralTweaksPromiseController<T> controller = CreatePromise<T>();
+            awaiter.OnCompleted(() =>
+            {
+                // Call complete
+                controller.CallComplete(awaiter.GetResult());
+            });
+            return controller.GetPromise();
+        }
+
+        /// <summary>
+        /// Creates a promise from a unmanaged il2cpp Task
+        /// </summary>
+        /// <typeparam name="T">Promise type</typeparam>
+        /// <param name="task">Task to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<T> CreatePromiseFrom<T>(Il2CppSystem.Threading.Tasks.Task<T> task)
+        {
+            return CreatePromiseFrom(task.GetAwaiter());
+        }
+
+        /// <summary>
+        /// Creates a promise from a unmanaged il2cpp Awaiter
+        /// </summary>
+        /// <typeparam name="T">Promise type</typeparam>
+        /// <param name="awaiter">Task awaiter to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<T> CreatePromiseFrom<T>(Il2CppSystem.Runtime.CompilerServices.TaskAwaiter<T> awaiter)
+        {
+            FeralTweaksPromiseController<T> controller = CreatePromise<T>();
+            awaiter.OnCompleted(new Action(() =>
+            {
+                // Call complete
+                controller.CallComplete(awaiter.GetResult());
+            }));
+            return controller.GetPromise();
         }
     }
 
@@ -95,6 +152,12 @@ namespace FeralTweaks.Actions
                     }
                     RunOnComplete(res);
                     ClearHandlers();
+
+                    // Release
+                    lock (_lockFullComplete)
+                    {
+                        Monitor.PulseAll(_lockFullComplete);
+                    }
                 };
                 promiseErrorCallback = error =>
                 {
@@ -106,6 +169,12 @@ namespace FeralTweaks.Actions
                     }
                     RunOnError(error);
                     ClearHandlers();
+
+                    // Release
+                    lock (_lockFullComplete)
+                    {
+                        Monitor.PulseAll(_lockFullComplete);
+                    }
                 };
             }
 
@@ -165,6 +234,33 @@ namespace FeralTweaks.Actions
             public override T GetResult()
             {
                 return _cResult;
+            }
+
+            public override T AwaitResult()
+            {
+                lock (_lockFullComplete)
+                {
+                    // Check exception
+                    if (_ex != null)
+                        throw new TargetInvocationException("Target function has thrown an exception", _ex); // Throw exception
+
+                    // Check completed
+                    if (_hasCompleted)
+                        return GetResult();
+
+                    // Wait
+                    while (!_hasCompleted)
+                        Monitor.Wait(_lockFullComplete);
+                }
+
+                // Check exception
+                if (_ex != null)
+                    throw new TargetInvocationException("Target function has thrown an exception", _ex); // Throw exception
+
+                // Check completed
+                if (_hasCompleted)
+                    return GetResult();
+                return default(T);
             }
         }
 
