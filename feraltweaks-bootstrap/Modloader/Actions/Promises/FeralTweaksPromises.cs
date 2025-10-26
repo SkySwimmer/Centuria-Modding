@@ -79,18 +79,92 @@ namespace FeralTweaks.Actions
 
         private class InternalPromise : FeralTweaksPromise<T>
         {
+            private bool _hasCompleted;
+            private Exception _ex;
+            private T _cResult = default(T);
+            private object _lockFullComplete = new object();
+
             public InternalPromise(out Action<T> promiseCallback, out Action<Exception> promiseErrorCallback)
             {
                 promiseCallback = res =>
                 {
+                    lock (_lockFullComplete)
+                    {
+                        _cResult = res;
+                        _hasCompleted = true;
+                    }
                     RunOnComplete(res);
                     ClearHandlers();
                 };
                 promiseErrorCallback = error =>
                 {
+                    lock (_lockFullComplete)
+                    {
+                        _ex = error;
+                        _cResult = default(T);
+                        _hasCompleted = true;
+                    }
                     RunOnError(error);
                     ClearHandlers();
                 };
+            }
+
+            protected override void ProcessAddCompleteHandler(Action<T> handler)
+            {
+                bool runNow = false;
+                lock (_lockFullComplete)
+                {
+                    if (!_hasCompleted)
+                    {
+                        ProcessAddCompleteHandlerInternal(handler);
+                    }
+                    else
+                        runNow = true;
+                }
+                if (runNow && _ex == null)
+                    handler(_cResult);
+            }
+
+            protected override void ProcessAddErrorHandler(Action<Exception> handler)
+            {
+                bool runNow = false;
+                lock (_lockFullComplete)
+                {
+                    if (!_hasCompleted)
+                    {
+                        ProcessAddErrorHandlerInternal(handler);
+                    }
+                    else
+                        runNow = true;
+                }
+                if (runNow && _ex != null)
+                    handler(_ex);
+            }
+
+            public override bool HasCompleted
+            {
+                get
+                {
+                    return _hasCompleted;
+                }
+            }
+
+            public override bool HasErrored
+            {
+                get
+                {
+                    return _ex != null;
+                }
+            }
+
+            public override Exception GetException()
+            {
+                return _ex;
+            }
+
+            public override T GetResult()
+            {
+                return _cResult;
             }
         }
 

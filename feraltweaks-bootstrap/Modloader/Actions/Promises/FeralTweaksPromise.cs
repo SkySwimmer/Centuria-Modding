@@ -14,21 +14,59 @@ namespace FeralTweaks.Actions
         private List<Action<T>> _onCompleteHandlers = new List<Action<T>>();
         private List<Action<Exception>> _onErrorHandlers = new List<Action<Exception>>();
 
+
+        /// <summary>
+        /// Checks if the promise completed
+        /// </summary>
+        public abstract bool HasCompleted { get; }
+        
+        /// <summary>
+        /// Checks if the promise has errored
+        /// </summary>
+        public abstract bool HasErrored { get; }
+
+        /// <summary>
+        /// Retrieves the exception should one be present
+        /// </summary>
+        /// <returns>Exception instance or null</returns>
+        public abstract Exception GetException();
+
+        /// <summary>
+        /// Retrieves the promise result
+        /// 
+        /// <para>Note: this does NOT await the action, use AwaitResult() instead to await the action result</para>
+        /// </summary>
+        /// <returns>Function result or null</returns>
+        public abstract T GetResult();
+
+
         /// <summary>
         /// Called to add complete handlers
         /// </summary>
         /// <param name="handler">Handler to add</param>
-        protected virtual void ProcessAddCompleteHandler(Action<T> handler)
+        protected abstract void ProcessAddCompleteHandler(Action<T> handler);
+
+        /// <summary>
+        /// Called to add error handlers
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        protected abstract void ProcessAddErrorHandler(Action<Exception> handler);
+
+        /// <summary>
+        /// Adds the handler internally
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        protected virtual void ProcessAddCompleteHandlerInternal(Action<T> handler)
         {
             lock (_onCompleteHandlers)
                 _onCompleteHandlers.Add(handler);
         }
 
         /// <summary>
-        /// Called to add error handlers
+        /// Adds the handler internally
         /// </summary>
         /// <param name="handler">Handler to add</param>
-        protected virtual void ProcessAddErrorHandler(Action<Exception> handler)
+        protected virtual void ProcessAddErrorHandlerInternal(Action<Exception> handler)
         {
             lock (_onErrorHandlers)
                 _onErrorHandlers.Add(handler);

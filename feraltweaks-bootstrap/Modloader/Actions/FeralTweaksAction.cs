@@ -152,11 +152,22 @@ namespace FeralTweaks.Actions
         /// <summary>
         /// Checks if the action completed
         /// </summary>
-        public bool HasCompleted
+        public override bool HasCompleted
         {
             get
             {
                 return _hasCompleted;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the action has errored
+        /// </summary>
+        public override bool HasErrored
+        {
+            get
+            {
+                return _ex != null;
             }
         }
 
@@ -168,17 +179,6 @@ namespace FeralTweaks.Actions
             get
             {
                 return _hasRun;
-            }
-        }
-
-        /// <summary>
-        /// Checks if the action has errored
-        /// </summary>
-        public bool HasErrored
-        {
-            get
-            {
-                return _ex != null;
             }
         }
 
@@ -196,7 +196,7 @@ namespace FeralTweaks.Actions
         /// Retrieves the exception should one be present
         /// </summary>
         /// <returns>Exception instance or null</returns>
-        public Exception GetException()
+        public override Exception GetException()
         {
             return _ex;
         }
@@ -207,7 +207,7 @@ namespace FeralTweaks.Actions
         /// <para>Note: this does NOT await the action, use AwaitResult() instead to await the action result</para>
         /// </summary>
         /// <returns>Function result or null</returns>
-        public T GetResult()
+        public override T GetResult()
         {
             return _cResult;
         }
@@ -521,6 +521,15 @@ namespace FeralTweaks.Actions
             return (FeralTweaksAction<T>)base.OnError(queue, handler);
         }
 
+        /// <summary>
+        /// Adds the handler internally
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        protected virtual void ProcessAddRunHandlerInternal(RunHandlerInfo handler)
+        {
+            lock (_onRunHandlers)
+                _onRunHandlers.Add(handler);
+        }
 
         /// <summary>
         /// Called to add run handlers
@@ -533,8 +542,7 @@ namespace FeralTweaks.Actions
             {
                 if (!_hasCompleted)
                 {
-                    lock (_onRunHandlers)
-                        _onRunHandlers.Add(handler);
+                    ProcessAddRunHandlerInternal(handler);
                 }
                 else
                     runNow = true;
@@ -542,7 +550,6 @@ namespace FeralTweaks.Actions
             if (runNow && _ex == null)
                 handler.action(_cResult);
         }
-
 
         /// <inheritdoc/>
         protected override void ProcessAddCompleteHandler(Action<T> handler)
@@ -552,7 +559,7 @@ namespace FeralTweaks.Actions
             {
                 if (!_hasCompleted)
                 {
-                    base.ProcessAddCompleteHandler(handler);
+                    ProcessAddCompleteHandlerInternal(handler);
                 }
                 else
                     runNow = true;
@@ -569,7 +576,7 @@ namespace FeralTweaks.Actions
             {
                 if (!_hasCompleted)
                 {
-                    base.ProcessAddErrorHandler(handler);
+                    ProcessAddErrorHandlerInternal(handler);
                 }
                 else
                     runNow = true;
@@ -707,16 +714,29 @@ namespace FeralTweaks.Actions
         {
             if (allFinished)
             {
+                // Mark done
+                lock (_lockFullComplete)
+                {
+                    _cResult = res;
+                    _hasCompleted = true;
+                }
+
                 // Run actions
                 RunOnComplete(res);
 
                 // Release
                 lock (_lockFullComplete)
                 {
-                    _cResult = res;
-                    _hasCompleted = true;
                     Monitor.PulseAll(_lockFullComplete);
                 }
+            }
+
+            // Mark done
+            lock (_lock)
+            {
+                _cResult = res;
+                _hasRun = true;
+                _hasRunI = true;
             }
 
             // Run actions
@@ -725,9 +745,6 @@ namespace FeralTweaks.Actions
             // Release
             lock (_lock)
             {
-                _cResult = res;
-                _hasRun = true;
-                _hasRunI = true;
                 Monitor.PulseAll(_lock);
             }
 
@@ -742,16 +759,30 @@ namespace FeralTweaks.Actions
 
         private void Crash(Exception ex)
         {
+            // Mark done
+            lock (_lockFullComplete)
+            {
+                _cResult = default(T);
+                _ex = ex;
+                _hasCompleted = true;
+            }
+            
             // Run actions
             RunOnError(ex);
 
             // Release
             lock (_lockFullComplete)
             {
+                Monitor.PulseAll(_lockFullComplete);
+            }
+
+            // Mark done
+            lock(_lock)
+            {
                 _cResult = default(T);
                 _ex = ex;
-                _hasCompleted = true;
-                Monitor.PulseAll(_lockFullComplete);
+                _hasRun = true;
+                _hasRunI = true;
             }
 
             // Run actions
@@ -760,10 +791,6 @@ namespace FeralTweaks.Actions
             // Release
             lock (_lock)
             {
-                _cResult = default(T);
-                _ex = ex;
-                _hasRun = true;
-                _hasRunI = true;
                 Monitor.PulseAll(_lock);
             }
 
