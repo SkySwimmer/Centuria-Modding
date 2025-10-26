@@ -159,7 +159,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return true;
 
             // Check room
-            if (ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
+            if (ChatManager.instance != null && ChatManager.instance._roomConversation != null && ChatManager.instance._roomConversation.id == inMessage.ConversationId)
             {
                 // Prevent SFX
                 __instance.RefreshText(inMessage.UnreadCount);

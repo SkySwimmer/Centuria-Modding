@@ -108,7 +108,7 @@ namespace FeralTweaks.Managers
             obj.transform.parent = rootContainer.transform;
 
             // Add manager, rename, move to DontDestroyOnLoad and disable manager
-            T manager = (T) obj.AddComponent(field.FieldType);
+            T manager = obj.AddComponent(field.FieldType).Cast<T>();
             manager.name = field.FieldType.Name;
             manager.enabled = false;
             obj.name = manager.name;

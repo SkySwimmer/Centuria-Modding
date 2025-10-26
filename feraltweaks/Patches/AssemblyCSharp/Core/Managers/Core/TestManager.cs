@@ -116,7 +116,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     GameObject.DontDestroyOnLoad(test);
                     test = test;
 
-
+                    // Test
+                    TestBehaviour[] behaviours = this.GetAllLinkedBehaviours<TestBehaviour>();
+                    behaviours = behaviours;
 
                     // FIXME: remove manager
                 });

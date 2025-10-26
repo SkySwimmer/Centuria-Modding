@@ -887,7 +887,7 @@ namespace FeralTweaksBootstrap
                 string currentHash = "";
                 LogInfo("Checking if the assembly cache is up-to-date...");
                 FileStream strm = File.OpenRead(dataPath + "/globalgamemanagers");
-                currentHash = string.Concat(SHA256.Create().ComputeHash(strm).Select(t => t.ToString("x2")));
+                currentHash = string.Concat(SHA256.Create().ComputeHash(strm).Select(t => t.ToString("x2"))) + "-interop-" + typeof(GeneratorOptions).Assembly.GetName().Version;
                 strm.Close();
                 if (!oldHash.Equals(currentHash))
                 {
@@ -1139,11 +1139,11 @@ namespace FeralTweaksBootstrap
 
                 // Write hash
                 FileStream strmI = File.OpenRead(dataPath + "/globalgamemanagers");
-                string hash = string.Concat(SHA256.Create().ComputeHash(strmI).Select(t => t.ToString("x2")));
+                string hash = string.Concat(SHA256.Create().ComputeHash(strmI).Select(t => t.ToString("x2"))) + "-interop-" + typeof(GeneratorOptions).Assembly.GetName().Version;
                 strm.Close();
                 File.WriteAllText("FeralTweaks/cache/assemblies/current", hash);
             }
-
+    
             // Close if dump-only
             if (dumpOnly && !loadMods)
             {
