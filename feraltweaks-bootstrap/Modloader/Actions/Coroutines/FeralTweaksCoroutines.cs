@@ -54,8 +54,8 @@ namespace FeralTweaks.Actions
             Init();
             return CreateNew(t =>
             {
-                t.Execute(coroutine);
-                t.Execute(target);
+                t.ExecuteCoroutine(coroutine);
+                t.ExecuteCoroutine(target);
             });
         }
 
@@ -71,8 +71,8 @@ namespace FeralTweaks.Actions
             Init();
             return CreateNew(t =>
             {
-                t.Execute(target);
-                t.Execute(coroutine);
+                t.ExecuteCoroutine(target);
+                t.ExecuteCoroutine(coroutine);
             });
         }
 
@@ -88,8 +88,8 @@ namespace FeralTweaks.Actions
             Init();
             return CreateNew(t =>
             {
-                t.Execute(coroutine);
-                t.Execute(target);
+                t.ExecuteCoroutine(coroutine);
+                t.ExecuteCoroutine(target);
             });
         }
 
@@ -105,8 +105,8 @@ namespace FeralTweaks.Actions
             Init();
             return CreateNew(t =>
             {
-                t.Execute(target);
-                t.Execute(coroutine);
+                t.ExecuteCoroutine(target);
+                t.ExecuteCoroutine(coroutine);
             });
         }
 
@@ -134,7 +134,7 @@ namespace FeralTweaks.Actions
             CheckSafety();
             Init();
             FTCoroutine.CoroutineBuilder b = new FTCoroutine.CoroutineBuilder();
-            b.Execute(coroutine);
+            b.ExecuteCoroutine(coroutine);
             return CastFT(new FTCoroutine(b));
         }
 
