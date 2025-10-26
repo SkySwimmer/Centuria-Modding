@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "$git" == "" ]; then
-	git="https://github.com/Cpeers1/Centuria.git"
+	git="https://github.com/Cpeers1/Centuria.git --branch 1.7.2"
 fi
 
 dir="$(pwd)"
@@ -31,6 +31,8 @@ function execute() {
         mkdir "$dir/server"
     fi
     cp -rf "build/Installations/." "$dir/server"
+    cp -rf "libraries/"*-javadoc.jar "$dir/server/libs"
+    cp -rf "libraries/"*-sources.jar "$dir/server/libs"
     cp "build/Installations/Centuria.jar" "$dir/server/libs"
 
     if [ ! -d "$dir/libraries" ]; then
