@@ -53,12 +53,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 DecreeDefComponent decree = def.GetComponent<DecreeDefComponent>();
                 if (decreeDate != null && decree != null)
                 {
+                    AvailabilityDefComponent availability = def.GetComponent<AvailabilityDefComponent>();
                     dynDecrees.Add(new DecreeData()
                     {
                         def = def,
                         decree = decree,
                         date = decreeDate,
-                        availability = def.GetComponent<AvailabilityDefComponent>()
+                        availability = availability,
+                        ignoreYear = availability != null && availability.chartDateAvailability.DateStart != null && availability.chartDateAvailability.DateStart != "" && availability.chartDateAvailability._ignoreYear
                     });
                 }
             }
@@ -72,7 +74,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 if (availability != null && availability.chartDateAvailability != null)
                 {
                     // Check
-                    if (availability.chartDateAvailability.DateStart != "" && availability.chartDateAvailability.DateStart != null)
+                    if (availability.chartDateAvailability.DateStart != null && availability.chartDateAvailability.DateStart != "")
                     {
                         // Remove from list
                         itms.Remove(decree);
