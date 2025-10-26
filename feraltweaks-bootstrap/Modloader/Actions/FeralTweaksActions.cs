@@ -21,7 +21,7 @@ namespace FeralTweaks.Actions
         }
 
         internal static Thread unityThread;
-        private static Thread actionThread;
+        internal static Thread actionThread;
         private static readonly List<Func<bool>> threadActions = [];
         private static readonly List<Func<bool>> uiRepeatingActions = [];
         internal static FrameUpdateHandler updateHandler;
@@ -160,7 +160,7 @@ namespace FeralTweaks.Actions
             })
             {
                 IsBackground = true,
-                Name = "FeralTweaks Action Thread"
+                Name = "FeralTweaks Event Queue Worker"
             };
             actionThread.Start();
         }

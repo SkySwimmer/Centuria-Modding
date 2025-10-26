@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppSystem;
 using Il2CppSystem.Collections;
+using Unity;
 
 namespace FeralTweaks.Actions
 {
@@ -167,7 +169,7 @@ namespace FeralTweaks.Actions
             /// <summary>
             /// Adds a break instruction
             /// </summary>
-            public CoroutineResultReference<Object> Break()
+            public CoroutineBuilder Break()
             {
                 CoroutineResultReference<Object> refer = GenRef<Object>();
                 actions.Add(new CoroutineInst()
@@ -175,13 +177,130 @@ namespace FeralTweaks.Actions
                     type = InstType.BREAK,
                     refer = refer
                 });
-                return refer;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a break instruction
+            /// </summary>
+            public CoroutineBuilder Break(out CoroutineResultReference<Object> refer)
+            {
+                CoroutineResultReference<Object> reference = GenRef<Object>();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.BREAK,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction
+            /// </summary>
+            public CoroutineBuilder Execute(System.Action call)
+            {
+                return Execute(t =>
+                {
+                    call();
+                    return t.Return();
+                });
+            }
+
+
+            /// <summary>
+            /// Adds a method execute instruction
+            /// </summary>
+            public CoroutineBuilder Execute(System.Action call, out CoroutineResultReference<Object> refer)
+            {
+                return Execute(t =>
+                {
+                    call();
+                    return t.Return();
+                }, out refer);
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction with return value passed to the coroutine (return eg. new WaitForSeconds())
+            /// </summary>
+            public CoroutineBuilder Execute<T>(System.Func<T> call) where T : Object
+            {
+                return Execute<T>(t =>
+                {
+                    return call();
+                });
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction with return value passed to the coroutine (return eg. new WaitForSeconds())
+            /// </summary>
+            public CoroutineBuilder Execute<T>(System.Func<T> call, out CoroutineResultReference<T> refer) where T : Object
+            {
+                return Execute<T>(t =>
+                {
+                    return call();
+                }, out refer);
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
+            /// </summary>
+            public CoroutineBuilder Execute(System.Action<CoroutineExecutionContext> call)
+            {
+                return Execute(ctx =>
+                {
+                    call(ctx);
+                    return ctx.Return();
+                });
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
+            /// </summary>
+            public CoroutineBuilder Execute(System.Action<CoroutineExecutionContext> call, out CoroutineResultReference<Object> refer)
+            {
+                return Execute(ctx =>
+                {
+                    call(ctx);
+                    return ctx.Return();
+                }, out refer);
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
+            /// </summary>
+            public CoroutineBuilder Execute<T>(System.Func<CoroutineExecutionContext, T> call) where T : Object
+            {
+                CoroutineResultReference<T> refer = GenRef<T>();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTE,
+                    ac = t => call(t),
+                    refer = refer
+                });
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
+            /// </summary>
+            public CoroutineBuilder Execute<T>(System.Func<CoroutineExecutionContext, T> call, out CoroutineResultReference<T> refer) where T : Object
+            {
+                CoroutineResultReference<T> reference = GenRef<T>();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTE,
+                    ac = t => call(t),
+                    refer = reference
+                });
+                refer = reference;
+                return this;
             }
 
             /// <summary>
             /// Adds a multi-execute instruction, supply a list of instructions that should run at the same frame update
             /// </summary>
-            public CoroutineResultReference<Object> ExecuteMultiple(System.Action<CoroutineBuilder> call)
+            public CoroutineBuilder ExecuteMultiple(System.Action<CoroutineBuilder> call)
             {
                 CoroutineResultReference<Object> refer = GenRef<Object>();
                 if (!canDoMulti)
@@ -206,21 +325,61 @@ namespace FeralTweaks.Actions
                     aclst = l,
                     refer = refer
                 });
-                return refer;
+                return this;
             }
 
             /// <summary>
-            /// Adds a FT action execute instruction
+            /// Adds a multi-execute instruction, supply a list of instructions that should run at the same frame update
             /// </summary>
-            public CoroutineResultReference<FeralTweaksAction<object>> Execute(System.Func<FeralTweaksAction<object>> actionBuilder)
+            public CoroutineBuilder ExecuteMultiple(System.Action<CoroutineBuilder> call, out CoroutineResultReference<Object> refer)
             {
-                return Execute<object>(actionBuilder);
+                CoroutineResultReference<Object> reference = GenRef<Object>();
+                if (!canDoMulti)
+                    throw new System.InvalidOperationException("Unable to call ExecuteMultiple in the current context");
+                CoroutineBuilder sb = new CoroutineBuilder();
+                sb.canDoMulti = false;
+                call(sb);
+                CoroutineInst[] insns = sb.GetActions();
+                CoroutineMultiInst[] l = new CoroutineMultiInst[insns.Length];
+                for (int i = 0; i < insns.Length; i++)
+                {
+                    // Share memory
+                    insns[i].refer._memory = reference._memory;
+                    l[i] = new CoroutineMultiInst()
+                    {
+                        insn = insns[i]
+                    };
+                }
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTEMULTIPLE,
+                    aclst = l,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
             }
 
             /// <summary>
             /// Adds a FT action execute instruction
             /// </summary>
-            public CoroutineResultReference<FeralTweaksAction<T>> Execute<T>(System.Func<FeralTweaksAction<T>> actionBuilder)
+            public CoroutineBuilder AwaitAction(System.Func<FeralTweaksAction<object>> actionBuilder)
+            {
+                return AwaitAction<object>(actionBuilder);
+            }
+
+            /// <summary>
+            /// Adds a FT action execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitAction(System.Func<FeralTweaksAction<object>> actionBuilder, out CoroutineResultReference<FeralTweaksAction<object>> refer)
+            {
+                return AwaitAction<object>(actionBuilder, out refer);
+            }
+
+            /// <summary>
+            /// Adds a FT action execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitAction<T>(System.Func<FeralTweaksAction<T>> actionBuilder)
             {
                 CoroutineResultReference<FeralTweaksAction<T>> refer = GenRef<FeralTweaksAction<T>>();
                 refer._alwaysReturn = true;
@@ -246,64 +405,140 @@ namespace FeralTweaks.Actions
                     },
                     refer = refer
                 });
-                return refer;
+                return this;
             }
 
             /// <summary>
-            /// Adds a method execute instruction
+            /// Adds a FT action execute instruction
             /// </summary>
-            public CoroutineResultReference<Object> Execute(System.Action call)
+            public CoroutineBuilder AwaitAction<T>(System.Func<FeralTweaksAction<T>> actionBuilder, out CoroutineResultReference<FeralTweaksAction<T>> refer)
             {
-                return Execute(t =>
-                {
-                    call();
-                    return t.Return();
-                });
-            }
-
-            /// <summary>
-            /// Adds a method execute instruction with return value passed to the coroutine (return eg. new WaitForSeconds())
-            /// </summary>
-            public CoroutineResultReference<T> Execute<T>(System.Func<T> call) where T : Object
-            {
-                return Execute<T>(t =>
-                {
-                    return call();
-                });
-            }
-
-            /// <summary>
-            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
-            /// </summary>
-            public CoroutineResultReference<Object> Execute(System.Action<CoroutineExecutionContext> call)
-            {
-                return Execute(ctx =>
-                {
-                    call(ctx);
-                    return ctx.Return();
-                });
-            }
-
-            /// <summary>
-            /// Adds a method execute instruction (supplying a CoroutineExecutionContext to the method call so the coroutine can be altered)
-            /// </summary>
-            public CoroutineResultReference<T> Execute<T>(System.Func<CoroutineExecutionContext, T> call) where T : Object
-            {
-                CoroutineResultReference<T> refer = GenRef<T>();
+                CoroutineResultReference<FeralTweaksAction<T>> reference = GenRef<FeralTweaksAction<T>>();
+                reference._alwaysReturn = true;
+                reference._selfAssignValue = true;
                 actions.Add(new CoroutineInst()
                 {
                     type = InstType.EXECUTE,
-                    ac = t => call(t),
+                    ac = ctx =>
+                    {
+                        FeralTweaksAction<T> ac = (FeralTweaksAction<T>)reference._value;
+                        if (ac == null)
+                        {
+                            ac = actionBuilder();
+                            reference._value = ac;
+                        }
+
+                        // Wait
+                        if (!ac.HasCompleted)
+                            return ctx.Continue();
+
+                        // Return
+                        return ctx.Return();
+                    },
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a FT promise execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitPromise(System.Func<FeralTweaksPromise<object>> promiseBuilder)
+            {
+                return AwaitPromise<object>(promiseBuilder);
+            }
+
+            /// <summary>
+            /// Adds a FT promise execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitPromise(System.Func<FeralTweaksPromise<object>> promiseBuilder, out CoroutineResultReference<object> refer)
+            {
+                return AwaitPromise<object>(promiseBuilder, out refer);
+            }
+
+            /// <summary>
+            /// Adds a FT promise execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitPromise<T>(System.Func<FeralTweaksPromise<T>> promiseBuilder)
+            {
+                CoroutineResultReference<T> refer = GenRef<T>();
+                refer._alwaysReturn = true;
+                refer._selfAssignValue = true;
+                bool _hasFinished = false;
+                FeralTweaksPromise<T> promise = null;
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTE,
+                    ac = ctx =>
+                    {
+                        if (promise == null)
+                        {
+                            promise = promiseBuilder();
+                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result =>
+                            {
+                                refer._value = result;
+                                _hasFinished = true;
+                            });
+                            promise.OnError(FeralTweaksTargetEventQueue.OnAction, () => _hasFinished = true);
+                        }
+
+                        // Wait
+                        if (!_hasFinished)
+                            return ctx.Continue();
+
+                        // Return
+                        return ctx.Return();
+                    },
                     refer = refer
                 });
-                return refer;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a FT promise execute instruction
+            /// </summary>
+            public CoroutineBuilder AwaitPromise<T>(System.Func<FeralTweaksPromise<T>> promiseBuilder, out CoroutineResultReference<T> refer)
+            {
+                CoroutineResultReference<T> reference = GenRef<T>();
+                reference._alwaysReturn = true;
+                reference._selfAssignValue = true;
+                bool _hasFinished = false;
+                FeralTweaksPromise<T> promise = null;
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTE,
+                    ac = ctx =>
+                    {
+                        if (promise == null)
+                        {
+                            promise = promiseBuilder();
+                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result =>
+                            {
+                                reference._value = result;
+                                _hasFinished = true;
+                            });
+                            promise.OnError(FeralTweaksTargetEventQueue.OnAction, () => _hasFinished = true);
+                        }
+
+                        // Wait
+                        if (!_hasFinished)
+                            return ctx.Continue();
+
+                        // Return
+                        return ctx.Return();
+                    },
+                    refer = reference
+                });
+                refer = reference;
+                return this;
             }
 
             /// <summary>
             /// Adds a coroutine to execute
             /// </summary>
             /// <param name="call">Coroutine to execute</param>
-            public CoroutineResultReference<IEnumerator> Execute(IEnumerator call)
+            public CoroutineBuilder ExecuteCoroutine(IEnumerator call)
             {
                 CoroutineResultReference<IEnumerator> refer = GenRef<IEnumerator>();
                 refer._selfAssignValue = true;
@@ -315,14 +550,73 @@ namespace FeralTweaks.Actions
                     cr = call,
                     refer = refer
                 });
-                return refer;
+                return this;
             }
 
             /// <summary>
             /// Adds a coroutine to execute
             /// </summary>
             /// <param name="call">Coroutine to execute</param>
-            public CoroutineResultReference<System.Collections.IEnumerator> Execute(System.Collections.IEnumerator call)
+            public CoroutineBuilder ExecuteCoroutine(IEnumerator call, out CoroutineResultReference<IEnumerator> refer)
+            {
+                CoroutineResultReference<IEnumerator> reference = GenRef<IEnumerator>();
+                reference._selfAssignValue = true;
+                reference._retainValue = true;
+                reference._value = call;
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTECOROUTINE,
+                    cr = call,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<IEnumerator> call)
+            {
+                CoroutineResultReference<IEnumerator> refer = GenRef<IEnumerator>();
+                refer._selfAssignValue = true;
+                refer._retainValue = true;
+                refer._value = call();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTECOROUTINE,
+                    cr = (IEnumerator)refer._value,
+                    refer = refer
+                });
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<IEnumerator> call, out CoroutineResultReference<IEnumerator> refer)
+            {
+                CoroutineResultReference<IEnumerator> reference = GenRef<IEnumerator>();
+                reference._selfAssignValue = true;
+                reference._retainValue = true;
+                reference._value = call();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTECOROUTINE,
+                    cr = (IEnumerator)reference._value,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Collections.IEnumerator call)
             {
                 CoroutineResultReference<System.Collections.IEnumerator> refer = GenRef<System.Collections.IEnumerator>();
                 refer._selfAssignValue = true;
@@ -334,16 +628,120 @@ namespace FeralTweaks.Actions
                     crm = call,
                     refer = refer
                 });
-                return refer;
+                return this;
             }
 
             /// <summary>
             /// Adds a coroutine to execute
             /// </summary>
             /// <param name="call">Coroutine to execute</param>
-            public CoroutineResultReference<IEnumerator> Execute(FTCoroutine call)
+            public CoroutineBuilder ExecuteCoroutine(System.Collections.IEnumerator call, out CoroutineResultReference<System.Collections.IEnumerator> refer)
             {
-                return Execute(FeralTweaksCoroutines.CastFT(call));
+                CoroutineResultReference<System.Collections.IEnumerator> reference = GenRef<System.Collections.IEnumerator>();
+                reference._selfAssignValue = true;
+                reference._retainValue = true;
+                reference._value = call;
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTEMANAGEDCOROUTINE,
+                    crm = call,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<System.Collections.IEnumerator> call)
+            {
+                CoroutineResultReference<System.Collections.IEnumerator> refer = GenRef<System.Collections.IEnumerator>();
+                refer._selfAssignValue = true;
+                refer._retainValue = true;
+                refer._value = call();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTEMANAGEDCOROUTINE,
+                    crm = (System.Collections.IEnumerator)refer._value,
+                    refer = refer
+                });
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<System.Collections.IEnumerator> call, out CoroutineResultReference<System.Collections.IEnumerator> refer)
+            {
+                CoroutineResultReference<System.Collections.IEnumerator> reference = GenRef<System.Collections.IEnumerator>();
+                reference._selfAssignValue = true;
+                reference._retainValue = true;
+                reference._value = call();
+                actions.Add(new CoroutineInst()
+                {
+                    type = InstType.EXECUTEMANAGEDCOROUTINE,
+                    crm = (System.Collections.IEnumerator)reference._value,
+                    refer = reference
+                });
+                refer = reference;
+                return this;
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(FTCoroutine call)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CastFT(call));
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(FTCoroutine call, out CoroutineResultReference<IEnumerator> refer)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CastFT(call), out refer);
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<FTCoroutine> call)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CastFT(call()));
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Func<FTCoroutine> call, out CoroutineResultReference<IEnumerator> refer)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CastFT(call()), out refer);
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Action<CoroutineBuilder> call)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CreateNew(call));
+            }
+
+            /// <summary>
+            /// Adds a coroutine to execute
+            /// </summary>
+            /// <param name="call">Coroutine to execute</param>
+            public CoroutineBuilder ExecuteCoroutine(System.Action<CoroutineBuilder> call, out CoroutineResultReference<IEnumerator> refer)
+            {
+                return ExecuteCoroutine(FeralTweaksCoroutines.CreateNew(call), out refer);
             }
 
             public CoroutineInst[] GetActions()

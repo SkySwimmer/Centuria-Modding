@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using FeralTweaks.Actions;
 using FeralTweaks.Managers;
 using Il2CppInterop.Runtime.Attributes;
@@ -16,7 +18,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
         public TestManager() : base(ClassInjector.DerivedConstructorPointer<TestManager>())
         {
-			ClassInjector.DerivedConstructorBody(this);
+            ClassInjector.DerivedConstructorBody(this);
         }
 
         public TestManager(nint pointer) : base(pointer)
@@ -34,7 +36,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             public TestBehaviour(nint pointer) : base(pointer)
             {
             }
-            
+
             public override void MAwake()
             {
                 GetType();
@@ -80,7 +82,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         [HideFromIl2Cpp]
         protected override void SetupLoadRules(LoadRuleBuilder ruleBuilder)
         {
-            ruleBuilder.AddLoadBeforeRule<LoadFinishManager>();
+            ruleBuilder.AddLoadFirstRule();
         }
 
         [HideFromIl2Cpp]
@@ -106,9 +108,58 @@ namespace feraltweaks.Patches.AssemblyCSharp
             return FeralTweaksCoroutines.CreateNew(t =>
             {
                 // First phase: action
-                CoroutineResultReference<Il2CppSystem.Object> ac1 = t.Execute(ctx =>
+                t.Execute(ctx =>
                 {
                     ctx = ctx;
+
+                    // Create promise
+                    FeralTweaksPromiseController testPromise1 = FeralTweaksPromises.CreatePromise();
+                    testPromise1.GetPromise().OnComplete(() =>
+                    {
+                        GetType();
+                    });
+                    testPromise1.CallComplete();
+                    FeralTweaksPromiseController<string> testPromise2 = FeralTweaksPromises.CreatePromise<string>();
+                    testPromise2.GetPromise().OnComplete(res =>
+                    {
+                        res = res;
+                    });
+                    FeralTweaksActions.Async.Oneshot(() => testPromise2.CallComplete("test"));
+
+                    // Run a test code
+                    FeralTweaksActions.Async.Oneshot(async () =>
+                    {
+                        FeralTweaksAction<string> func = FeralTweaksActions.Async.Oneshot<string>((ctx) =>
+                        {
+                            return "test";
+                        });
+                        string test = await func;
+                        test = test;
+                    }).AwaitComplete();
+
+                    // Run something async
+                    FeralTweaksActions.Async.Oneshot<string>((ctx) =>
+                    {
+                        // Runs outside of unity
+                        // Say a webrequest
+                        return "test";
+                    }).OnComplete(result =>
+                    {
+                        // Do something with the result
+                        // OnComplete runs on unity, or on the event queue, it runs on the queue used previously
+                        result = result;
+                    }).AwaitComplete();
+
+                    // Test
+                    Action<int, string> ac = (test1, test) =>
+                    {
+                        Action callback = FeralTweaksCallbacks.CreateQueuedWrapper(() =>
+                        {
+                            test = test;
+                        });
+                        FeralTweaksActions.EventQueue.Oneshot(callback);
+                    };
+                    ac(1, "hi");
 
                     // Create test
                     GameObject test = new GameObject("test");
@@ -117,25 +168,49 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     test = test;
 
                     // Test
-                    TestBehaviour[] behaviours = this.GetAllLinkedBehaviours<TestBehaviour>();
-                    behaviours = behaviours;
+                    FeralTweaksActions.Unity.Oneshot(() =>
+                    {
+                        // Wait for core to init
+                        if (!Core.Loaded)
+                            return false;
+
+                        // Pull behaviours attached to test manager
+                        TestBehaviour[] behaviours = this.GetAllLinkedBehaviours<TestBehaviour>();
+                        behaviours = behaviours;
+
+                        // Finish
+                        return true;
+                    });
 
                     // FIXME: remove manager
-                });
+                }, out CoroutineResultReference<Il2CppSystem.Object> ac1);
 
                 // Next phase: coroutine
-                CoroutineResultReference<System.Collections.IEnumerator> ac2CR = t.Execute(InitCoroutineCustom(ac1));
+                t.ExecuteCoroutine(() => InitCoroutineCustom(ac1), out CoroutineResultReference<System.Collections.IEnumerator> ac2CR);
+
+                // Run promise
+                t.AwaitPromise(() => FetchDataAsync(), out CoroutineResultReference<string> promise);
+
+                // Await action
+                t.AwaitAction(() => FeralTweaksActions.Async.Oneshot(() =>
+                {
+                    promise = promise;
+                }), out CoroutineResultReference<FeralTweaksAction<object>> acFtA1);
 
                 // Next phase: FT action
-                CoroutineResultReference<FeralTweaksAction<string>> acFtA = t.Execute(() => FeralTweaksActions.Async.AfterSecs<string>(10, ctx =>
+                t.AwaitAction(() => FeralTweaksActions.Async.AfterSecs<string>(10, ctx =>
                 {
+                    promise = promise;
                     return "test";
-                }));
+                }), out CoroutineResultReference<FeralTweaksAction<string>> acFtA);
 
                 // Next phase: action
                 t.Execute(ctx =>
                 {
+                    // Get result
                     string s = acFtA.ReturnValue.GetResult();
+
+                    // Test
                     ctx = ctx;
                 });
 
@@ -146,6 +221,17 @@ namespace feraltweaks.Patches.AssemblyCSharp
         public System.Collections.IEnumerator InitCoroutineCustom(CoroutineResultReference<Il2CppSystem.Object> ac1)
         {
             yield break;
+        }
+
+        [HideFromIl2Cpp]
+        private FeralTweaksPromise<string> FetchDataAsync()
+        {
+            FeralTweaksPromiseController<string> promise = FeralTweaksPromises.CreatePromise<string>();
+            Task.Run(() =>
+            {
+                promise.CallComplete("Hello World");
+            });
+            return promise.GetPromise();
         }
     }
 }

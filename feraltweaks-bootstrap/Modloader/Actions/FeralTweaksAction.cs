@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -13,7 +15,7 @@ namespace FeralTweaks.Actions
     /// FeralTweaks action interface
     /// </summary>
     /// <typeparam name="T">Result type</typeparam>
-    public class FeralTweaksAction<T>
+    public class FeralTweaksAction<T> : FeralTweaksPromise<T>
     {
         internal bool _denyContinueCall;
 
@@ -29,8 +31,14 @@ namespace FeralTweaks.Actions
         private T _cResult = default(T);
         private Exception _ex;
 
-        private List<Action<T>> onCompleteActions = new List<Action<T>>();
-        private List<Action<T>> onRunActions = new List<Action<T>>();
+        protected class RunHandlerInfo
+        {
+            public Action<T> action;
+            public bool runOnError;
+            public bool persist;
+        }
+
+        private List<RunHandlerInfo> _onRunHandlers = new List<RunHandlerInfo>();
 
         private Func<FeralTweaksActionExecutionContext<T>, T> _action;
 
@@ -175,99 +183,6 @@ namespace FeralTweaks.Actions
         }
 
         /// <summary>
-        /// Adds actions to run when the task completes a tick (removed each tick)
-        /// </summary>
-        /// <param name="action">Action to run</param>
-        public void AddOnRun(Action action)
-        {
-            bool runNow = false;
-            lock (_lock)
-            {
-                if (!_hasCompleted)
-                {
-                    lock (onRunActions)
-                    {
-                        onRunActions.Add(t => action());
-                    }
-                }
-                else
-                    runNow = true;
-            }
-            if (runNow)
-                action();
-        }
-
-
-        /// <summary>
-        /// Adds actions to run when the task completes a tick (removed each tick)
-        /// </summary>
-        /// <param name="action">Action to run</param>
-        public void AddOnRun(Action<T> action)
-        {
-            bool runNow = false;
-            lock (_lock)
-            {
-                if (!_hasCompleted)
-                {
-                    lock (onRunActions)
-                    {
-                        onRunActions.Add(action);
-                    }
-                }
-                else
-                    runNow = true;
-            }
-            if (runNow)
-                action(_cResult);
-        }
-
-        /// <summary>
-        /// Adds actions to run when the task completes (note: called only after all tasks finish, use AddOnRun to add a task executed every run)
-        /// </summary>
-        /// <param name="action">Action to run</param>
-        public void AddOnComplete(Action action)
-        {
-            bool runNow = false;
-            lock (_lockFullComplete)
-            {
-                if (!_hasCompleted)
-                {
-                    lock (onCompleteActions)
-                    {
-                        onCompleteActions.Add(t => action());
-                    }
-                }
-                else
-                    runNow = true;
-            }
-            if (runNow)
-                action();
-        }
-
-        /// <summary>
-        /// Adds actions to run when the task completes (note: called only after all tasks finish, use AddOnRun to add a task executed every run)
-        /// </summary>
-        /// <param name="action">Action to run</param>
-        public void AddOnComplete(Action<T> action)
-        {
-            bool runNow = false;
-            lock (_lockFullComplete)
-            {
-                if (!_hasCompleted)
-                {
-                    lock (onCompleteActions)
-                    {
-                        onCompleteActions.Add(action);
-                    }
-                }
-                else
-                    runNow = true;
-            }
-            if (runNow)
-                action(_cResult);
-        }
-
-        /// <summary>
         /// Cancels the action
         /// 
         /// <para>Note: Cancel only works if the action has not run yet or is a repeating action, it cannot end execution</para>
@@ -312,7 +227,12 @@ namespace FeralTweaks.Actions
                 throw new InvalidOperationException("AwaitTick() call is unsafe in current context, as it would lock up the active action thread");
 
             bool hasReceivedRun = false;
-            AddOnRun(() => hasReceivedRun = true);
+            ProcessAddRunHandler(new RunHandlerInfo()
+            {
+                action = (val) => hasReceivedRun = true,
+                persist = false,
+                runOnError = true
+            });
             lock (_lock)
             {
                 lock (_lockFullComplete)
@@ -387,10 +307,15 @@ namespace FeralTweaks.Actions
 
             T res = default(T);
             bool hasReceivedRun = false;
-            AddOnRun(t =>
+            ProcessAddRunHandler(new RunHandlerInfo()
             {
-                res = t;
-                hasReceivedRun = true;
+                action = (val) =>
+                {
+                    res = val;
+                    hasReceivedRun = true;
+                },
+                persist = false,
+                runOnError = true
             });
             lock (_lock)
             {
@@ -453,18 +378,238 @@ namespace FeralTweaks.Actions
             return _cResult;
         }
 
-        private FeralTweaksActionAwaiter<T> awaiter;
 
         /// <summary>
-        /// Retrieves the action awaiter
+        /// Adds an on run handler
         /// </summary>
-        /// <returns>FeralTweaksActionAwaiter instance</returns>
-        public FeralTweaksActionAwaiter<T> GetAwaiter()
+        /// <param name="handler">Handler to add</param>
+        /// <param name="persist">Controls if the handler should remain in the handler list after its run</param>
+        public FeralTweaksAction<T> OnRun(Action<T> handler, bool persist = false)
         {
-            if (awaiter == null)
-                awaiter = new FeralTweaksActionAwaiter<T>(this);
-            return awaiter;
+            handler = FeralTweaksCallbacks.CreateQueuedWrapper(handler);
+            ProcessAddRunHandler(new RunHandlerInfo()
+            {
+                action = handler,
+                persist = persist
+            });
+            return this;
         }
+
+        /// <summary>
+        /// Adds an on run handler
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        /// <param name="persist">Controls if the handler should remain in the handler list after its run</param>
+        public FeralTweaksAction<T> OnRun(Action handler, bool persist = false)
+        {
+            handler = FeralTweaksCallbacks.CreateQueuedWrapper(handler);
+            ProcessAddRunHandler(new RunHandlerInfo()
+            {
+                action = (val) => handler(),
+                persist = persist
+            });
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an on run handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Handler to add</param>
+        /// <param name="persist">Controls if the handler should remain in the handler list after its run</param>
+        public FeralTweaksAction<T> OnRun(FeralTweaksTargetEventQueue queue, Action<T> handler, bool persist = false)
+        {
+            handler = FeralTweaksCallbacks.CreateQueuedWrapper(queue, handler);
+            ProcessAddRunHandler(new RunHandlerInfo()
+            {
+                action = handler,
+                persist = persist
+            });
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an on run handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Handler to add</param>
+        /// <param name="persist">Controls if the handler should remain in the handler list after its run</param>
+        public FeralTweaksAction<T> OnRun(FeralTweaksTargetEventQueue queue, Action handler, bool persist = false)
+        {
+            handler = FeralTweaksCallbacks.CreateQueuedWrapper(queue, handler);
+            ProcessAddRunHandler(new RunHandlerInfo()
+            {
+                action = (val) => handler(),
+                persist = persist
+            });
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        public new FeralTweaksAction<T> OnComplete(Action<T> handler)
+        {
+            return (FeralTweaksAction<T>)base.OnComplete(handler);
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        public new FeralTweaksAction<T> OnComplete(Action handler)
+        {
+            return (FeralTweaksAction<T>)base.OnComplete(handler);
+        }
+
+        /// <summary>
+        /// Adds an on error handler
+        /// </summary>
+        /// <param name="handler">Error handler to add</param>
+        public new FeralTweaksAction<T> OnError(Action<Exception> handler)
+        {
+            return (FeralTweaksAction<T>)base.OnError(handler);
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="handler">Error handler to add</param>
+        public new FeralTweaksAction<T> OnError(Action handler)
+        {
+            return (FeralTweaksAction<T>)base.OnError(handler);
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Handler to add</param>
+        public new FeralTweaksAction<T> OnComplete(FeralTweaksTargetEventQueue queue, Action<T> handler)
+        {
+            return (FeralTweaksAction<T>)base.OnComplete(queue, handler);
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Handler to add</param>
+        public new FeralTweaksAction<T> OnComplete(FeralTweaksTargetEventQueue queue, Action handler)
+        {
+            return (FeralTweaksAction<T>)base.OnComplete(queue, handler);
+        }
+
+        /// <summary>
+        /// Adds an on error handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Error handler to add</param>
+        public new FeralTweaksAction<T> OnError(FeralTweaksTargetEventQueue queue, Action<Exception> handler)
+        {
+            return (FeralTweaksAction<T>)base.OnError(queue, handler);
+        }
+
+        /// <summary>
+        /// Adds an on complete handler
+        /// </summary>
+        /// <param name="queue">Target event queue to run the handler on</param>
+        /// <param name="handler">Error handler to add</param>
+        public new FeralTweaksAction<T> OnError(FeralTweaksTargetEventQueue queue, Action handler)
+        {
+            return (FeralTweaksAction<T>)base.OnError(queue, handler);
+        }
+
+
+        /// <summary>
+        /// Called to add run handlers
+        /// </summary>
+        /// <param name="handler">Handler to add</param>
+        protected virtual void ProcessAddRunHandler(RunHandlerInfo handler)
+        {
+            bool runNow = false;
+            lock (_lock)
+            {
+                if (!_hasCompleted)
+                {
+                    lock (_onRunHandlers)
+                        _onRunHandlers.Add(handler);
+                }
+                else
+                    runNow = true;
+            }
+            if (runNow && _ex == null)
+                handler.action(_cResult);
+        }
+
+
+        /// <inheritdoc/>
+        protected override void ProcessAddCompleteHandler(Action<T> handler)
+        {
+            bool runNow = false;
+            lock (_lockFullComplete)
+            {
+                if (!_hasCompleted)
+                {
+                    base.ProcessAddCompleteHandler(handler);
+                }
+                else
+                    runNow = true;
+            }
+            if (runNow && _ex == null)
+                handler(_cResult);
+        }
+
+        /// <inheritdoc/>
+        protected override void ProcessAddErrorHandler(Action<Exception> handler)
+        {
+            bool runNow = false;
+            lock (_lockFullComplete)
+            {
+                if (!_hasCompleted)
+                {
+                    base.ProcessAddErrorHandler(handler);
+                }
+                else
+                    runNow = true;
+            }
+            if (runNow && _ex != null)
+                handler(_ex);
+        }
+
+
+        /// <summary>
+        /// Runs the OnRun event
+        /// </summary>
+        /// <param name="value">Result value</param>
+        /// <param name="isCrash">True if called because of an error, false if called normally</param>
+        protected void RunOnRun(T value, bool isCrash)
+        {
+            // Run actions
+            List<RunHandlerInfo> acL = new List<RunHandlerInfo>();
+            List<RunHandlerInfo> acRemoveList = new List<RunHandlerInfo>();
+            lock (_onRunHandlers)
+            {
+                acL.AddRange(_onRunHandlers);
+                _onRunHandlers.RemoveAll(t => !t.persist);
+            }
+            foreach (RunHandlerInfo ac in acL)
+            {
+                try
+                {
+                    if (!isCrash || ac.runOnError)
+                        ac.action(value);
+                }
+                catch (Exception e)
+                {
+                    Logger.GetLogger("ActionManager").Error("An exception was thrown while running an OnRun action", e);
+                    if (Debugger.IsAttached)
+                        throw;
+                }
+            }
+        }
+
 
         internal bool Tick()
         {
@@ -557,30 +702,13 @@ namespace FeralTweaks.Actions
             return true;
         }
 
+
         private void Complete(T res, bool allFinished)
         {
             if (allFinished)
             {
                 // Run actions
-                List<Action<T>> acL2 = new List<Action<T>>();
-                lock (onCompleteActions)
-                {
-                    acL2.AddRange(onCompleteActions);
-                    onCompleteActions.Clear();
-                }
-                foreach (Action<T> ac in acL2)
-                {
-                    try
-                    {
-                        ac(res);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.GetLogger("ActionManager").Error("An exception was thrown while running an OnComplete action", e);
-                        if (Debugger.IsAttached)
-                            throw;
-                    }
-                }
+                RunOnComplete(res);
 
                 // Release
                 lock (_lockFullComplete)
@@ -592,25 +720,7 @@ namespace FeralTweaks.Actions
             }
 
             // Run actions
-            List<Action<T>> acL = new List<Action<T>>();
-            lock (onRunActions)
-            {
-                acL.AddRange(onRunActions);
-                onRunActions.Clear();
-            }
-            foreach (Action<T> ac in acL)
-            {
-                try
-                {
-                    ac(default(T));
-                }
-                catch (Exception e)
-                {
-                    Logger.GetLogger("ActionManager").Error("An exception was thrown while running an OnRun action", e);
-                    if (Debugger.IsAttached)
-                        throw;
-                }
-            }
+            RunOnRun(res, false);
 
             // Release
             lock (_lock)
@@ -620,30 +730,20 @@ namespace FeralTweaks.Actions
                 _hasRunI = true;
                 Monitor.PulseAll(_lock);
             }
+
+            // Check
+            if (allFinished)
+            {
+                // Clear
+                ClearHandlers();
+                _onRunHandlers.Clear();
+            }
         }
 
         private void Crash(Exception ex)
         {
             // Run actions
-            List<Action<T>> acL2 = new List<Action<T>>();
-            lock (onCompleteActions)
-            {
-                acL2.AddRange(onCompleteActions);
-                onCompleteActions.Clear();
-            }
-            foreach (Action<T> ac in acL2)
-            {
-                try
-                {
-                    ac(default(T));
-                }
-                catch (Exception e)
-                {
-                    Logger.GetLogger("ActionManager").Error("An exception was thrown while running an OnComplete action", e);
-                    if (Debugger.IsAttached)
-                        throw;
-                }
-            }
+            RunOnError(ex);
 
             // Release
             lock (_lockFullComplete)
@@ -655,25 +755,7 @@ namespace FeralTweaks.Actions
             }
 
             // Run actions
-            List<Action<T>> acL = new List<Action<T>>();
-            lock (onRunActions)
-            {
-                acL.AddRange(onRunActions);
-                onRunActions.Clear();
-            }
-            foreach (Action<T> ac in acL)
-            {
-                try
-                {
-                    ac(default(T));
-                }
-                catch (Exception e)
-                {
-                    Logger.GetLogger("ActionManager").Error("An exception was thrown while running an OnRun action", e);
-                    if (Debugger.IsAttached)
-                        throw;
-                }
-            }
+            RunOnRun(default(T), true);
 
             // Release
             lock (_lock)
@@ -684,6 +766,24 @@ namespace FeralTweaks.Actions
                 _hasRunI = true;
                 Monitor.PulseAll(_lock);
             }
+
+            // Clear
+            ClearHandlers();
+            _onRunHandlers.Clear();
+        }
+
+
+        private FeralTweaksActionAwaiter<T> awaiter;
+
+        /// <summary>
+        /// Retrieves the action awaiter
+        /// </summary>
+        /// <returns>FeralTweaksActionAwaiter instance</returns>
+        public FeralTweaksActionAwaiter<T> GetAwaiter()
+        {
+            if (awaiter == null)
+                awaiter = new FeralTweaksActionAwaiter<T>(this);
+            return awaiter;
         }
     }
 
@@ -723,13 +823,15 @@ namespace FeralTweaks.Actions
         /// <inheritdoc/>
         public void OnCompleted(Action continuation)
         {
-            action.AddOnComplete(continuation);
+            action.OnComplete(FeralTweaksTargetEventQueue.OnAction, continuation);
+            action.OnError(FeralTweaksTargetEventQueue.OnAction, continuation);
         }
 
         /// <inheritdoc/>
         public void UnsafeOnCompleted(Action continuation)
         {
-            action.AddOnComplete(continuation);
+            action.OnComplete(FeralTweaksTargetEventQueue.OnAction, continuation);
+            action.OnError(FeralTweaksTargetEventQueue.OnAction, continuation);
         }
     }
 }
