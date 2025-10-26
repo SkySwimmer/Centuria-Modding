@@ -1,10 +1,10 @@
 #
-# Spring event
+# Cindernoct 2025
 #
 
 setchart CraftableItemChart
 
-def decreeboard:emuferal:springevent2024
+def decreeboard:emuferal:cindernoct2025
 	{
 		"templateClass": "DecreeTemplate",
 		"templateFormatHash": "5f8ba791578e887d01abbf928e547f2f",
@@ -12,9 +12,9 @@ def decreeboard:emuferal:springevent2024
 			{
 				"componentClass": "DecreeDefComponent",
 				"componentJSON": {
-					"localizedHeaderDefId": "decreeboard:emuferal:springevent2024.header.text",
-					"localizedMessageDefId": "decreeboard:emuferal:springevent2024.message.text",
-					"imageDefID": "decreeboard:emuferal:springevent2024.image",
+					"localizedHeaderDefId": "decreeboard:emuferal:cindernoct2025.header.text",
+					"localizedMessageDefId": "decreeboard:emuferal:cindernoct2025.message.text",
+					"imageDefID": "decreeboard:emuferal:cindernoct2025.image",
 					"decreeCategory": 0,
 					"decreeLayoutType": 3
 				}
@@ -38,7 +38,7 @@ def decreeboard:emuferal:springevent2024
 				"componentClass": "DecreeDateDefComponent",
 				"componentIsCustom": true,
 				"componentJSON": {
-					"decreeDate": "03/15/2024"
+					"decreeDate": "10/26/2025"
 				}
 			}
 		]
@@ -47,7 +47,7 @@ enddef
 
 setchart ImageChart
 
-def decreeboard:emuferal:springevent2024.image
+def decreeboard:emuferal:cindernoct2025.image
 	{
 		"templateClass": "ImageTemplate",
 		"templateFormatHash": "93b3555cd5408f926301bfa0fda6218e",
@@ -77,7 +77,7 @@ enddef
 
 setchart LocalizationChart
 
-def decreeboard:emuferal:springevent2024.header.text
+def decreeboard:emuferal:cindernoct2025.header.text
 	{
 		"templateClass": "LocalizationTemplate",
 		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
@@ -86,7 +86,7 @@ def decreeboard:emuferal:springevent2024.header.text
 				"componentClass": "LocalizationDefComponent",
 				"componentJSON": {
 					"needsTranslation": true,
-					"en": "EmuFeral 2024 Spring Event",
+					"en": "EmuFeral 2025 Cindernoct!",
 					"fr": "",
 					"de": "",
 					"es": "",
@@ -101,7 +101,7 @@ def decreeboard:emuferal:springevent2024.header.text
 	}
 enddef
 
-def decreeboard:emuferal:springevent2024.message.text
+def decreeboard:emuferal:cindernoct2025.message.text
 	{
 		"templateClass": "LocalizationTemplate",
 		"templateFormatHash": "392f1dafc8ef6ce858720cbef5e34ebc",
@@ -110,7 +110,7 @@ def decreeboard:emuferal:springevent2024.message.text
 				"componentClass": "LocalizationDefComponent",
 				"componentJSON": {
 					"needsTranslation": true,
-					"en": "We are having a Spring-themed event in-game on March 19th! We will be meeting up in Lakeroot Valley at 7PM EST (11pm UTC/GMT), come sporting your Spring-themed looks and have some fun! More details in the Announcements channel on Discord/the Events tab.\n\nVisit our discord for more information: https://discord.gg/ferever",
+					"en": "<size=120%><b><color=#e06f24>Cindernoct Finale Events</color></b></size>\n\nAs the moon sets on this year’s Cindernoct, we’re closing the celebration with two final showcases of creativity and style!\n\n<size=120%><b>Fashion Show: Looks Contest Finals</b></size>\nThe runway awaits! Come see the community’s most hauntingly beautiful ensembles as our finalists take the stage for the Cindernoct Looks Contest.\n\n<size=120%><b>Sanctuary Tours: Contest Winners</b></size>\nStep inside the realms of imagination - join guided tours through the winning sanctuaries from our Cindernoct Sanctuary Contest, and discover the artistry that brought these spaces to life.\n\n<u>Event times and details can be found in the #emulator-events channel on our Discord server</u>. Don’t miss your chance to experience the final spark of Cindernoct before it fades into the night!",
 					"fr": "",
 					"de": "",
 					"es": "",
