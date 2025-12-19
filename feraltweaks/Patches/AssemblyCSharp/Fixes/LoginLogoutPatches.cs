@@ -314,10 +314,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 serverMods.Clear();
                 UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                 if (chat != null)
+                {
+                    chat.SaveWindowSize();
                     GameObject.Destroy(chat.gameObject);
+                }
                 UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
                 if (vchat != null)
+                {
+                    vchat.SaveWindowSize();
                     GameObject.Destroy(vchat.gameObject);
+                }
                 ChatManager.instance._cachedConversations = null;
                 ChatManager.instance._unreadConversations.Clear();
                 ChatPatches.unreadMessagesPerConversation.Clear();
@@ -472,10 +478,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 {
                     UI_Window_Chat chat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_Chat>(true);
                     if (chat != null)
+                    {
+                        chat.SaveWindowSize();
                         GameObject.Destroy(chat.gameObject);
+                    }
                     UI_Window_VoiceChat vchat = GameObject.Find("CanvasRoot").GetComponentInChildren<UI_Window_VoiceChat>(true);
                     if (vchat != null)
+                    {
+                        vchat.SaveWindowSize();
                         GameObject.Destroy(vchat.gameObject);
+                    }
                     ChatManager.instance._cachedConversations = null;
                     ChatManager.instance._unreadConversations.Clear();
                     ChatPatches.unreadMessagesPerConversation.Clear();
