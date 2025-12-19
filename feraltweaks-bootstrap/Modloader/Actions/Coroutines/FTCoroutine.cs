@@ -452,7 +452,7 @@ namespace FeralTweaks.Actions
             /// <summary>
             /// Adds a FT promise execute instruction
             /// </summary>
-            public CoroutineBuilder AwaitPromise(System.Func<FeralTweaksPromise<object>> promiseBuilder, out CoroutineResultReference<object> refer)
+            public CoroutineBuilder AwaitPromise(System.Func<FeralTweaksPromise<object>> promiseBuilder, out CoroutineResultReference<FeralTweaksPromise<object>> refer)
             {
                 return AwaitPromise<object>(promiseBuilder, out refer);
             }
@@ -462,7 +462,7 @@ namespace FeralTweaks.Actions
             /// </summary>
             public CoroutineBuilder AwaitPromise<T>(System.Func<FeralTweaksPromise<T>> promiseBuilder)
             {
-                CoroutineResultReference<T> refer = GenRef<T>();
+                CoroutineResultReference<FeralTweaksPromise<T>> refer = GenRef<FeralTweaksPromise<T>>();
                 refer._alwaysReturn = true;
                 refer._selfAssignValue = true;
                 bool _hasFinished = false;
@@ -475,11 +475,8 @@ namespace FeralTweaks.Actions
                         if (promise == null)
                         {
                             promise = promiseBuilder();
-                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result =>
-                            {
-                                refer._value = result;
-                                _hasFinished = true;
-                            });
+                            refer._value = promise;
+                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result => _hasFinished = true);
                             promise.OnError(FeralTweaksTargetEventQueue.OnAction, () => _hasFinished = true);
                         }
 
@@ -498,9 +495,9 @@ namespace FeralTweaks.Actions
             /// <summary>
             /// Adds a FT promise execute instruction
             /// </summary>
-            public CoroutineBuilder AwaitPromise<T>(System.Func<FeralTweaksPromise<T>> promiseBuilder, out CoroutineResultReference<T> refer)
+            public CoroutineBuilder AwaitPromise<T>(System.Func<FeralTweaksPromise<T>> promiseBuilder, out CoroutineResultReference<FeralTweaksPromise<T>> refer)
             {
-                CoroutineResultReference<T> reference = GenRef<T>();
+                CoroutineResultReference<FeralTweaksPromise<T>> reference = GenRef<FeralTweaksPromise<T>>();
                 reference._alwaysReturn = true;
                 reference._selfAssignValue = true;
                 bool _hasFinished = false;
@@ -513,11 +510,8 @@ namespace FeralTweaks.Actions
                         if (promise == null)
                         {
                             promise = promiseBuilder();
-                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result =>
-                            {
-                                reference._value = result;
-                                _hasFinished = true;
-                            });
+                            reference._value = promise;
+                            promise.OnComplete(FeralTweaksTargetEventQueue.OnAction, result => _hasFinished = true);
                             promise.OnError(FeralTweaksTargetEventQueue.OnAction, () => _hasFinished = true);
                         }
 

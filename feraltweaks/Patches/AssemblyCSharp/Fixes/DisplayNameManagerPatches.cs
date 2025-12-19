@@ -160,7 +160,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         lock (inProgressDisplayNames)
                         {
                             foreach (string id in namesToFetch)
+                            {
+                                inProgressDisplayNames[id].CallError(new ArgumentException("The server responded with an error, display name request failed for " + id + "!"));
                                 inProgressDisplayNames.Remove(id);
+                            }
                         }
                     }
                 });

@@ -84,6 +84,58 @@ namespace FeralTweaks.Actions
             }));
             return controller.GetPromise();
         }
+
+        /// <summary>
+        /// Creates a promise from a managed Task
+        /// </summary>
+        /// <param name="task">Task to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<object> CreatePromiseFrom(System.Threading.Tasks.Task task)
+        {
+            return CreatePromiseFrom(task.GetAwaiter());
+        }
+
+        /// <summary>
+        /// Creates a promise from a managed Awaiter
+        /// </summary>
+        /// <param name="awaiter">Task awaiter to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<object> CreatePromiseFrom(System.Runtime.CompilerServices.TaskAwaiter awaiter)
+        {
+            FeralTweaksPromiseController controller = CreatePromise();
+            awaiter.OnCompleted(() =>
+            {
+                // Call complete
+                controller.CallComplete();
+            });
+            return controller.GetPromise();
+        }
+
+        /// <summary>
+        /// Creates a promise from a unmanaged il2cpp Task
+        /// </summary>
+        /// <param name="task">Task to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<object> CreatePromiseFrom(Il2CppSystem.Threading.Tasks.Task task)
+        {
+            return CreatePromiseFrom(task.GetAwaiter());
+        }
+
+        /// <summary>
+        /// Creates a promise from a unmanaged il2cpp Awaiter
+        /// </summary>
+        /// <param name="awaiter">Task awaiter to bind to</param>
+        /// <returns>FeralTweaksPromise instance</returns>
+        public static FeralTweaksPromise<object> CreatePromiseFrom(Il2CppSystem.Runtime.CompilerServices.TaskAwaiter awaiter)
+        {
+            FeralTweaksPromiseController controller = CreatePromise();
+            awaiter.OnCompleted(new Action(() =>
+            {
+                // Call complete
+                controller.CallComplete();
+            }));
+            return controller.GetPromise();
+        }
     }
 
     /// <summary>
