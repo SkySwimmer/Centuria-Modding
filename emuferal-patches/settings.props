@@ -39,3 +39,11 @@ AllowShinigamiGlidingWithNoWings=true
 DefaultAvatarActionOrder=[8930, 9108, 9116, 9121, 9122, 9143, 9151, 9190]
 VersionLabel=${global:7358}\nCenturia ${server:version}\nFer.al ${game:version} (build ${game:build})\n\nBETA 1.8 EARLY ACCESS 1
 EnableGroupChatTab=true
+
+# Game assets
+GameAssetsProd=https://game-assets.emuferal.openferal.net/
+GameAssetsStagehttps://game-assets.stage.emuferal.openferal.net/
+GameAssetsDev=https://game-assets.dev.emuferal.openferal.net/
+GameAssetsShared=https://s2.game-assets.emuferal.openferal.net/
+GameAssetsStageShared=https://s2.game-assets.stage.emuferal.openferal.net/
+GameAssetsDevShared=https://s2.game-assets.dev.emuferal.openferal.net/
