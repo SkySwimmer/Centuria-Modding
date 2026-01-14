@@ -54,26 +54,26 @@ public class IoUtil {
 	/**
 	 * Reads a given amount of bytes from the stream
 	 * 
-	 * @param strm Stream to read from
-	 * @param n    Amount of bytes to read
+	 * @param input Stream to read from
+	 * @param num   Amount of bytes to read
 	 * @return Byte array
 	 */
-	public static byte[] readNBytes(InputStream strm, int n) throws IOException {
-		byte[] res = new byte[n];
+	public static byte[] readNBytes(InputStream input, int num) throws IOException {
+		byte[] res = new byte[num];
 		int c = 0;
 		while (true) {
 			try {
-				int r = strm.read(res, c, n - c);
+				int r = input.read(res, c, num - c);
 				if (r == -1)
 					break;
 				c += r;
 			} catch (Exception e) {
-				int b = strm.read();
+				int b = input.read();
 				if (b == -1)
 					break;
 				res[c++] = (byte) b;
 			}
-			if (c >= n)
+			if (c >= num)
 				break;
 		}
 		return Arrays.copyOfRange(res, 0, c);

@@ -48,7 +48,7 @@ public class AssetProxyProcessor extends HttpPushProcessor {
 				path = path.substring(1);
 
 			// Build url
-			String url = newHost + path;
+			String url = newHost + path.replace(" ", "%20");
 			if (getRequest().getRequestQuery().isEmpty())
 				url += "?" + getRequest().getRequestQuery();
 
@@ -99,7 +99,7 @@ public class AssetProxyProcessor extends HttpPushProcessor {
 				setResponseStatus(404, "Not found");
 			}
 		} finally {
-			Log.i("FT-LAUNCHER", getRequest().getRequestMethod() + " " + path + " : " + getResponse().getResponseCode()
+			Log.i("FT-LAUNCHER", getRequest().getRequestMethod() + " /" + path + " : " + getResponse().getResponseCode()
 					+ " " + getResponse().getResponseMessage() + " [" + client.getRemoteAddress() + "]");
 		}
 	}

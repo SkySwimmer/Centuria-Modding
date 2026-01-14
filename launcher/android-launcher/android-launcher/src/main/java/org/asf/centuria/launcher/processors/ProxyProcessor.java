@@ -99,7 +99,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 				setResponseStatus(404, "Not found");
 			}
 		} finally {
-			Log.i("FT-LAUNCHER", getRequest().getRequestMethod() + " " + path + " : " + getResponse().getResponseCode()
+			Log.i("FT-LAUNCHER", getRequest().getRequestMethod() + " /" + path + " : " + getResponse().getResponseCode()
 					+ " " + getResponse().getResponseMessage() + " [" + client.getRemoteAddress() + "]");
 		}
 	}
