@@ -113,6 +113,12 @@ namespace feraltweaks
                                     LoginLogoutPatches.loggingOut = true;
                                     if (NetworkManager.instance._serverConnection.IsConnected)
                                     {
+                                        if (KeepAlive.instance != null)
+                                        {
+                                            KeepAlive.instance._elapsedTime = 0f;
+                                            KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                                            KeepAlive.instance._warningSent = false;
+                                        }
                                         NetworkManager.instance._serverConnection.Disconnect();
                                         if (NetworkManager.instance._chatServiceConnection.IsConnected)
                                             NetworkManager.instance._chatServiceConnection.Disconnect();

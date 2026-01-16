@@ -134,6 +134,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
         {
             if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
             {
+                if (KeepAlive.instance != null)
+                {
+                    KeepAlive.instance._elapsedTime = 0f;
+                    KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                    KeepAlive.instance._warningSent = false;
+                }
                 NetworkManager.instance._serverConnection.Disconnect();
                 if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                     NetworkManager.instance._chatServiceConnection.Disconnect();
@@ -207,7 +213,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 __instance.tmpLabelMessage.text = __instance.tmpLabelMessage.text + "\nDescription: " + __instance._resetErrorCode._internalErrorText;
             }
         }
-
 
         private static bool HandleReset(SplashError inSplashError, ErrorCode inErrorCode)
         {
@@ -292,6 +297,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         // Disconnect
                         if (NetworkManager.instance != null)
                         {
+                            if (KeepAlive.instance != null)
+                            {
+                                KeepAlive.instance._elapsedTime = 0f;
+                                KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                                KeepAlive.instance._warningSent = false;
+                            }
                             if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                                 NetworkManager.instance._serverConnection.Disconnect();
                             if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
@@ -348,6 +359,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
                 if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                 {
+                    if (KeepAlive.instance != null)
+                    {
+                        KeepAlive.instance._elapsedTime = 0f;
+                        KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                        KeepAlive.instance._warningSent = false;
+                    }
                     NetworkManager.instance._serverConnection.Disconnect();
                     if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                         NetworkManager.instance._chatServiceConnection.Disconnect();
@@ -508,6 +525,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
                 if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                 {
+                    if (KeepAlive.instance != null)
+                    {
+                        KeepAlive.instance._elapsedTime = 0f;
+                        KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                        KeepAlive.instance._warningSent = false;
+                    }
                     NetworkManager.instance._serverConnection.Disconnect();
                     if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                         NetworkManager.instance._chatServiceConnection.Disconnect();
@@ -741,6 +764,12 @@ namespace feraltweaks.Patches.AssemblyCSharp
             RoomManager.instance.PreviousLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
 
             // Reset
+            if (KeepAlive.instance != null)
+            {
+                KeepAlive.instance._elapsedTime = 0f;
+                KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                KeepAlive.instance._warningSent = false;
+            }
             if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                 NetworkManager.instance._serverConnection.Disconnect();
             if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
