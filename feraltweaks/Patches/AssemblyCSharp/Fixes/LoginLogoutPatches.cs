@@ -33,7 +33,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             {
                 // Check type
                 if (!Il2CppType.Of<UnityEngine.Component>().IsAssignableFrom(Il2CppType.TypeFromPointer(clsPointer)))
-                    return null;               
+                    return null;
 
                 // Return
                 return (method, obj, parameters, except) =>
@@ -165,7 +165,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(Application), "Quit", new Type[] {})]
+        [HarmonyPatch(typeof(Application), "Quit", new Type[] { })]
         public static bool QuitApp()
         {
             // Check window and bundle manager and progress screen
@@ -196,7 +196,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
             QuitAppSmooth();
             return false;
         }
- 
+
         public static void CleanConnection()
         {
             if (NetworkManager.instance != null && NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
@@ -333,32 +333,32 @@ namespace feraltweaks.Patches.AssemblyCSharp
                             // Server connection lost
                             LogoutWithError("Connection lost", "Connection to the server was lost!\nPlease check if you still have an active internet connection.", inErrorCode);
                             return false;
-                            
+
                         case 10:
                             // Download failure
                             LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.", inErrorCode);
                             return false;
-                            
+
                         case 11:
                             // Bundle incompatible
                             LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.\nAn internal error happened when loading the bundle.", inErrorCode);
                             return false;
-                            
+
                         case 12:
                             // Not enough disk space
                             LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease check if you have enough disk space.", inErrorCode);
                             return false;
-                            
+
                         case 13:
                             // Load failure
                             LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.\nAn internal error happened when loading the bundle.", inErrorCode);
                             return false;
-                            
+
                         case 14:
                             // Unencrypted charts
                             LogoutWithError("Fatal Error", "An error occurred while loading game data.\nFor some reason charts are unencrypted? What?", inErrorCode);
                             return false;
-                        
+
                     }
                 }
             }
@@ -439,7 +439,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
                     // Show popup
                     UI_Window_OkPopup.CloseWindow();
-                    UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + "-" + inErrorCode.Subcode + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
+                    UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + (inErrorCode.Subcode != null && inErrorCode.Subcode != "" ? "-" + inErrorCode.Subcode : "") + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
 
                     // Return
                     return true;
@@ -666,10 +666,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         CameraFader.current.FadeOut(1f);
                         start2 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         FeralTweaksActions.Unity.Oneshot(() =>
-                        { 
+                        {
                             if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start2 < 1000)
                                 return false;
-                            
+
                             Application.Quit();
                             return true;
                         });
@@ -1047,7 +1047,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     // Clear action
                     avatar._nextActionType = ActorActionType.None;
                     avatar._nextActionBreakLoop = true;
-                    
+
                     // Hide avatar
                     _skipTeleportAwayLogout = true;
                     Dictionary<GameObject, bool> oldStates = new Dictionary<GameObject, bool>();
@@ -1073,7 +1073,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         if (WantsToQuit)
                         {
                             // Game's quitting, skip teleport
-                            return true; 
+                            return true;
                         }
 
                         // Play sound
@@ -1090,7 +1090,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         {
                             if (avatar == null || avatar.transform == null)
                                 return true; // Crashed
-                                
+
                             // Wait for transition
                             if (!avatar.IsTransitionArriving)
                                 return false;
@@ -1278,7 +1278,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 FeralTweaksLoader.GetLoadedMod<FeralTweaks>().LogError("Login failed due to " + json["params"]["incompatibleClientModCount"].ToString() + " incompatible CLIENT mod" + (json["params"]["incompatibleClientModCount"].ToString() == "1" ? "" : "s") + " [" + json["params"]["incompatibleClientMods"].ToString() + "]");
             }
         }
-        
+
         private static GameObject GetChild(GameObject parent, string name)
         {
             if (name.Contains("/"))
