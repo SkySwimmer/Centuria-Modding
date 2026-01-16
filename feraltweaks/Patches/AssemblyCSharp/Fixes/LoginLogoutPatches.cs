@@ -208,50 +208,108 @@ namespace feraltweaks.Patches.AssemblyCSharp
             }
         }
 
+
         private static bool HandleReset(SplashError inSplashError, ErrorCode inErrorCode)
         {
+            // Check conditional codes codes
+            // Check if the server is connected
+            if (NetworkManager.instance != null && NetworkManager.instance._serverConnection != null)
+            {
+                // Check menu
+                if (WindowManager.GetWindow<UI_Window_Login>() == null || !WindowManager.GetWindow<UI_Window_Login>().IsOpen || !WindowManager.GetWindow<UI_Window_Login>().IsOpening)
+                {
+                    switch (inErrorCode.Code)
+                    {
+                        case 2:
+                            // Server connection lost (no internet)
+                            LogoutWithError("Connection lost", "Connection to the server was lost!\nPlease check if you still have an active internet connection.", inErrorCode);
+                            return false;
+
+                        case 8:
+                            // Server connection lost
+                            LogoutWithError("Connection lost", "Connection to the server was lost!\nPlease check if you still have an active internet connection.", inErrorCode);
+                            return false;
+                            
+                        case 10:
+                            // Download failure
+                            LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.", inErrorCode);
+                            return false;
+                            
+                        case 11:
+                            // Bundle incompatible
+                            LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.\nAn internal error happened when loading the bundle.", inErrorCode);
+                            return false;
+                            
+                        case 12:
+                            // Not enough disk space
+                            LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease check if you have enough disk space.", inErrorCode);
+                            return false;
+                            
+                        case 13:
+                            // Load failure
+                            LogoutWithError("Fatal Error", "An error occurred while downloading assets.\nPlease verify your internet connection and try again.\nAn internal error happened when loading the bundle.", inErrorCode);
+                            return false;
+                            
+                        case 14:
+                            // Unencrypted charts
+                            LogoutWithError("Fatal Error", "An error occurred while loading game data.\nFor some reason charts are unencrypted? What?", inErrorCode);
+                            return false;
+                        
+                    }
+                }
+            }
+
             // Check code
             switch (inErrorCode.Code)
             {
 
                 case 9:
-                    // Server connection lost
-                    LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
-                    return false;
+                    {
+                        // Server connection lost
+                        LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
+                        return false;
+                    }
 
                 case 28:
-                    // Server connection lost
-                    LogoutWithError("Connection lost", "You were gone for too long and were disconnected!\nYou have been logged out", inErrorCode);
-                    return false;
+                    {
+                        // Server connection lost
+                        LogoutWithError("Connection lost", "You were gone for too long and were disconnected!\nYou have been logged out", inErrorCode);
+                        return false;
+                    }
 
                 case 1008:
-                    // API error
-                    LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
-                    return false;
+                    {
+                        // API error
+                        LogoutWithError("Connection lost", "Connection to the server was lost!\nYou have been logged out", inErrorCode);
+                        return false;
+                    }
 
                 default:
-                    // Allow reset
-                    WantsToQuit = true;
+                    {
+                        // Allow reset
+                        WantsToQuit = true;
 
-                    // Disconnect
-                    if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
-                        NetworkManager.instance._serverConnection.Disconnect();
-                    if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
-                        NetworkManager.instance._chatServiceConnection.Disconnect();
-                    if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
-                        NetworkManager.instance._voiceChatServiceConnection.Disconnect();
-                    NetworkManager.instance._serverConnection = null;
-                    NetworkManager.instance._chatServiceConnection = null;
-                    NetworkManager.instance._voiceChatServiceConnection = null;
-                    NetworkManager.instance._jwt = null;
-                    NetworkManager.instance._uuid = null;
+                        // Disconnect
+                        if (NetworkManager.instance != null)
+                        {
+                            if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
+                                NetworkManager.instance._serverConnection.Disconnect();
+                            if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
+                                NetworkManager.instance._chatServiceConnection.Disconnect();
+                            if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
+                                NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                            NetworkManager.instance._serverConnection = null;
+                            NetworkManager.instance._chatServiceConnection = null;
+                            NetworkManager.instance._voiceChatServiceConnection = null;
+                            NetworkManager.instance._jwt = null;
+                            NetworkManager.instance._uuid = null;
+                        }
+                    }
 
                     // Return
                     return true;
-
             }
         }
-
         private static void LogoutWithError(string title, string errorMessage, ErrorCode inErrorCode)
         {
             // Schedule error
