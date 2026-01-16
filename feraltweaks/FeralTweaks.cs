@@ -135,6 +135,11 @@ namespace feraltweaks
                 LogInfo("No command line parameters received for launcher handoff, starting regularly...");
         }
 
+        public override void FinalizeLoad()
+        {
+            FeralTweaksActionManager.SetupUnity();
+        }
+
         private void HookBundlePatches()
         {
             // Bundle patches

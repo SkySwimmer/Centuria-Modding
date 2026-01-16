@@ -9,10 +9,18 @@ namespace FeralTweaks.Actions
     /// </summary>
     public static class FeralTweaksActionManager
     {
+        internal static Thread unityThread;
+        internal static Thread actionThread;
+
         private static List<Func<bool>> threadActions = new List<Func<bool>>();
         private static List<Func<bool>> uiRepeatingActions = new List<Func<bool>>();
         private static List<Action> uiActions = new List<Action>();
 
+        internal static void SetupUnity()
+        {
+            unityThread = Thread.CurrentThread;
+        }
+        
         internal static void CallUpdate()
         {
             Func<bool>[] actionsUA;
@@ -40,7 +48,7 @@ namespace FeralTweaks.Actions
         internal static void StartActionThread()
         {
             // Start action thread
-            Thread th = new Thread(() =>
+            actionThread = new Thread(() =>
             {
                 while (true)
                 {
@@ -59,9 +67,9 @@ namespace FeralTweaks.Actions
                     Thread.Sleep(10);
                 }
             });
-            th.IsBackground = true;
-            th.Name = "FeralTweaks Action Thread";
-            th.Start();
+            actionThread.IsBackground = true;
+            actionThread.Name = "FeralTweaks Action Thread";
+            actionThread.Start();
         }
 
         /// <summary>
