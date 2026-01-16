@@ -74,10 +74,6 @@ namespace FeralTweaksBootstrap
                     LogError(msg);
                     break;
             }
-
-            // Throw if needed
-            if (Debugger.IsAttached && exception != null)
-                ExceptionDispatchInfo.Capture(exception).Throw();
         }
     }
 
