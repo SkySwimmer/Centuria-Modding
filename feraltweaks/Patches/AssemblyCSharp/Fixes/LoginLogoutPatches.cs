@@ -339,7 +339,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     {
                         // Show popup
                         UI_Window_OkPopup.CloseWindow();
-                        UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + "-" + inErrorCode.Subcode + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
+                        UI_Window_OkErrorPopup.QueueWindow(title, "<size=80%>\n" + errorMessage + "\n\nError code: " + inErrorCode.Code + (inErrorCode.Subcode != null && inErrorCode.Subcode != "" ? "-" + inErrorCode.Subcode : "") + (inErrorCode._internalErrorText != null ? "\nDescription: " + inErrorCode.InternalErrorText : "") + "</size>", "");
                     });
                     return true;
                 });
