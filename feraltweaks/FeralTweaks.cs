@@ -517,7 +517,6 @@ namespace feraltweaks
                                     // Show window and log out
                                     ScheduleDelayedAction(() =>
                                     {
-                                        
                                         // Show window
                                         ScheduleDelayedActionForUnity(() =>
                                         {
