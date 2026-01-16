@@ -16,73 +16,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
 {
     public class DisplayNameManagerPatches
     {
-        private class DisplayNameState
-        {
-            private object _lock = new object();
-
-            private Exception ex;
-            public bool complete;
-            public string result;
-
-            public void Call(string result)
-            {
-                lock (_lock)
-                {
-                    this.result = result;
-                    complete = true;
-                }
-
-                // Release
-                lock (_lock)
-                {
-                    Monitor.PulseAll(_lock);
-                }
-            }
-
-            public void Error(Exception ex)
-            {
-                lock (_lock)
-                {
-                    this.ex = ex;
-                    result = null;
-                    complete = true;
-                }
-
-                // Release
-                lock (_lock)
-                {
-                    Monitor.PulseAll(_lock);
-                }
-            }
-
-            public string Await()
-            {
-                lock (_lock)
-                {
-                    // Check exception
-                    if (ex != null)
-                        throw new TargetInvocationException("Target function has thrown an exception", ex); // Throw exception
-
-                    // Check completed
-                    if (complete)
-                        return result;
-
-                    // Wait
-                    while (!complete)
-                        Monitor.Wait(_lock);
-                }
-
-                // Check exception
-                if (ex != null)
-                    throw new TargetInvocationException("Target function has thrown an exception", ex); // Throw exception
-
-                // Check completed
-                if (complete)
-                    return result;
-                return null;
-            }
-        }
-
         private static List<string> displayNamesToFetch = new List<string>();
         private static Dictionary<string, DisplayNameState> inProgressDisplayNames = new Dictionary<string, DisplayNameState>();
 
@@ -244,6 +177,73 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     // Return
                     return true;
                 });
+            }
+        }
+        
+        private class DisplayNameState
+        {
+            private object _lock = new object();
+
+            private Exception ex;
+            public bool complete;
+            public string result;
+
+            public void Call(string result)
+            {
+                lock (_lock)
+                {
+                    this.result = result;
+                    complete = true;
+                }
+
+                // Release
+                lock (_lock)
+                {
+                    Monitor.PulseAll(_lock);
+                }
+            }
+
+            public void Error(Exception ex)
+            {
+                lock (_lock)
+                {
+                    this.ex = ex;
+                    result = null;
+                    complete = true;
+                }
+
+                // Release
+                lock (_lock)
+                {
+                    Monitor.PulseAll(_lock);
+                }
+            }
+
+            public string Await()
+            {
+                lock (_lock)
+                {
+                    // Check exception
+                    if (ex != null)
+                        throw new TargetInvocationException("Target function has thrown an exception", ex); // Throw exception
+
+                    // Check completed
+                    if (complete)
+                        return result;
+
+                    // Wait
+                    while (!complete)
+                        Monitor.Wait(_lock);
+                }
+
+                // Check exception
+                if (ex != null)
+                    throw new TargetInvocationException("Target function has thrown an exception", ex); // Throw exception
+
+                // Check completed
+                if (complete)
+                    return result;
+                return null;
             }
         }
     }
