@@ -377,7 +377,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 case 28:
                     {
                         // Server connection lost
-                        LogoutWithError("Connection lost", "You were gone for too long and were disconnected!\nYou have been logged out", inErrorCode);
+                        LogoutWithError("Connection lost", "You were gone for too long and got disconnected!\nYou have been logged out", inErrorCode);
                         return false;
                     }
 
