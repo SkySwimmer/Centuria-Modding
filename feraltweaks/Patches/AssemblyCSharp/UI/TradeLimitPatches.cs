@@ -16,12 +16,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return true;
 
             int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
-            if (value < 0)
-                value = 0;
-            else if (value > limit)
-                value = limit;
-            __instance._chosenQuantity = value;
-            __instance._inputField.SetTextWithoutNotify(value.ToString());
+            int quantityAvailable = __instance._itemQuantity;
+            int newQuantity = value;
+            if (newQuantity > quantityAvailable)
+                newQuantity = quantityAvailable;
+            if (newQuantity < 0)
+                newQuantity = 0;
+            else if (newQuantity > limit)
+                newQuantity = limit;
+            __instance._chosenQuantity = newQuantity;
+            __instance._inputField.SetTextWithoutNotify(newQuantity.ToString());
             __instance.RefreshQuantity();
 
             return false;
@@ -35,7 +39,10 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 return true;
 
             int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
+            int quantityAvailable = __instance._itemQuantity;
             int newQuantity = __instance._chosenQuantity + 1;
+            if (newQuantity > quantityAvailable)
+                newQuantity = quantityAvailable;
             if (newQuantity < 0)
                 newQuantity = 0;
             else if (newQuantity > limit)
@@ -56,6 +63,9 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             int limit = int.Parse(FeralTweaks.PatchConfig["TradeItemLimit"]);
             int newQuantity = __instance._chosenQuantity - 1;
+            int quantityAvailable = __instance._itemQuantity;
+            if (newQuantity > quantityAvailable)
+                newQuantity = quantityAvailable;
             if (newQuantity < 0)
                 newQuantity = 0;
             else if (newQuantity > limit)
@@ -66,6 +76,5 @@ namespace feraltweaks.Patches.AssemblyCSharp
 
             return false;
         }
-
     }
 }
