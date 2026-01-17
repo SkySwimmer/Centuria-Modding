@@ -103,18 +103,4 @@ public class LengthLimitedStream extends InputStream {
 		delegate.close();
 	}
 
-	protected String readStreamLine(InputStream strm) throws IOException {
-		String buffer = "";
-		while (true) {
-			char ch = (char) strm.read();
-			if (ch == (char) -1)
-				return null;
-			if (ch == '\n') {
-				return buffer;
-			} else if (ch != '\r') {
-				buffer += ch;
-			}
-		}
-	}
-
 }

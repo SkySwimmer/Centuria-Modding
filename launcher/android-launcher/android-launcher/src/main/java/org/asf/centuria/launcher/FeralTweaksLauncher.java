@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.asf.centuria.launcher.io.ChunkedStream;
 import org.asf.centuria.launcher.io.IoUtil;
 import org.asf.centuria.launcher.io.LengthLimitedStream;
+import org.asf.centuria.launcher.io.PrependedBufferStream;
 import org.asf.centuria.launcher.processors.AssetProxyProcessor;
 import org.asf.centuria.launcher.processors.ProxyProcessor;
 import org.asf.connective.ConnectiveHttpServer;
@@ -1348,6 +1350,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 				conn = factory.createSocket(u.getHost(), u.getPort() == -1 ? 443 : u.getPort());
 			}
+			PrependedBufferStream st = new PrependedBufferStream(conn.getInputStream());
 
 			// Write request
 			conn.getOutputStream().write((method + " " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
@@ -1363,14 +1366,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Check response
 			Map<String, String> responseHeadersOutput = new HashMap<String, String>();
-			String line = readStreamLine(conn.getInputStream());
+			String line = readStreamLine(st);
 			String statusLine = line;
 			if (!line.startsWith("HTTP/1.1 ")) {
 				conn.close();
 				throw new IOException("Server returned invalid protocol");
 			}
 			while (true) {
-				line = readStreamLine(conn.getInputStream());
+				line = readStreamLine(st);
 				if (line.equals(""))
 					break;
 				String key = line.substring(0, line.indexOf(": "));
@@ -1382,7 +1385,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			int status = Integer.parseInt(statusLine.split(" ")[1]);
 
 			// Set data
-			data = conn.getInputStream();
+			data = st;
 
 			// Return
 			ResponseData resp = new ResponseData();
@@ -1397,6 +1400,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					&& Long.parseLong(resp.headers.get("content-length")) > 0)
 				resp.bodyStream = new LengthLimitedStream(resp.bodyStream,
 						Long.parseLong(resp.headers.get("content-length")));
+			try {
+				conn.close();
+			} catch (IOException e) {
+			}
 			return resp;
 		} else {
 			// Default mode
@@ -1522,16 +1529,65 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		archive.close();
 	}
 
-	private static String readStreamLine(InputStream strm) throws IOException {
-		String buffer = "";
-		while (true) {
-			char ch = (char) strm.read();
-			if (ch == (char) -1)
-				return null;
-			if (ch == '\n') {
-				return buffer;
-			} else if (ch != '\r') {
-				buffer += ch;
+	private static String readStreamLine(PrependedBufferStream strm) throws IOException {
+		// Read a number of bytes
+		byte[] content = new byte[20480];
+		int read = strm.read(content, 0, content.length);
+		if (read <= -1) {
+			// Failed
+			return null;
+		} else {
+			// Trim array
+			content = Arrays.copyOfRange(content, 0, read);
+
+			// Find newline
+			String newData = new String(content, "UTF-8");
+			if (newData.contains("\n")) {
+				// Found newline
+				String line = newData.substring(0, newData.indexOf("\n"));
+				int offset = line.length() + 1;
+				int returnLength = content.length - offset;
+				if (returnLength > 0) {
+					// Return
+					strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+				}
+				return line.replace("\r", "");
+			} else {
+				// Read more
+				while (true) {
+					byte[] addition = new byte[20480];
+					read = strm.read(addition, 0, addition.length);
+					if (read <= -1) {
+						// Failed
+						strm.returnToBuffer(content);
+						return null;
+					}
+
+					// Trim
+					addition = Arrays.copyOfRange(addition, 0, read);
+
+					// Append
+					byte[] newContent = new byte[content.length + addition.length];
+					for (int i = 0; i < content.length; i++)
+						newContent[i] = content[i];
+					for (int i = content.length; i < newContent.length; i++)
+						newContent[i] = addition[i - content.length];
+					content = newContent;
+
+					// Find newline
+					newData = new String(content, "UTF-8");
+					if (newData.contains("\n")) {
+						// Found newline
+						String line = newData.substring(0, newData.indexOf("\n"));
+						int offset = line.length() + 1;
+						int returnLength = content.length - offset;
+						if (returnLength > 0) {
+							// Return
+							strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+						}
+						return line.replace("\r", "");
+					}
+				}
 			}
 		}
 	}
