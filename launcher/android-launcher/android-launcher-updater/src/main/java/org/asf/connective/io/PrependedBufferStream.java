@@ -71,7 +71,7 @@ public class PrependedBufferStream extends InputStream {
 				throw new IndexOutOfBoundsException();
 
 			// Read
-			int max = len;
+			int max = len - start;
 
 			// Get buffered data
 			byte[] data = buffers.remove(0);
