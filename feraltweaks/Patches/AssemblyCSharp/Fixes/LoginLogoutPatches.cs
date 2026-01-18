@@ -212,6 +212,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     NetworkManager.instance._chatServiceConnection.Disconnect();
                 if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
                     NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                 NetworkManager.instance._serverConnection = null;
                 NetworkManager.instance._chatServiceConnection = null;
                 NetworkManager.instance._voiceChatServiceConnection = null;
@@ -408,6 +409,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                                 NetworkManager.instance._chatServiceConnection.Disconnect();
                             if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
                                 NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+                            NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                             NetworkManager.instance._serverConnection = null;
                             NetworkManager.instance._chatServiceConnection = null;
                             NetworkManager.instance._voiceChatServiceConnection = null;
@@ -460,12 +462,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
                 if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                 {
-                    if (KeepAlive.instance != null)
-                    {
-                        KeepAlive.instance._elapsedTime = 0f;
-                        KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
-                        KeepAlive.instance._warningSent = false;
-                    }
                     NetworkManager.instance._serverConnection.Disconnect();
                     if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                         NetworkManager.instance._chatServiceConnection.Disconnect();
@@ -476,6 +472,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     NetworkManager.instance._voiceChatServiceConnection = null;
                     NetworkManager.instance._jwt = null;
                     NetworkManager.instance._uuid = null;
+                }
+                if (KeepAlive.instance != null)
+                {
+                    KeepAlive.instance._elapsedTime = 0f;
+                    KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                    KeepAlive.instance._warningSent = false;
+                }
+                if (NetworkManager.instance != null)
+                {
+                    NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                 }
                 Avatar_Local.instance = null;
                 XPManager.instance.PlayerLevel = null;
@@ -680,12 +686,6 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     RoomManager.instance.CurrentLevelDef = ChartDataManager.instance.levelChartData.GetDef("58").GetComponent<LevelDefComponent>();
                     if (NetworkManager.instance._serverConnection != null && NetworkManager.instance._serverConnection.IsConnected)
                     {
-                        if (KeepAlive.instance != null)
-                        {
-                            KeepAlive.instance._elapsedTime = 0f;
-                            KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
-                            KeepAlive.instance._warningSent = false;
-                        }
                         NetworkManager.instance._serverConnection.Disconnect();
                         if (NetworkManager.instance._chatServiceConnection != null && NetworkManager.instance._chatServiceConnection.IsConnected)
                             NetworkManager.instance._chatServiceConnection.Disconnect();
@@ -696,6 +696,16 @@ namespace feraltweaks.Patches.AssemblyCSharp
                         NetworkManager.instance._voiceChatServiceConnection = null;
                         NetworkManager.instance._jwt = null;
                         NetworkManager.instance._uuid = null;
+                    }
+                    if (KeepAlive.instance != null)
+                    {
+                        KeepAlive.instance._elapsedTime = 0f;
+                        KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
+                        KeepAlive.instance._warningSent = false;
+                    }
+                    if (NetworkManager.instance != null)
+                    {
+                        NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                     }
                     Avatar_Local.instance = null;
                     XPManager.instance.PlayerLevel = null;
@@ -942,6 +952,7 @@ namespace feraltweaks.Patches.AssemblyCSharp
                 NetworkManager.instance._chatServiceConnection.Disconnect();
             if (NetworkManager.instance._voiceChatServiceConnection != null && NetworkManager.instance._voiceChatServiceConnection.IsConnected)
                 NetworkManager.instance._voiceChatServiceConnection.Disconnect();
+            NetworkManager.DisconnectReason = DisconnectReason.Unknown;
             NetworkManager.instance._serverConnection = null;
             NetworkManager.instance._chatServiceConnection = null;
             NetworkManager.instance._voiceChatServiceConnection = null;

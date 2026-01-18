@@ -119,6 +119,7 @@ namespace feraltweaks
                                             KeepAlive.instance._sendKeepAliveMessageNextSendInterval = false;
                                             KeepAlive.instance._warningSent = false;
                                         }
+                                        NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                                         NetworkManager.instance._serverConnection.Disconnect();
                                         if (NetworkManager.instance._chatServiceConnection.IsConnected)
                                             NetworkManager.instance._chatServiceConnection.Disconnect();
