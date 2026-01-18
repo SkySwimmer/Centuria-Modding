@@ -122,6 +122,7 @@ namespace feraltweaks
                                         NetworkManager.instance._serverConnection.Disconnect();
                                         if (NetworkManager.instance._chatServiceConnection.IsConnected)
                                             NetworkManager.instance._chatServiceConnection.Disconnect();
+                                        NetworkManager.DisconnectReason = DisconnectReason.Unknown;
                                         NetworkManager.instance._serverConnection = null;
                                         NetworkManager.instance._chatServiceConnection = null;
                                         NetworkManager.instance._jwt = null;
