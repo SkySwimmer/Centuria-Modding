@@ -83,7 +83,7 @@ public class RelationshipJumpToPlayerOverridePacket implements IXtPacket<Relatio
 							// Load privacy settings
 							int privSetting = 0;
 							UserVarValue val = sancOwner.getSaveSpecificInventory().getUserVarAccesor()
-									.getPlayerVarValue(17544, 0);
+									.getPlayerVarValue("17544", 0);
 							if (val != null)
 								privSetting = val.value;
 
