@@ -137,11 +137,11 @@ public class FeralTweaksModule implements ICenturiaModule {
 		PlayerNameManager.initPlayerNameManager();
 
 		// Bind events
-		EventBus.getInstance().addEventReceiver(new CommandHandlers());
-		EventBus.getInstance().addEventReceiver(new ChatMessageHandler());
-		EventBus.getInstance().addEventReceiver(new DisconnectHandler());
-		EventBus.getInstance().addEventReceiver(new ChatHandshakeHandler());
-		EventBus.getInstance().addEventReceiver(new GameHandshakeHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new CommandHandlers());
+		EventBus.getInstance().addAllEventsFromReceiver(new ChatMessageHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new DisconnectHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new ChatHandshakeHandler());
+		EventBus.getInstance().addAllEventsFromReceiver(new GameHandshakeHandler());
 	}
 
 	@EventListener
@@ -153,7 +153,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void apiStartup(APIServerStartupEvent event) {
 		// Register custom processors
-		event.getServer().registerProcessor(new DataProcessor());
+		event.getServer().registerHandler(new DataProcessor());
 	}
 
 	@EventListener

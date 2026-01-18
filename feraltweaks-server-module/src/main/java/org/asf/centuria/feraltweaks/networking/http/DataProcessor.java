@@ -22,7 +22,7 @@ import org.asf.connective.NetworkedConnectiveHttpServer;
 import org.asf.connective.RemoteClient;
 import org.asf.connective.TlsSecuredHttpServer;
 import org.asf.connective.impl.http_1_1.RemoteClientHttp_1_1;
-import org.asf.connective.processors.HttpRequestProcessor;
+import org.asf.connective.handlers.HttpRequestHandler;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -30,10 +30,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class DataProcessor extends HttpRequestProcessor {
+public class DataProcessor extends HttpRequestHandler {
 
 	@Override
-	public HttpRequestProcessor createNewInstance() {
+	public HttpRequestHandler createNewInstance() {
 		return new DataProcessor();
 	}
 
@@ -43,7 +43,7 @@ public class DataProcessor extends HttpRequestProcessor {
 	}
 
 	@Override
-	public void process(String pth, String method, RemoteClient client) {
+	public void handle(String pth, String method, RemoteClient client) {
 		try {
 			// Retrieve path
 			String path = getRequest().getRequestPath().substring(path().length());
