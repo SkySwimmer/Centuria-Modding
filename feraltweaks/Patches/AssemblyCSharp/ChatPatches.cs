@@ -484,6 +484,14 @@ namespace feraltweaks.Patches.AssemblyCSharp
                     isSecured = FeralTweaks.EncryptedChat == 1;
                 }
             }
+            else if (__instance.ToString() == "VoiceChatServiceConnection")
+            {
+                // Override encryption if needed
+                if (FeralTweaks.EncryptedVoiceChat != -1)
+                {
+                    isSecured = FeralTweaks.EncryptedVoiceChat == 1;
+                }
+            }
         }
 
         [HarmonyPrefix]

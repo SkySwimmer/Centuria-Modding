@@ -67,6 +67,7 @@ namespace feraltweaks
         public static int BlueboxPort = -1;
         public static int EncryptedGame = -1; // -1 = unset, 0 = false, 1 = true
         public static int EncryptedChat = -1; // -1 = unset, 0 = false, 1 = true
+        public static int EncryptedVoiceChat = -1; // -1 = unset, 0 = false, 1 = true
 
         // Error message container for when login fails and the server includes a feraltweaks message field in the response
         public static string LoginErrorMessage = null;
@@ -327,7 +328,7 @@ namespace feraltweaks
             // Parse environment
             string[] payload = args.Split(" ");
             if (payload.Length == 0)
-                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false]");
+                LogError("Error: missing argument(s) for server environment: [directorhost] [apihost] [chathost] [chatport] [gameport] [voicehost] [voiceport] [blueboxport] [encryptedgame: true/false] [encryptedchat: true/false] [encryptedvoicechat: true/false]");
             try
             {
                 if (payload.Length >= 1)
@@ -379,6 +380,41 @@ namespace feraltweaks
                 {
                     EncryptedChat = payload[9].ToLower() == "true" ? 1 : 0;
                     LogInfo("Encryped chat server: " + (EncryptedChat == 1));
+                }
+                if (payload.Length >= 10)
+                {
+                    EncryptedVoiceChat = payload[10].ToLower() == "true" ? 1 : 0;
+                    LogInfo("Encryped voice chat server: " + (EncryptedVoiceChat == 1));
+                }
+                if (payload.Length >= 11)
+                {
+                    PatchConfig["GameAssetsProd"] = payload[11];
+                    LogInfo("Game Assets Prod: " + payload[11]);
+                }
+                if (payload.Length >= 12)
+                {
+                    PatchConfig["GameAssetsStage"] = payload[12];
+                    LogInfo("Game Assets Stage: " + payload[12]);
+                }
+                if (payload.Length >= 13)
+                {
+                    PatchConfig["GameAssetsDev"] = payload[13];
+                    LogInfo("Game Assets Dev: " + payload[13]);
+                }
+                if (payload.Length >= 14)
+                {
+                    PatchConfig["GameAssetsShared"] = payload[14];
+                    LogInfo("Game Assets Shared Prod: " + payload[14]);
+                }
+                if (payload.Length >= 15)
+                {
+                    PatchConfig["GameAssetsStageShared"] = payload[15];
+                    LogInfo("Game Assets Shared Stage: " + payload[15]);
+                }
+                if (payload.Length >= 16)
+                {
+                    PatchConfig["GameAssetsDevShared"] = payload[16];
+                    LogInfo("Game Assets Shared Dev: " + payload[16]);
                 }
             }
             catch
