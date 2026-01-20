@@ -555,6 +555,9 @@ public class DataProcessor extends HttpRequestHandler {
 				}
 
 				// Generate data
+				String addrRaw = addr;
+				if (addr.contains(":"))
+					addr = "[" + addr + "]";
 				JsonObject serverBlock = createOrGetJsonObject(serverInfo, "server");
 				JsonObject hosts = createOrGetJsonObject(serverBlock, "hosts");
 				hosts.addProperty("director",
@@ -565,8 +568,8 @@ public class DataProcessor extends HttpRequestHandler {
 						((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
 								+ addr + ":"
 								+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/");
-				hosts.addProperty("chat", addr);
-				hosts.addProperty("voiceChat", addr);
+				hosts.addProperty("chat", addrRaw);
+				hosts.addProperty("voiceChat", addrRaw);
 				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
 				ports.addProperty("game", Centuria.gameServer.getServerSocket().getLocalPort());
 				ports.addProperty("chat", Centuria.chatServer.getServerSocket().getLocalPort());
