@@ -356,6 +356,36 @@ namespace feraltweaks
                     EncryptedVoiceChat = payload[10].ToLower() == "true" ? 1 : 0;
                     LogInfo("Encryped voice chat server: " + (EncryptedVoiceChat == 1));
                 }
+                if (payload.Length >= 11)
+                {
+                    PatchConfig["GameAssetsProd"] = payload[11];
+                    LogInfo("Game Assets Prod: " + payload[11]);
+                }
+                if (payload.Length >= 12)
+                {
+                    PatchConfig["GameAssetsStage"] = payload[12];
+                    LogInfo("Game Assets Stage: " + payload[12]);
+                }
+                if (payload.Length >= 13)
+                {
+                    PatchConfig["GameAssetsDev"] = payload[13];
+                    LogInfo("Game Assets Dev: " + payload[13]);
+                }
+                if (payload.Length >= 14)
+                {
+                    PatchConfig["GameAssetsShared"] = payload[14];
+                    LogInfo("Game Assets Shared Prod: " + payload[14]);
+                }
+                if (payload.Length >= 15)
+                {
+                    PatchConfig["GameAssetsStageShared"] = payload[15];
+                    LogInfo("Game Assets Shared Stage: " + payload[15]);
+                }
+                if (payload.Length >= 16)
+                {
+                    PatchConfig["GameAssetsDevShared"] = payload[16];
+                    LogInfo("Game Assets Shared Dev: " + payload[16]);
+                }
             }
             catch
             {
