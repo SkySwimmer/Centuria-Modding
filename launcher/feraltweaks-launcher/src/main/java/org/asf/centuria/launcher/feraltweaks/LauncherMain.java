@@ -1344,7 +1344,6 @@ public class LauncherMain {
 		}, "Launcher Thread");
 		th.setDaemon(true);
 		th.start();
-
 	}
 
 	private boolean checkExists(String url, String authToken) {

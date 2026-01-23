@@ -842,7 +842,7 @@ public class LauncherUpdaterMain {
 							}
 
 							// Find wine packages
-							if (selected.isAuto) {
+							if (selected == null || selected.isAuto) {
 								System.out
 										.println("[LAUNCHER] [UPDATER] " + "Attempting to select wine installation...");
 								Optional<WineInstallation> wine = Stream.of(allWineInstalls).filter(t -> !t.isProton)
@@ -1944,7 +1944,8 @@ public class LauncherUpdaterMain {
 				// Modify path
 				proc = new ProcessBuilder("reg", "add",
 						"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + launcherDir,
-						"/v", "ModifyPath", "/d", new File(installerOut, "launcher.bat").getAbsolutePath(), "/f");
+						"/v", "ModifyPath", "/d",
+						"\\\"" + new File(installerOut, "launcher.bat").getAbsolutePath() + "\\\"", "/f");
 				proc.inheritIO();
 				if (proc.start().waitFor() != 0)
 					regWriteError();
@@ -1952,7 +1953,8 @@ public class LauncherUpdaterMain {
 				// Uninstall string
 				proc = new ProcessBuilder("reg", "add",
 						"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + launcherDir,
-						"/v", "UninstallString", "/d", new File(installerOut, "launcher.bat").getAbsolutePath(), "/f");
+						"/v", "UninstallString", "/d",
+						"\\\"" + new File(installerOut, "launcher.bat").getAbsolutePath() + "\\\"", "/f");
 				proc.inheritIO();
 				if (proc.start().waitFor() != 0)
 					regWriteError();
@@ -2124,8 +2126,10 @@ public class LauncherUpdaterMain {
 						// Shell command
 						proc = new ProcessBuilder("reg", "add",
 								"HKEY_CURRENT_USER\\Software\\Classes\\" + urlProt + "\\shell\\open\\command", "/d",
-								"\"" + new File(installerOut, "launcher.bat").getAbsolutePath() + "\'"
-										+ (args.isEmpty() ? "" : " " + args.replace("%url%", "%u")),
+								"\\\"" + new File(launcherOut, "launcher.bat").getAbsolutePath() + "\\\""
+										+ (args.isEmpty() ? ""
+												: " " + args.replace("%url%", "%u").replace("\\\"", "\\\\\"")
+														.replace("\"", "\\\"")),
 								"/f");
 						proc.inheritIO();
 						proc.start().waitFor();
@@ -2346,8 +2350,6 @@ public class LauncherUpdaterMain {
 				log("Removing url protocols...");
 				JsonObject protocols = conf.get("urlProtocols").getAsJsonObject();
 				for (String urlProt : protocols.keySet()) {
-					String args = protocols.get(urlProt).getAsString();
-
 					// Add protocol
 					if (os == 2) {
 						// Linux
