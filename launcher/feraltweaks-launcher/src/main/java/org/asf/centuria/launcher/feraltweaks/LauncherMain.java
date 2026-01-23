@@ -71,7 +71,6 @@ import java.awt.event.MouseEvent;
 import java.awt.Font;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import javax.swing.BoxLayout;
 import javax.swing.border.BevelBorder;
 
 public class LauncherMain {
@@ -188,11 +187,10 @@ public class LauncherMain {
 		panel_5.setPreferredSize(new Dimension(510, 10));
 		panel_5.setBackground(Color.DARK_GRAY);
 		panel_4.add(panel_5, BorderLayout.EAST);
-		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.X_AXIS));
 
 		JProgressBar progressBar = new JProgressBar();
 		panel_5.add(progressBar);
-		progressBar.setPreferredSize(new Dimension(500, 14));
+		progressBar.setPreferredSize(new Dimension(500, 18));
 		progressBar.setBackground(new Color(240, 240, 240, 100));
 		panel_5.setVisible(false);
 
