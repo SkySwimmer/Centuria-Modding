@@ -20,6 +20,7 @@ import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.hc.client5.http.DnsResolver;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
@@ -28,6 +29,8 @@ import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -42,13 +45,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,6 +59,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -69,7 +71,6 @@ import java.awt.event.MouseEvent;
 import java.awt.Font;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import javax.swing.BoxLayout;
 import javax.swing.border.BevelBorder;
 
 public class LauncherMain {
@@ -81,6 +82,8 @@ public class LauncherMain {
 	private boolean connected;
 
 	public static final String PREFERRED_DXVK_VERSION_MACOS = "v1.10.3";
+
+	private CloseableHttpClient clientBase;
 
 	/**
 	 * Launch the application.
@@ -110,6 +113,10 @@ public class LauncherMain {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		// Create client
+		clientBase = HttpClientBuilder.create().setDefaultHeaders(List.of(new BasicHeader("Keep-Alive", "timeout=30")))
+				.build();
+
 		try {
 			try {
 				UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
@@ -180,11 +187,10 @@ public class LauncherMain {
 		panel_5.setPreferredSize(new Dimension(510, 10));
 		panel_5.setBackground(Color.DARK_GRAY);
 		panel_4.add(panel_5, BorderLayout.EAST);
-		panel_5.setLayout(new BoxLayout(panel_5, BoxLayout.X_AXIS));
 
 		JProgressBar progressBar = new JProgressBar();
 		panel_5.add(progressBar);
-		progressBar.setPreferredSize(new Dimension(500, 14));
+		progressBar.setPreferredSize(new Dimension(500, 18));
 		progressBar.setBackground(new Color(240, 240, 240, 100));
 		panel_5.setVisible(false);
 
@@ -256,9 +262,16 @@ public class LauncherMain {
 			lblNewLabel_1.setText(srvName + " Launcher");
 
 			// Download data
-			InputStream strm = new URL(url).openStream();
-			String data = new String(strm.readAllBytes(), "UTF-8");
-			strm.close();
+			HttpGet get = new HttpGet(url);
+			String data = clientBase.execute(get, t -> {
+				if (t.getCode() != 200) {
+					return null;
+				}
+				InputStream strm = t.getEntity().getContent();
+				String d = new String(strm.readAllBytes(), "UTF-8");
+				strm.close();
+				return d;
+			});
 			JsonObject info = JsonParser.parseString(data).getAsJsonObject();
 			JsonObject launcher = info.get("launcher").getAsJsonObject();
 			String banner = launcher.get("banner").getAsString();
@@ -271,14 +284,16 @@ public class LauncherMain {
 			useWineMethodOSX = launcher.has("osxUseWineMethod") && launcher.get("osxUseWineMethod").getAsBoolean();
 
 			// Handle relative paths for banner
-			if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
-				String api = hosts.get("api").getAsString();
-				if (!api.endsWith("/"))
-					api += "/";
-				while (banner.startsWith("/"))
-					banner = banner.substring(1);
-				banner = api + banner;
+			String api = hosts.get("api").getAsString();
+			if (!api.endsWith("/"))
+				api += "/";
+			String apiData = api + "data/";
+			if (hosts.has("launcherDataSource")) {
+				apiData = hosts.get("launcherDataSource").getAsString();
+				if (!apiData.endsWith("/"))
+					apiData += "/";
 			}
+			banner = processRelative(apiData, banner);
 
 			// Determine platform
 			if (System.getProperty("os.name").toLowerCase().contains("win")
@@ -320,7 +335,7 @@ public class LauncherMain {
 					}
 					manifest = client.get(os).getAsString();
 				}
-			} else if (System.getProperty("os.name").toLowerCase().contains("linux")) {// Linux
+			} else if (System.getProperty("os.name").toLowerCase().contains("linux")) { // Linux
 				os = "linux";
 				feralPlat = "win64";
 				if (!loader.has("win64")) {
@@ -401,13 +416,19 @@ public class LauncherMain {
 						String api = hosts.get("api").getAsString();
 						if (!api.endsWith("/"))
 							api += "/";
-						HttpURLConnection conn = (HttpURLConnection) new URL(api + "centuria/refreshtoken")
-								.openConnection();
-						conn.addRequestProperty("Authorization", "Bearer " + lastToken);
-						conn.setRequestMethod("POST");
-						if (conn.getResponseCode() == 200) {
-							// Read response
-							String data = new String(conn.getInputStream().readAllBytes(), "UTF-8");
+
+						HttpPost post = new HttpPost(api + "centuria/refreshtoken");
+						post.addHeader("Authorization", "Bearer " + lastToken);
+						String data = clientBase.execute(post, resp -> {
+							if (resp.getCode() != 200) {
+								return null;
+							}
+							InputStream strm = resp.getEntity().getContent();
+							String d = new String(strm.readAllBytes(), "UTF-8");
+							strm.close();
+							return d;
+						});
+						if (data != null) {
 							JsonObject resp = JsonParser.parseString(data).getAsJsonObject();
 							authToken = resp.get("auth_token").getAsString();
 							lastToken = resp.get("refresh_token").getAsString();
@@ -468,26 +489,31 @@ public class LauncherMain {
 					if (!apiData.endsWith("/"))
 						apiData += "/";
 				}
-				HttpURLConnection conn = (HttpURLConnection) new URL(api + "centuria/getuser").openConnection();
-				conn.addRequestProperty("Authorization", "Bearer " + lastToken);
-				conn.setDoOutput(true);
+				HttpPost post = new HttpPost(api + "centuria/getuser");
+				post.addHeader("Authorization", "Bearer " + lastToken);
 				JsonObject payload = new JsonObject();
 				payload.addProperty("id", accountID);
-				conn.getOutputStream().write(payload.toString().getBytes("UTF-8"));
-				String dataS = new String(conn.getInputStream().readAllBytes(), "UTF-8");
+				post.setHeader("Content-type", "application/json");
+				post.setEntity(new StringEntity(payload.toString()));
+				String dataS = clientBase.execute(post, resp -> {
+					InputStream strm = resp.getEntity().getContent();
+					String d = new String(strm.readAllBytes(), "UTF-8");
+					strm.close();
+					return d;
+				});
 				JsonObject respJ = JsonParser.parseString(dataS).getAsJsonObject();
 				boolean completedTutorial = respJ.get("tutorial_completed").getAsBoolean();
 
 				// Check client modding
 				try {
-					conn = (HttpURLConnection) new URL(apiData + "clientmods/testendpoint").openConnection();
-					conn.addRequestProperty("Authorization", "Bearer " + authToken);
-					InputStream strm;
-					if (conn.getResponseCode() < 400)
-						strm = conn.getInputStream();
-					else
-						strm = conn.getErrorStream();
-					String data = new String(strm.readAllBytes(), "UTF-8");
+					HttpGet get = new HttpGet(apiData + "clientmods/testendpoint");
+					get.addHeader("Authorization", "Bearer " + authToken);
+					String data = clientBase.execute(get, resp -> {
+						InputStream strm = resp.getEntity().getContent();
+						String d = new String(strm.readAllBytes(), "UTF-8");
+						strm.close();
+						return d;
+					});
 					JsonObject resp = JsonParser.parseString(data).getAsJsonObject();
 					if (resp.has("error")) {
 						// Handle error
@@ -559,7 +585,8 @@ public class LauncherMain {
 
 				// Download manifest
 				CloseableHttpClient http;
-				URL oUrl = new URL(manifest);
+				String manifestF = processRelative(apiData, manifest);
+				URL oUrl = new URL(manifestF);
 				String ip = oUrl.getHost();
 				String hostname = oUrl.getHost();
 				if (client.has("manifestDownloadIP")) {
@@ -581,7 +608,7 @@ public class LauncherMain {
 				}
 
 				// Create request
-				HttpGet req = new HttpGet(manifest);
+				HttpGet req = new HttpGet(manifestF);
 				req.addHeader("Host", hostname);
 
 				// Get response
@@ -612,8 +639,6 @@ public class LauncherMain {
 				boolean resetAttrs = false;
 				if (!currentClient.equals(cVer)) {
 					// Download new client
-					oUrl = new URL(url);
-					ip = oUrl.getHost();
 					CloseableHttpClient httpCl;
 					if (client.has("clientDownloadIP")) {
 						ip = client.get("clientDownloadIP").getAsString();
@@ -634,8 +659,11 @@ public class LauncherMain {
 					}
 
 					// Create request
+					url = processRelative(apiData, url);
 					req = new HttpGet(url);
-					req.addHeader("Host", hostname);
+					URL oUrl2 = new URL(url);
+					String hostname2 = oUrl2.getHost();
+					req.addHeader("Host", hostname2);
 					httpCl.execute(req, t -> {
 						HttpEntity ent = t.getEntity();
 
@@ -762,7 +790,8 @@ public class LauncherMain {
 						panel_5.setVisible(true);
 						panel_1.repaint();
 					});
-					downloadFile(modloader.get("url").getAsString(), new File("modloader.zip"), progressBar, panel_1);
+					downloadFile(processRelative(apiData, modloader.get("url").getAsString()),
+							new File("modloader.zip"), progressBar, panel_1);
 
 					// Extract
 					try {
@@ -825,6 +854,29 @@ public class LauncherMain {
 					updateMods("assemblies/index.json", apiData, modloader.get("assemblyBaseDir").getAsString(), hosts,
 							authToken, progressBar, panel_1);
 
+					// Check if platformspecific mods exist
+					// Tho if on linux we use windows unless linux separately exists
+					if (checkExists(apiData + "assemblies-" + os + "/index.json", authToken)) {
+						// Download assets
+						SwingUtilities.invokeAndWait(() -> {
+							log("Updating platform-specific client mods...");
+							panel_5.setVisible(true);
+							panel_1.repaint();
+						});
+						updateMods("assemblies-" + os + "/index.json", apiData,
+								modloader.get("assemblyBaseDir").getAsString(), hosts, authToken, progressBar, panel_1);
+
+					} else if (os.equals("linux") && checkExists(apiData + "assemblies-win64/index.json", authToken)) {
+						// Download assets
+						SwingUtilities.invokeAndWait(() -> {
+							log("Updating platform-specific client mods...");
+							panel_5.setVisible(true);
+							panel_1.repaint();
+						});
+						updateMods("assemblies-win64/index.json", apiData,
+								modloader.get("assemblyBaseDir").getAsString(), hosts, authToken, progressBar, panel_1);
+					}
+
 					// Save version
 					Files.writeString(Path.of("modversion.info"), serverInfo.get("modVersion").getAsString());
 
@@ -850,6 +902,29 @@ public class LauncherMain {
 					// Download manifest
 					updateMods("assets/index.json", apiData, modloader.get("assetBaseDir").getAsString(), hosts,
 							authToken, progressBar, panel_1);
+
+					// Check if platformspecific mods exist
+					// Tho if on linux we use windows unless linux separately exists
+					if (checkExists(apiData + "assets-" + os + "/index.json", authToken)) {
+						// Download assets
+						SwingUtilities.invokeAndWait(() -> {
+							log("Updating platform-specific client mod assets...");
+							panel_5.setVisible(true);
+							panel_1.repaint();
+						});
+						updateMods("assets-" + os + "/index.json", apiData, modloader.get("assetBaseDir").getAsString(),
+								hosts, authToken, progressBar, panel_1);
+
+					} else if (os.equals("linux") && checkExists(apiData + "assets-win64/index.json", authToken)) {
+						// Download assets
+						SwingUtilities.invokeAndWait(() -> {
+							log("Updating platform-specific client mod assets...");
+							panel_5.setVisible(true);
+							panel_1.repaint();
+						});
+						updateMods("assets-win64/index.json", apiData, modloader.get("assetBaseDir").getAsString(),
+								hosts, authToken, progressBar, panel_1);
+					}
 
 					// Save version
 					Files.writeString(Path.of("assetversion.info"), serverInfo.get("assetVersion").getAsString());
@@ -977,18 +1052,25 @@ public class LauncherMain {
 								panel_1.repaint();
 							});
 							try {
-								ProcessBuilder proc = new ProcessBuilder("wine", "reg", "add",
+								ProcessBuilder proc = new ProcessBuilder("wine", "wineboot", "--init", "-f");
+								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
+								proc.inheritIO();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
+								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "winhttp", "/d",
 										"native,builtin", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d11", "/d",
 										"native", "/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d10core", "/d",
 										"native", "/f");
@@ -1000,13 +1082,15 @@ public class LauncherMain {
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 								proc = new ProcessBuilder("wine", "reg", "add",
 										"HKEY_CURRENT_USER\\Software\\Wine\\DllOverrides", "/v", "d3d9", "/d", "native",
 										"/f");
 								proc.environment().put("WINEPREFIX", prefix.getCanonicalPath());
 								proc.inheritIO();
-								proc.start().waitFor();
+								if (proc.start().waitFor() != 0)
+									prefixConfigureError(prefix, serverSock);
 							} catch (Exception e) {
 								prefix.delete();
 								SwingUtilities.invokeAndWait(() -> {
@@ -1207,7 +1291,7 @@ public class LauncherMain {
 									for (StackTraceElement ele : e.getStackTrace())
 										stackTrace += "\n     At: " + ele;
 									try {
-										serverSock.close();
+										sendCommand(cl, "crash");
 									} catch (IOException e2) {
 									}
 									JOptionPane.showMessageDialog(frmCenturiaLauncher,
@@ -1215,6 +1299,16 @@ public class LauncherMain {
 													+ e + stackTrace
 													+ "\nPlease report this error to the server operators.",
 											"Launcher Error", JOptionPane.ERROR_MESSAGE);
+									try {
+										cl.close();
+									} catch (IOException e2) {
+									}
+									try {
+										serverSock.close();
+									} catch (IOException e2) {
+									}
+									if (proc != null && proc.isAlive())
+										proc.destroyForcibly();
 									System.exit(1);
 								});
 							} catch (InvocationTargetException | InterruptedException e1) {
@@ -1248,7 +1342,41 @@ public class LauncherMain {
 		}, "Launcher Thread");
 		th.setDaemon(true);
 		th.start();
+	}
 
+	private boolean checkExists(String url, String authToken) {
+		HttpGet get = new HttpGet(url);
+		get.addHeader("Authorization", "Bearer " + authToken);
+		try {
+			return clientBase.execute(get, resp -> {
+				if (resp.getCode() != 200)
+					return null;
+				InputStream strm = resp.getEntity().getContent();
+				String d = new String(strm.readAllBytes(), "UTF-8");
+				strm.close();
+				return d;
+			}) != null;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	private void prefixConfigureError(File prefix, ServerSocket serverSock) {
+		prefix.delete();
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				JOptionPane.showMessageDialog(frmCenturiaLauncher,
+						"Failed to configure wine, please contact support, an error occurred while setting up the wine prefix.",
+						"Launcher Error", JOptionPane.ERROR_MESSAGE);
+				try {
+					serverSock.close();
+				} catch (IOException e2) {
+				}
+				System.exit(1);
+			});
+		} catch (InvocationTargetException | InterruptedException e) {
+			;
+		}
 	}
 
 	private void launcherHandoff(Socket cl, String authToken, String api, String apiData, JsonObject serverInfo,
@@ -1286,20 +1414,71 @@ public class LauncherMain {
 		}
 
 		// Send server environment
-		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Sending configuration...");
-		if (serverInfo.has("encryptedVoiceChat"))
-			sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
-					hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
-					hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
-					ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean(),
-					serverInfo.get("encryptedChat").getAsBoolean(),
-					serverInfo.get("encryptedVoiceChat").getAsBoolean());
-		else
-			sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
-					hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
-					hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
-					ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean(),
-					serverInfo.get("encryptedChat").getAsBoolean(), serverInfo.get("encryptedChat").getAsBoolean());
+		System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Sending server environment...");
+
+		// Build command
+		// The server environment commands are in order
+		ArrayList<Object> serverEnv = new ArrayList<Object>();
+
+		// API hosts
+		serverEnv.add(hosts.get("director").getAsString());
+		serverEnv.add(hosts.get("api").getAsString());
+
+		// Chat
+		serverEnv.add(hosts.get("chat").getAsString());
+		serverEnv.add(ports.get("chat").getAsInt());
+
+		// Gameserver
+		serverEnv.add(ports.get("game").getAsInt());
+
+		// Voicechat
+		serverEnv.add(hosts.get("voiceChat").getAsString());
+		serverEnv.add(ports.get("voiceChat").getAsInt());
+
+		// Bluebox
+		serverEnv.add(ports.get("bluebox").getAsInt());
+
+		// Encryption states
+		serverEnv.add(serverInfo.get("encryptedGame").getAsBoolean());
+		serverEnv.add(serverInfo.get("encryptedChat").getAsBoolean());
+		serverEnv.add(serverInfo.get("encryptedVoiceChat").getAsBoolean());
+
+		// If present, send asset servers
+		if (hosts.has("gameAssets")) {
+			JsonObject assets = hosts.get("gameAssets").getAsJsonObject();
+
+			// Prod
+			serverEnv.add(processUrl(apiData, assets.get("prod").getAsString()));
+
+			// If present, add stage
+			if (assets.has("stage")) {
+				// Stage
+				serverEnv.add(processUrl(apiData, assets.get("stage").getAsString()));
+
+				// If present, add dev
+				if (assets.has("dev")) {
+					// Dev
+					serverEnv.add(processUrl(apiData, assets.get("dev").getAsString()));
+
+					// If present, add S2
+					if (assets.has("s2")) {
+						JsonObject s2 = assets.get("s2").getAsJsonObject();
+
+						// Prod
+						serverEnv.add(processUrl(apiData, s2.get("prod").getAsString()));
+
+						// Stage
+						serverEnv.add(processUrl(apiData, s2.get("stage").getAsString()));
+
+						// Dev
+						serverEnv.add(processUrl(apiData, s2.get("dev").getAsString()));
+					}
+				}
+			}
+		}
+
+		// Check asset hosts
+		sendCommand(cl, "serverenvironment", serverEnv.toArray(t -> new Object[t]));
 
 		// Send autologin
 		if (completedTutorial) {
@@ -1311,19 +1490,45 @@ public class LauncherMain {
 		cl.getOutputStream().write("end\n".getBytes("UTF-8"));
 	}
 
+	private String processRelative(String apiData, String url) {
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			while (url.startsWith("/"))
+				url = url.substring(1);
+			url = apiData + url;
+		}
+		return url;
+	}
+
+	private String processUrl(String apiData, String url) {
+		// Check
+		if (!url.endsWith("/"))
+			url += "/";
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			while (url.startsWith("/"))
+				url = url.substring(1);
+			url = apiData + url;
+		}
+		return url;
+	}
+
 	private String downloadProtectedString(String url, String authToken) throws IOException {
-		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-		conn.addRequestProperty("Authorization", "Bearer " + authToken);
-		InputStream strm = conn.getInputStream();
-		String data = new String(strm.readAllBytes(), "UTF-8");
-		return data;
+		HttpGet get = new HttpGet(url);
+		get.addHeader("Authorization", "Bearer " + authToken);
+		return clientBase.execute(get, resp -> {
+			InputStream strm = resp.getEntity().getContent();
+			String d = new String(strm.readAllBytes(), "UTF-8");
+			strm.close();
+			return d;
+		});
 	}
 
 	private String downloadString(String url) throws IOException {
-		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-		InputStream strm = conn.getInputStream();
-		String data = new String(strm.readAllBytes(), "UTF-8");
-		return data;
+		return clientBase.execute(new HttpGet(url), resp -> {
+			InputStream strm = resp.getEntity().getContent();
+			String d = new String(strm.readAllBytes(), "UTF-8");
+			strm.close();
+			return d;
+		});
 	}
 
 	private void sendCommand(Socket cl, String cmd, Object... params) throws UnsupportedEncodingException, IOException {
@@ -1352,14 +1557,14 @@ public class LauncherMain {
 		String api = hosts.get("api").getAsString();
 		if (!api.endsWith("/"))
 			api += "/";
-		HttpURLConnection conn = (HttpURLConnection) new URL(apiData + "clientmods/" + pth).openConnection();
-		conn.addRequestProperty("Authorization", "Bearer " + authToken);
-		InputStream strm;
-		if (conn.getResponseCode() < 400)
-			strm = conn.getInputStream();
-		else
-			strm = conn.getErrorStream();
-		String data = new String(strm.readAllBytes(), "UTF-8");
+		HttpGet get = new HttpGet(apiData + "clientmods/" + pth);
+		get.addHeader("Authorization", "Bearer " + authToken);
+		String data = clientBase.execute(get, resp -> {
+			InputStream strm = resp.getEntity().getContent();
+			String d = new String(strm.readAllBytes(), "UTF-8");
+			strm.close();
+			return d;
+		});
 		JsonObject resp = JsonParser.parseString(data).getAsJsonObject();
 		if (resp.has("error")) {
 			// Handle error
@@ -1401,53 +1606,63 @@ public class LauncherMain {
 				path = path.substring(1);
 
 			// Download mod
-			conn = (HttpURLConnection) new URL(api + "data/" + path).openConnection();
-			conn.addRequestProperty("Authorization", "Bearer " + authToken);
-			File outputFile = new File(output);
-			outputFile.getParentFile().mkdirs();
 			System.out.println("[LAUNCHER] [FERALTWEAKS LAUNCHER] Downloading " + path + " into " + output + "...");
-			FileOutputStream outp = new FileOutputStream(outputFile);
-			long size = conn.getContentLengthLong();
-			if (size == -1) {
-				// Transfer
-				conn.getInputStream().transferTo(outp);
+			get = new HttpGet(api + "data/" + path);
+			get.addHeader("Authorization", "Bearer " + authToken);
+			clientBase.execute(get, response -> {
+				// Check code
+				if (response.getCode() != 200)
+					throw new IOException("Unexpected response code: " + response.getCode());
 
-				// Increase progress
-				SwingUtilities.invokeLater(() -> {
-					progressBar.setValue(progressBar.getValue() + 100);
-					panel_1.repaint();
-				});
-			} else {
-				// Block transfer
-				long c = 0;
-				float step = 100f / (float) size;
-				int valStart = progressBar.getValue();
-				while (c < size) {
-					// Read block
-					byte[] buffer = new byte[2048];
-					int r = conn.getInputStream().read(buffer, 0, buffer.length);
-					if (r == -1)
-						throw new IOException("Stream closed before end of document");
-					c += r;
+				// Output
+				HttpEntity entity = response.getEntity();
+				long size = entity.getContentLength();
+				InputStream strm = entity.getContent();
+				File outputFile = new File(output);
+				outputFile.getParentFile().mkdirs();
+				FileOutputStream outp = new FileOutputStream(outputFile);
+				if (size == -1) {
+					// Transfer
+					strm.transferTo(outp);
 
-					// Write
-					outp.write(buffer, 0, r);
+					// Increase progress
+					SwingUtilities.invokeLater(() -> {
+						progressBar.setValue(progressBar.getValue() + 100);
+						panel_1.repaint();
+					});
+				} else {
+					// Block transfer
+					long c = 0;
+					float step = 100f / (float) size;
+					int valStart = progressBar.getValue();
+					while (c < size) {
+						// Read block
+						byte[] buffer = new byte[2048];
+						int r = strm.read(buffer, 0, buffer.length);
+						if (r == -1)
+							throw new IOException("Stream closed before end of document");
+						c += r;
+
+						// Write
+						outp.write(buffer, 0, r);
+
+						// Set progress
+						long cF = c;
+						SwingUtilities.invokeLater(() -> {
+							progressBar.setValue(valStart + (int) ((float) step * cF));
+							panel_1.repaint();
+						});
+					}
 
 					// Set progress
-					long cF = c;
 					SwingUtilities.invokeLater(() -> {
-						progressBar.setValue(valStart + (int) ((float) step * cF));
+						progressBar.setValue(valStart + 100);
 						panel_1.repaint();
 					});
 				}
-
-				// Set progress
-				SwingUtilities.invokeLater(() -> {
-					progressBar.setValue(valStart + 100);
-					panel_1.repaint();
-				});
-			}
-			outp.close();
+				outp.close();
+				return null;
+			});
 		}
 
 		// Set progress
@@ -1583,34 +1798,46 @@ public class LauncherMain {
 
 	private void downloadFile(String url, File outp, JProgressBar progressBar, JPanel panel_1)
 			throws MalformedURLException, IOException {
-		URLConnection urlConnection = new URL(url).openConnection();
-		try {
-			SwingUtilities.invokeAndWait(() -> {
-				progressBar.setMaximum(urlConnection.getContentLength() / 1000);
-				progressBar.setValue(0);
-				panel_1.repaint();
-			});
-		} catch (InvocationTargetException | InterruptedException e) {
-		}
-		InputStream data = urlConnection.getInputStream();
-		FileOutputStream out = new FileOutputStream(outp);
-		while (true) {
-			byte[] b = data.readNBytes(1000);
-			if (b.length == 0)
-				break;
-			else {
-				out.write(b);
-				SwingUtilities.invokeLater(() -> {
-					progressBar.setValue(progressBar.getValue() + 1);
+		HttpGet get = new HttpGet(url);
+		clientBase.execute(get, response -> {
+			// Check code
+			if (response.getCode() != 200)
+				throw new IOException("Unexpected response code: " + response.getCode());
+
+			// Get entity
+			HttpEntity entity = response.getEntity();
+			long size = entity.getContentLength();
+			InputStream data = entity.getContent();
+
+			// Download
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					progressBar.setMaximum((int) (size / 1000));
+					progressBar.setValue(0);
 					panel_1.repaint();
 				});
+			} catch (InvocationTargetException | InterruptedException e) {
 			}
-		}
-		out.close();
-		data.close();
-		SwingUtilities.invokeLater(() -> {
-			progressBar.setValue(progressBar.getMaximum());
-			panel_1.repaint();
+			FileOutputStream out = new FileOutputStream(outp);
+			while (true) {
+				byte[] b = data.readNBytes(1000);
+				if (b.length == 0)
+					break;
+				else {
+					out.write(b);
+					SwingUtilities.invokeLater(() -> {
+						progressBar.setValue(progressBar.getValue() + 1);
+						panel_1.repaint();
+					});
+				}
+			}
+			out.close();
+			data.close();
+			SwingUtilities.invokeLater(() -> {
+				progressBar.setValue(progressBar.getMaximum());
+				panel_1.repaint();
+			});
+			return null;
 		});
 	}
 

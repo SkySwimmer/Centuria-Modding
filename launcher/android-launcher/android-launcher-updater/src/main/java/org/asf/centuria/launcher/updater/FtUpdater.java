@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ import java.util.zip.ZipFile;
 
 import org.asf.centuria.launcher.IFeralTweaksLauncher;
 import org.asf.centuria.launcher.io.IoUtil;
+import org.asf.centuria.launcher.io.PrependedBufferStream;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -322,10 +324,12 @@ public class FtUpdater {
 	private void downloadFile(String url, File outp) throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
+		Socket conn = null;
 		if (url.startsWith("http:")) {
 			// Plain HTTP
 			URL u = new URL(url);
-			Socket conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
+			conn = new Socket(u.getHost(), u.getPort() == -1 ? 80 : u.getPort());
+			PrependedBufferStream st = new PrependedBufferStream(conn.getInputStream());
 
 			// Write request
 			conn.getOutputStream().write(("GET " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
@@ -335,14 +339,14 @@ public class FtUpdater {
 
 			// Check response
 			Map<String, String> responseHeadersOutput = new HashMap<String, String>();
-			String line = readStreamLine(conn.getInputStream());
+			String line = readStreamLine(st);
 			String statusLine = line;
 			if (!line.startsWith("HTTP/1.1 ")) {
 				conn.close();
 				throw new IOException("Server returned invalid protocol");
 			}
 			while (true) {
-				line = readStreamLine(conn.getInputStream());
+				line = readStreamLine(st);
 				if (line.equals(""))
 					break;
 				String key = line.substring(0, line.indexOf(": "));
@@ -358,7 +362,7 @@ public class FtUpdater {
 			}
 
 			// Set data
-			data = conn.getInputStream();
+			data = st;
 			progressValue = 0;
 			progressMax = (int) (Long.parseLong(responseHeadersOutput.get("content-length")) / 1000);
 			progressEnabled = true;
@@ -385,6 +389,12 @@ public class FtUpdater {
 		}
 		out.close();
 		data.close();
+		if (conn != null) {
+			try {
+				conn.close();
+			} catch (IOException e) {
+			}
+		}
 		progressValue = progressMax;
 		updateProgress();
 	}
@@ -440,16 +450,65 @@ public class FtUpdater {
 		archive.close();
 	}
 
-	private static String readStreamLine(InputStream strm) throws IOException {
-		String buffer = "";
-		while (true) {
-			char ch = (char) strm.read();
-			if (ch == (char) -1)
-				return null;
-			if (ch == '\n') {
-				return buffer;
-			} else if (ch != '\r') {
-				buffer += ch;
+	private static String readStreamLine(PrependedBufferStream strm) throws IOException {
+		// Read a number of bytes
+		byte[] content = new byte[20480];
+		int read = strm.read(content, 0, content.length);
+		if (read <= -1) {
+			// Failed
+			return null;
+		} else {
+			// Trim array
+			content = Arrays.copyOfRange(content, 0, read);
+
+			// Find newline
+			String newData = new String(content, "UTF-8");
+			if (newData.contains("\n")) {
+				// Found newline
+				String line = newData.substring(0, newData.indexOf("\n"));
+				int offset = line.length() + 1;
+				int returnLength = content.length - offset;
+				if (returnLength > 0) {
+					// Return
+					strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+				}
+				return line.replace("\r", "");
+			} else {
+				// Read more
+				while (true) {
+					byte[] addition = new byte[20480];
+					read = strm.read(addition, 0, addition.length);
+					if (read <= -1) {
+						// Failed
+						strm.returnToBuffer(content);
+						return null;
+					}
+
+					// Trim
+					addition = Arrays.copyOfRange(addition, 0, read);
+
+					// Append
+					byte[] newContent = new byte[content.length + addition.length];
+					for (int i = 0; i < content.length; i++)
+						newContent[i] = content[i];
+					for (int i = content.length; i < newContent.length; i++)
+						newContent[i] = addition[i - content.length];
+					content = newContent;
+
+					// Find newline
+					newData = new String(content, "UTF-8");
+					if (newData.contains("\n")) {
+						// Found newline
+						String line = newData.substring(0, newData.indexOf("\n"));
+						int offset = line.length() + 1;
+						int returnLength = content.length - offset;
+						if (returnLength > 0) {
+							// Return
+							strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+						}
+						return line.replace("\r", "");
+					}
+				}
 			}
 		}
 	}

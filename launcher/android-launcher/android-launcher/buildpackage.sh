@@ -123,10 +123,10 @@ fi
 echo
 
 # Windowsill
-echo Building windowsill...
-cd ../windowsill-cpp/
-chmod +x buildpackage.sh
-./buildpackage.sh || exit 1
+#echo Building windowsill...
+#cd ../windowsill-cpp/
+#chmod +x buildpackage.sh
+#./buildpackage.sh || exit 1
 cd ../android-launcher
 echo Copying libraries...
 cp -v ../windowsill-cpp/src/build/*.so build/launcher-binaries

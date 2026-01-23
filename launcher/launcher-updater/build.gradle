@@ -58,7 +58,7 @@ artifacts {
 }
 
 dependencies {
-	implementation group: 'com.google.code.gson', name: 'gson', version: '2.9.0'
+	implementation group: 'com.google.code.gson', name: 'gson', version: '2.13.2'
 }
 
 project.configurations.implementation.canBeResolved = true

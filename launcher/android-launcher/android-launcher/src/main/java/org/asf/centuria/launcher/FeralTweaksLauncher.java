@@ -14,6 +14,8 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -29,6 +31,8 @@ import javax.net.ssl.SSLSocketFactory;
 import org.asf.centuria.launcher.io.ChunkedStream;
 import org.asf.centuria.launcher.io.IoUtil;
 import org.asf.centuria.launcher.io.LengthLimitedStream;
+import org.asf.centuria.launcher.io.PrependedBufferStream;
+import org.asf.centuria.launcher.io.SocketCloserStream;
 import org.asf.centuria.launcher.processors.AssetProxyProcessor;
 import org.asf.centuria.launcher.processors.ProxyProcessor;
 import org.asf.connective.ConnectiveHttpServer;
@@ -92,7 +96,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	private boolean disableModloader;
 	private boolean useProxyMethod;
 
-	private String proxyAssetUrl = "https://emuferal.ddns.net/feralassets";
+	private String proxyAssetUrl = "https://game-assets.emuferal.openferal.net/";
 
 	private String accountID;
 
@@ -187,15 +191,13 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					if (!proxyAssetUrl.endsWith("/"))
 						proxyAssetUrl += "/";
 
-					// Handle relative paths for banner
-					if (!banner.startsWith("http://") && !banner.startsWith("https://")) {
-						String api = hosts.get("api").getAsString();
-						if (!api.endsWith("/"))
-							api += "/";
-						while (banner.startsWith("/"))
-							banner = banner.substring(1);
-						banner = api + banner;
-					}
+					// Assign banner
+					String api = hosts.get("api").getAsString();
+					if (!api.endsWith("/"))
+						api += "/";
+					String apiData = api + "data/";
+					banner = processRelative(apiData, banner);
+					proxyAssetUrl = processRelative(apiData, proxyAssetUrl);
 
 					// Assign platform
 					os = "android-";
@@ -250,6 +252,13 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 				// Run launcher
 				try {
+					// Get urls
+					String api = hosts.get("api").getAsString();
+					if (!api.endsWith("/"))
+						api += "/";
+					String apiData = api + "data/";
+					String apiDataF = apiData;
+
 					// Create title
 					TextView txtTitle = new TextView(activity);
 					txtTitle.setTextColor(Color.WHITE);
@@ -326,9 +335,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						if (!lastToken.isEmpty()) {
 							// Contact API
 							try {
-								String api = hosts.get("api").getAsString();
-								if (!api.endsWith("/"))
-									api += "/";
 								HashMap<String, String> headers = new HashMap<String, String>();
 								headers.put("Authorization", "Bearer " + lastToken);
 								InputStream res = request(api + "centuria/refreshtoken", "POST", headers, null);
@@ -451,7 +457,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 																		login.toString());
 
 																// Run launcher post-auth
-																postAuth(accountID, authToken);
+																postAuth(apiDataF, accountID, authToken);
 															} catch (Throwable e) {
 																Throwable t = e;
 																String stackTr = "";
@@ -556,7 +562,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 													public void run() {
 														try {
 															// Run launcher post-auth
-															postAuth(accountIDF, authTokenF);
+															postAuth(apiDataF, accountIDF, authTokenF);
 														} catch (Throwable e) {
 															Throwable t = e;
 															String stackTr = "";
@@ -588,10 +594,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 						}
 
 						// Run launcher post-auth
-						postAuth(accountID, authToken);
+						postAuth(apiData, accountID, authToken);
 					} else {
 						// Run game
-						startGame(false, null);
+						startGame(apiData, false, null);
 					}
 				} catch (Throwable e) {
 					Throwable t = e;
@@ -628,7 +634,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				}
 			}
 
-			private void postAuth(String accountID, String authToken) throws Throwable {
+			private void postAuth(String apiData, String accountID, String authToken) throws Throwable {
 				// Success
 				log("Login success!");
 				FeralTweaksLauncher.this.accountID = accountID;
@@ -655,10 +661,10 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				boolean completedTutorial = respJ.get("tutorial_completed").getAsBoolean();
 
 				// Start game
-				startGame(completedTutorial, authToken);
+				startGame(apiData, completedTutorial, authToken);
 			}
 
-			private void startGame(boolean completedTutorial, String authToken) throws Throwable {
+			private void startGame(String apiData, boolean completedTutorial, String authToken) throws Throwable {
 				// Check modding
 				if (!disableModloader) {
 					// Modloader update
@@ -672,7 +678,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					if (!modloader.get("version").getAsString().equals(currentLoader)) {
 						// Update modloader
 						log("Updating " + modloader.get("name").getAsString() + "...");
-						downloadFile(modloader.get("url").getAsString(), new File(launcherDir, "modloader.zip"));
+						downloadFile(processRelative(apiData, modloader.get("url").getAsString()),
+								new File(launcherDir, "modloader.zip"));
 						progressValue = 0;
 						progressMax = 100;
 						updateProgress();
@@ -886,8 +893,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 								}
 								try {
 									log("Communicating with client...");
-									launcherHandoff(cl, authTokenF, hosts.get("api").getAsString(), serverInfo, hosts,
-											ports, completedTutorial);
+									launcherHandoff(apiData, cl, authTokenF, hosts.get("api").getAsString(), serverInfo,
+											hosts, ports, completedTutorial);
 									cl.close();
 									log("Finished startup!");
 									Thread.sleep(1000);
@@ -962,8 +969,8 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		th.start();
 	}
 
-	private void launcherHandoff(Socket cl, String authToken, String api, JsonObject serverInfo, JsonObject hosts,
-			JsonObject ports, boolean completedTutorial) throws Exception {
+	private void launcherHandoff(String apiData, Socket cl, String authToken, String api, JsonObject serverInfo,
+			JsonObject hosts, JsonObject ports, boolean completedTutorial) throws Exception {
 		if (!api.endsWith("/"))
 			api += "/";
 
@@ -994,13 +1001,72 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					.encodeToString((file + "::" + patch.replace("\t", "    ").replace("\r", "")).getBytes("UTF-8")));
 		}
 
-		// Send server environment
-		Log.i("FT-LAUNCHER", "Sending configuration...");
-		sendCommand(cl, "serverenvironment", hosts.get("director").getAsString(), hosts.get("api").getAsString(),
-				hosts.get("chat").getAsString(), ports.get("chat").getAsInt(), ports.get("game").getAsInt(),
-				hosts.get("voiceChat").getAsString(), ports.get("voiceChat").getAsInt(),
-				ports.get("bluebox").getAsInt(), serverInfo.get("encryptedGame").getAsBoolean(),
-				serverInfo.get("encryptedChat").getAsBoolean());
+		// Log
+		Log.i("FT-LAUNCHER", "Sending server environment...");
+
+		// Build command
+		// The server environment commands are in order
+		ArrayList<Object> serverEnv = new ArrayList<Object>();
+
+		// API hosts
+		serverEnv.add(hosts.get("director").getAsString());
+		serverEnv.add(hosts.get("api").getAsString());
+
+		// Chat
+		serverEnv.add(hosts.get("chat").getAsString());
+		serverEnv.add(ports.get("chat").getAsInt());
+
+		// Gameserver
+		serverEnv.add(ports.get("game").getAsInt());
+
+		// Voicechat
+		serverEnv.add(hosts.get("voiceChat").getAsString());
+		serverEnv.add(ports.get("voiceChat").getAsInt());
+
+		// Bluebox
+		serverEnv.add(ports.get("bluebox").getAsInt());
+
+		// Encryption states
+		serverEnv.add(serverInfo.get("encryptedGame").getAsBoolean());
+		serverEnv.add(serverInfo.get("encryptedChat").getAsBoolean());
+		serverEnv.add(serverInfo.get("encryptedVoiceChat").getAsBoolean());
+
+		// If present, send asset servers
+		if (hosts.has("gameAssets")) {
+			JsonObject assets = hosts.get("gameAssets").getAsJsonObject();
+
+			// Prod
+			serverEnv.add(processUrl(apiData, assets.get("prod").getAsString()));
+
+			// If present, add stage
+			if (assets.has("stage")) {
+				// Stage
+				serverEnv.add(processUrl(apiData, assets.get("stage").getAsString()));
+
+				// If present, add dev
+				if (assets.has("dev")) {
+					// Dev
+					serverEnv.add(processUrl(apiData, assets.get("dev").getAsString()));
+
+					// If present, add S2
+					if (assets.has("s2")) {
+						JsonObject s2 = assets.get("s2").getAsJsonObject();
+
+						// Prod
+						serverEnv.add(processUrl(apiData, s2.get("prod").getAsString()));
+
+						// Stage
+						serverEnv.add(processUrl(apiData, s2.get("stage").getAsString()));
+
+						// Dev
+						serverEnv.add(processUrl(apiData, s2.get("dev").getAsString()));
+					}
+				}
+			}
+		}
+
+		// Check asset hosts
+		sendCommand(cl, "serverenvironment", serverEnv.toArray(new Object[0]));
 
 		// Send autologin
 		if (completedTutorial && authToken != null) {
@@ -1300,6 +1366,27 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		}
 	}
 
+	private String processRelative(String apiData, String url) {
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			while (url.startsWith("/"))
+				url = url.substring(1);
+			url = apiData + url;
+		}
+		return url;
+	}
+
+	private String processUrl(String apiData, String url) {
+		// Check
+		if (!url.endsWith("/"))
+			url += "/";
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			while (url.startsWith("/"))
+				url = url.substring(1);
+			url = apiData + url;
+		}
+		return url;
+	}
+
 	/**
 	 * Sends HTTP requests
 	 * 
@@ -1311,11 +1398,11 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	 * @throws MalformedURLException If the URL is not of a valid format
 	 * @throws IOException           If a transfer error occurs
 	 */
-	public InputStream request(String url, String method, Map<String, String> headers, byte[] body)
+	public static InputStream request(String url, String method, Map<String, String> headers, byte[] body)
 			throws MalformedURLException, IOException {
 		ResponseData res = requestRaw(url, method, headers, body);
 		if (res.statusCode != 200) {
-			res.bodyStream.close();
+			res.close();
 			throw new IOException("Server returned HTTP " + res.statusLine.substring("HTTP/1.1 ".length()));
 		}
 		return res.bodyStream;
@@ -1332,7 +1419,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 	 * @throws MalformedURLException If the URL is not of a valid format
 	 * @throws IOException           If a transfer error occurs
 	 */
-	public ResponseData requestRaw(String url, String method, Map<String, String> headers, byte[] body)
+	public static ResponseData requestRaw(String url, String method, Map<String, String> headers, byte[] body)
 			throws MalformedURLException, IOException {
 		// Check URL
 		InputStream data;
@@ -1348,6 +1435,7 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 				SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 				conn = factory.createSocket(u.getHost(), u.getPort() == -1 ? 443 : u.getPort());
 			}
+			PrependedBufferStream st = new PrependedBufferStream(conn.getInputStream());
 
 			// Write request
 			conn.getOutputStream().write((method + " " + u.getFile() + " HTTP/1.1\r\n").getBytes("UTF-8"));
@@ -1363,14 +1451,14 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 
 			// Check response
 			Map<String, String> responseHeadersOutput = new HashMap<String, String>();
-			String line = readStreamLine(conn.getInputStream());
+			String line = readStreamLine(st);
 			String statusLine = line;
 			if (!line.startsWith("HTTP/1.1 ")) {
 				conn.close();
 				throw new IOException("Server returned invalid protocol");
 			}
 			while (true) {
-				line = readStreamLine(conn.getInputStream());
+				line = readStreamLine(st);
 				if (line.equals(""))
 					break;
 				String key = line.substring(0, line.indexOf(": "));
@@ -1382,20 +1470,20 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 			int status = Integer.parseInt(statusLine.split(" ")[1]);
 
 			// Set data
-			data = conn.getInputStream();
+			data = st;
 
 			// Return
 			ResponseData resp = new ResponseData();
 			resp.statusLine = statusLine;
 			resp.statusCode = status;
-			resp.bodyStream = data;
+			resp.bodyStream = new SocketCloserStream(data, conn);
 			resp.headers = responseHeadersOutput;
 			if (resp.headers.containsKey("transfer-encoding")
 					&& resp.headers.get("transfer-encoding").equalsIgnoreCase("chunked"))
 				resp.bodyStream = new ChunkedStream(resp.bodyStream);
 			else if (resp.headers.containsKey("content-length")
 					&& Long.parseLong(resp.headers.get("content-length")) > 0)
-				resp.bodyStream = new LengthLimitedStream(resp.bodyStream,
+				resp.bodyStream = new LengthLimitedStream(resp.bodyStream, true,
 						Long.parseLong(resp.headers.get("content-length")));
 			return resp;
 		} else {
@@ -1522,16 +1610,65 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 		archive.close();
 	}
 
-	private static String readStreamLine(InputStream strm) throws IOException {
-		String buffer = "";
-		while (true) {
-			char ch = (char) strm.read();
-			if (ch == (char) -1)
-				return null;
-			if (ch == '\n') {
-				return buffer;
-			} else if (ch != '\r') {
-				buffer += ch;
+	private static String readStreamLine(PrependedBufferStream strm) throws IOException {
+		// Read a number of bytes
+		byte[] content = new byte[20480];
+		int read = strm.read(content, 0, content.length);
+		if (read <= -1) {
+			// Failed
+			return null;
+		} else {
+			// Trim array
+			content = Arrays.copyOfRange(content, 0, read);
+
+			// Find newline
+			String newData = new String(content, "UTF-8");
+			if (newData.contains("\n")) {
+				// Found newline
+				String line = newData.substring(0, newData.indexOf("\n"));
+				int offset = line.length() + 1;
+				int returnLength = content.length - offset;
+				if (returnLength > 0) {
+					// Return
+					strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+				}
+				return line.replace("\r", "");
+			} else {
+				// Read more
+				while (true) {
+					byte[] addition = new byte[20480];
+					read = strm.read(addition, 0, addition.length);
+					if (read <= -1) {
+						// Failed
+						strm.returnToBuffer(content);
+						return null;
+					}
+
+					// Trim
+					addition = Arrays.copyOfRange(addition, 0, read);
+
+					// Append
+					byte[] newContent = new byte[content.length + addition.length];
+					for (int i = 0; i < content.length; i++)
+						newContent[i] = content[i];
+					for (int i = content.length; i < newContent.length; i++)
+						newContent[i] = addition[i - content.length];
+					content = newContent;
+
+					// Find newline
+					newData = new String(content, "UTF-8");
+					if (newData.contains("\n")) {
+						// Found newline
+						String line = newData.substring(0, newData.indexOf("\n"));
+						int offset = line.length() + 1;
+						int returnLength = content.length - offset;
+						if (returnLength > 0) {
+							// Return
+							strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+						}
+						return line.replace("\r", "");
+					}
+				}
 			}
 		}
 	}

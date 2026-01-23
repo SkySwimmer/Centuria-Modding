@@ -75,7 +75,7 @@ namespace CenturiaSelfExtractingInstaller
 
                 // Copy data
                 Console.WriteLine("Copying zip into installer...");
-                FileStream o = File.OpenWrite("installer.exe");
+                FileStream o = File.OpenWrite(args.Length == 1 ? "installer.exe" : args[1]);
                 strm.Position = 0;
                 strm.CopyTo(o);
 
