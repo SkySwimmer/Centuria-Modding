@@ -809,9 +809,6 @@ public class LauncherUpdaterMain {
 				if (useWine) {
 					log("Selecting wine installation...");
 
-					// Select installation
-					WineInstallation selected = selectedWine;
-
 					// Check bundled support
 					if (supportBundledWine && useBundled) {
 						// Use bundled
@@ -819,7 +816,7 @@ public class LauncherUpdaterMain {
 						selectedWine = new WineInstallation("syslibs/bin", "Bundled wine", false, false);
 					} else {
 						// Check auto
-						if (selected.isAuto) {
+						if (selectedWine == null || selectedWine.isAuto) {
 							// Find first automatic entry
 							log("Selecting wine using automatic detection system...");
 
@@ -842,7 +839,7 @@ public class LauncherUpdaterMain {
 							}
 
 							// Find wine packages
-							if (selected == null || selected.isAuto) {
+							if (selectedWine == null || selectedWine.isAuto) {
 								System.out
 										.println("[LAUNCHER] [UPDATER] " + "Attempting to select wine installation...");
 								Optional<WineInstallation> wine = Stream.of(allWineInstalls).filter(t -> !t.isProton)
@@ -859,7 +856,7 @@ public class LauncherUpdaterMain {
 							}
 
 							// Use default
-							if (selected.isAuto) {
+							if (selectedWine == null || selectedWine.isAuto) {
 								System.out.println("[LAUNCHER] [UPDATER] "
 										+ "Attempting to find wine installations using default listing...");
 								Optional<WineInstallation> wine = Stream.of(allWineInstalls).findFirst();
