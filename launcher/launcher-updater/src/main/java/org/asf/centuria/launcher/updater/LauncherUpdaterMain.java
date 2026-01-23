@@ -892,8 +892,7 @@ public class LauncherUpdaterMain {
 				builder.environment().put("CENTURIA_LAUNCHER_PATH",
 						(os == 0 || os == 2 ? new File("launcher.sh").getAbsolutePath()
 								: new File("launcher.bat").getAbsolutePath()));
-				if (os == 0)
-					builder.environment().put("PATH", pathExtensions + System.getenv("PATH") + ":/usr/local/bin");
+				builder.environment().put("PATH", pathExtensions + System.getenv("PATH"));
 				builder.inheritIO();
 				Process proc = builder.start();
 
