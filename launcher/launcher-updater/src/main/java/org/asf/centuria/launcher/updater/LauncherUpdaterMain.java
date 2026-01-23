@@ -1781,8 +1781,8 @@ public class LauncherUpdaterMain {
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
 			}
-			copyDir(instSource, new File(System.getProperty("user.home") + "/Applications/" + srvName + ".app"),
-					progressBar);
+			File appDir = new File(System.getProperty("user.home") + "/Applications/" + srvName + ".app");
+			copyDir(instSource, appDir, progressBar);
 			if (progressBar != null) {
 				try {
 					SwingUtilities.invokeAndWait(() -> {
@@ -1793,6 +1793,14 @@ public class LauncherUpdaterMain {
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
 			}
+
+			// Copy server json
+			sOut = new File(appDir, os == 0 ? "Contents/Resources/server.json" : "server.json");
+			if (sOut.exists())
+				sOut.delete();
+			Files.copy(new File("server.json").toPath(), sOut.toPath());
+
+			// Delete old folder if needed
 			File oldLauncher = new File("/Applications/" + srvName + ".app");
 			if (oldLauncher.exists()) {
 				// Remove
