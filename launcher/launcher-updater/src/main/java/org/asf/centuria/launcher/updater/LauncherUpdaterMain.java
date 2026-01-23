@@ -2024,9 +2024,8 @@ public class LauncherUpdaterMain {
 					sO.write(("Comment=Launcher for " + srvName + "\n").getBytes("UTF-8"));
 					sO.write(("Exec=\"" + new File(launcherOut, "launcher.sh").getAbsolutePath() + "\"\n")
 							.getBytes("UTF-8"));
-					sO.write(("Icon=\"" + new File(launcherOut, "icon.png").getAbsolutePath() + "\"\n")
-							.getBytes("UTF-8"));
-					sO.write(("Path=\"" + launcherOut.getAbsolutePath() + "\"\n").getBytes("UTF-8"));
+					sO.write(("Icon=" + new File(launcherOut, "icon.png").getAbsolutePath() + "\n").getBytes("UTF-8"));
+					sO.write(("Path=" + launcherOut.getAbsolutePath() + "\n").getBytes("UTF-8"));
 					sO.write(("StartupNotify=true\n").getBytes("UTF-8"));
 					sO.write(("Terminal=false\n").getBytes("UTF-8"));
 					sO.write(("Type=Application\n").getBytes("UTF-8"));
@@ -2048,9 +2047,9 @@ public class LauncherUpdaterMain {
 						sO.write(("Comment=Launcher for " + srvName + "\n").getBytes("UTF-8"));
 						sO.write(("Exec=\"" + new File(launcherOut, "launcher.sh").getAbsolutePath() + "\"\n")
 								.getBytes("UTF-8"));
-						sO.write(("Icon=\"" + new File(launcherOut, "icon.png").getAbsolutePath() + "\"\n")
+						sO.write(("Icon=" + new File(launcherOut, "icon.png").getAbsolutePath() + "\n")
 								.getBytes("UTF-8"));
-						sO.write(("Path=\"" + launcherOut.getAbsolutePath() + "\"\n").getBytes("UTF-8"));
+						sO.write(("Path=" + launcherOut.getAbsolutePath() + "\n").getBytes("UTF-8"));
 						sO.write(("StartupNotify=true\n").getBytes("UTF-8"));
 						sO.write(("Terminal=false\n").getBytes("UTF-8"));
 						sO.write(("Type=Application\n").getBytes("UTF-8"));
@@ -2090,7 +2089,7 @@ public class LauncherUpdaterMain {
 					sO.write("[Desktop Entry]\n".getBytes("UTF-8"));
 					sO.write(("Exec=\"" + new File(launcherOut, "launcher.sh").getAbsolutePath() + "\""
 							+ (args.isEmpty() ? "" : " " + args.replace("%url%", "%u") + "\n")).getBytes("UTF-8"));
-					sO.write(("Path=\"" + launcherOut.getAbsolutePath() + "\"\n").getBytes("UTF-8"));
+					sO.write(("Path=" + launcherOut.getAbsolutePath() + "\n").getBytes("UTF-8"));
 					sO.write(("StartupNotify=false\n").getBytes("UTF-8"));
 					sO.write(("NoDisplay=true\n").getBytes("UTF-8"));
 					sO.write(("X-KDE-RunOnDiscreteGpu=true\n").getBytes("UTF-8"));
