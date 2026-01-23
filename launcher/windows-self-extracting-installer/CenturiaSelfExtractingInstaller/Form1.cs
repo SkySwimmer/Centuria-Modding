@@ -52,7 +52,6 @@ namespace CenturiaSelfExtractingInstaller
                     // Read position
                     sPos = BitConverter.ToInt64(pos, 0);
                     strm.Position = sPos;
-                    MessageBox.Show(sPos + " " + payloadEnd);
                 }
                 catch
                 {

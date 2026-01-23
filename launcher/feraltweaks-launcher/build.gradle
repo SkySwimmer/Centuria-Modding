@@ -60,13 +60,13 @@ artifacts {
 }
 
 dependencies {
-	implementation group: 'com.google.code.gson', name: 'gson', version: '2.9.0'
+	implementation group: 'com.google.code.gson', name: 'gson', version: '2.13.2'
 	
-	implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.21'	
-	implementation group: 'org.tukaani', name: 'xz', version: '1.9'
-	implementation group: 'org.joml', name: 'joml', version: '1.10.4'
+	implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.28.0'
+	implementation group: 'org.tukaani', name: 'xz', version: '1.11'
+	implementation group: 'org.joml', name: 'joml', version: '1.10.8'
 	
-	implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.2.1'
+	implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.6'
 }
 
 project.configurations.implementation.canBeResolved = true

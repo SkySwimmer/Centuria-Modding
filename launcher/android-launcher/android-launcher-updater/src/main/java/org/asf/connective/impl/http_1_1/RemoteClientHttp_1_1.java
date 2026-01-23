@@ -425,14 +425,22 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 			// Transfer body
 			if (response.getBodyLength() >= 0) {
 				long length = response.getBodyLength();
-				int tr = 0;
+				long tr = 0;
 				for (long i = 0; i < length; i += tr) {
-					tr = 1024 * 1024;
-					if (tr > length)
-						tr = (int) length;
-					byte[] b = IoUtil.readNBytes(response.getBodyStream(), tr);
-					tr = b.length;
-					out.write(b);
+					// Prepare buffer
+					int bufLen = 20480;
+					if (bufLen > (length - i))
+						bufLen = (int) (length - i);
+
+					// Read
+					byte[] buffer = new byte[bufLen];
+					int readNum = response.getBodyStream().read(buffer, 0, buffer.length);
+					if (readNum == -1)
+						throw new IOException("Unexpected End of File");
+
+					// Write
+					out.write(buffer, 0, readNum);
+					tr = readNum;
 				}
 			} else {
 				// Write in chunks

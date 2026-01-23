@@ -2,19 +2,17 @@ package org.asf.centuria.launcher.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 
-public class LengthLimitedStream extends InputStream {
+public class SocketCloserStream extends InputStream {
 
 	private InputStream delegate;
-	private long currentPos;
-	private long length;
-	private boolean allowClose;
+	private Socket conn;
 	private boolean closed;
 
-	public LengthLimitedStream(InputStream delegate, boolean allowClose, long length) {
+	public SocketCloserStream(InputStream delegate, Socket conn) {
 		this.delegate = delegate;
-		this.length = length;
-		this.allowClose = allowClose;
+		this.conn = conn;
 	}
 
 	@Override
@@ -22,15 +20,9 @@ public class LengthLimitedStream extends InputStream {
 		// Check
 		if (closed)
 			throw new IOException("Stream closed");
-		if (currentPos >= length)
-			return -1;
 
 		// Read
-		int b = delegate.read();
-		currentPos++;
-		if (b == -1)
-			currentPos = length;
-		return b;
+		return delegate.read();
 	}
 
 	@Override
@@ -43,8 +35,6 @@ public class LengthLimitedStream extends InputStream {
 		// Check position
 		if (closed)
 			throw new IOException("Stream closed");
-		if (currentPos >= length)
-			return -1;
 
 		// Check
 		if (end == 0)
@@ -60,8 +50,6 @@ public class LengthLimitedStream extends InputStream {
 
 		// Read block
 		int amount = bytesToRead;
-		if (amount > (length - currentPos))
-			amount = (int) (length - currentPos);
 		byte[] buffer = new byte[amount];
 		int read = delegate.read(buffer, 0, amount);
 		if (read == -1) {
@@ -69,7 +57,6 @@ public class LengthLimitedStream extends InputStream {
 			return -1;
 		}
 		bytesRead += read;
-		currentPos += read;
 
 		// Write block to output
 		for (int i = 0; i < buffer.length; i++)
@@ -81,8 +68,11 @@ public class LengthLimitedStream extends InputStream {
 
 	@Override
 	public void close() throws IOException {
-		if (allowClose)
-			delegate.close();
+		delegate.close();
+		try {
+			conn.close();
+		} catch (IOException e) {
+		}
 		closed = true;
 	}
 

@@ -49,7 +49,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 
 			// Build url
 			String url = newHost + path;
-			if (getRequest().getRequestQuery().isEmpty())
+			if (!getRequest().getRequestQuery().isEmpty())
 				url += "?" + getRequest().getRequestQuery();
 
 			// Proxy
@@ -68,8 +68,7 @@ public class ProxyProcessor extends HttpPushProcessor {
 					getRequest().transferRequestBody(bO);
 					body = bO.toByteArray();
 				}
-				FeralTweaksLauncher.ResponseData resp = FeralTweaksLauncher.getInstance().requestRaw(url, method,
-						headers, body);
+				FeralTweaksLauncher.ResponseData resp = FeralTweaksLauncher.requestRaw(url, method, headers, body);
 
 				// Read response code
 				int responseCode = resp.statusCode;
