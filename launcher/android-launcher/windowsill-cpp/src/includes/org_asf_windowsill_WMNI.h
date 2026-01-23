@@ -33,6 +33,14 @@ JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_loadLibrary
 
 /*
  * Class:     org_asf_windowsill_WMNI
+ * Method:    librarySymbol
+ * Signature: (JLjava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_asf_windowsill_WMNI_librarySymbol
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     org_asf_windowsill_WMNI
  * Method:    closeLibrary
  * Signature: (J)V
  */

@@ -402,7 +402,12 @@ public class DataProcessor extends HttpRequestHandler {
 					&& !path.endsWith("/feraltweaks/settings.props")
 					&& !path.endsWith("/clientmods/assemblies/index.json")
 					&& !path.endsWith("/clientmods/assets/index.json")
-					&& !path.endsWith("/server.json")) {
+					&& !path.endsWith("/clientmods/assemblies-osx/index.json")
+					&& !path.endsWith("/clientmods/assets-osx/index.json")
+					&& !path.endsWith("/clientmods/assemblies-win64/index.json")
+					&& !path.endsWith("/clientmods/assets-win64/index.json")
+					&& !path.endsWith("/clientmods/assemblies-linux/index.json")
+					&& !path.endsWith("/clientmods/assets-linux/index.json") && !path.endsWith("/server.json")) {
 
 				// Check if its a index json request of a different folder
 				if (path.endsWith("/index.json")) {
@@ -461,7 +466,10 @@ public class DataProcessor extends HttpRequestHandler {
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
-			} else if (path.endsWith("/clientmods/assemblies/index.json")) {
+			} else if (path.endsWith("/clientmods/assemblies/index.json")
+					&& path.endsWith("/clientmods/assemblies-osx/index.json")
+					&& path.endsWith("/clientmods/assemblies-win64/index.json")
+					&& path.endsWith("/clientmods/assemblies-linux/index.json")) {
 				if (!reqFile.getParentFile().exists()) {
 					this.setResponseStatus(404, "Not found");
 					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
@@ -475,7 +483,10 @@ public class DataProcessor extends HttpRequestHandler {
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
 				return;
-			} else if (path.endsWith("/clientmods/assets/index.json")) {
+			} else if (path.endsWith("/clientmods/assets/index.json")
+					&& path.endsWith("/clientmods/assets-osx/index.json")
+					&& path.endsWith("/clientmods/assets-win64/index.json")
+					&& path.endsWith("/clientmods/assets-linux/index.json")) {
 				if (!reqFile.getParentFile().exists()) {
 					this.setResponseStatus(404, "Not found");
 					this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
@@ -497,7 +508,7 @@ public class DataProcessor extends HttpRequestHandler {
 				File cacheDir = new File("cache/feraltweaks");
 				cacheDir.mkdirs();
 				File cachedServerFileDir = new File(cacheDir,
-					path.substring(0, path.length() - "/server.json".length()));
+						path.substring(0, path.length() - "/server.json".length()));
 				cachedServerFileDir.mkdirs();
 
 				// Attempt to update upstream
@@ -543,14 +554,18 @@ public class DataProcessor extends HttpRequestHandler {
 						SocketAddress ad = sock.getLocalSocketAddress();
 						if (ad instanceof InetSocketAddress) {
 							InetSocketAddress iA = (InetSocketAddress) ad;
-							if (Centuria.encryptGame && (!Centuria.encryptGame || Centuria.directorServer instanceof TlsSecuredHttpServer || this.getServer() instanceof TlsSecuredHttpServer))
+							if (Centuria.encryptGame
+									&& (!Centuria.encryptGame || Centuria.directorServer instanceof TlsSecuredHttpServer
+											|| this.getServer() instanceof TlsSecuredHttpServer))
 								host = iA.getAddress().getCanonicalHostName();
 							else
 								host = iA.getAddress().getHostAddress();
 							addr = host;
 						}
 					}
-					if (host.equals("localhost") && (!Centuria.encryptGame && !(Centuria.directorServer instanceof TlsSecuredHttpServer) && !(this.getServer() instanceof TlsSecuredHttpServer)))
+					if (host.equals("localhost")
+							&& (!Centuria.encryptGame && !(Centuria.directorServer instanceof TlsSecuredHttpServer)
+									&& !(this.getServer() instanceof TlsSecuredHttpServer)))
 						addr = "127.0.0.1";
 				}
 
@@ -561,13 +576,11 @@ public class DataProcessor extends HttpRequestHandler {
 				JsonObject serverBlock = createOrGetJsonObject(serverInfo, "server");
 				JsonObject hosts = createOrGetJsonObject(serverBlock, "hosts");
 				hosts.addProperty("director",
-						((Centuria.directorServer instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
-								+ addr + ":"
-								+ ((NetworkedConnectiveHttpServer) Centuria.directorServer).getListenPort() + "/");
-				hosts.addProperty("api",
-						((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
-								+ addr + ":"
-								+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/");
+						((Centuria.directorServer instanceof TlsSecuredHttpServer) ? "https" : "http") + "://" + addr
+								+ ":" + ((NetworkedConnectiveHttpServer) Centuria.directorServer).getListenPort()
+								+ "/");
+				hosts.addProperty("api", ((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
+						+ addr + ":" + ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/");
 				hosts.addProperty("chat", addrRaw);
 				hosts.addProperty("voiceChat", addrRaw);
 				JsonObject ports = createOrGetJsonObject(serverBlock, "ports");
@@ -578,7 +591,9 @@ public class DataProcessor extends HttpRequestHandler {
 				serverBlock.addProperty("encryptedGame", Centuria.encryptGame);
 				serverBlock.addProperty("encryptedChat", Centuria.encryptChat);
 				serverBlock.addProperty("encryptedVoiceChat", Centuria.encryptVoiceChat);
-				serverBlock.addProperty("modVersion", (serverBlock.has("modVersion") ? serverBlock.get("modVersion").getAsString() + "-" : "") + module.modDataVersion);
+				serverBlock.addProperty("modVersion",
+						(serverBlock.has("modVersion") ? serverBlock.get("modVersion").getAsString() + "-" : "")
+								+ module.modDataVersion);
 				serverBlock.addProperty("assetVersion",
 						(serverBlock.has("assetVersion") ? serverBlock.get("assetVersion").getAsString() + "-" : "")
 								+ module.modDataVersion);
@@ -595,14 +610,13 @@ public class DataProcessor extends HttpRequestHandler {
 							// Uses upstream okaaaaaaaaay
 							// Lets change that to the local server
 							upstream = ((this.getServer() instanceof TlsSecuredHttpServer) ? "https" : "http") + "://"
-									+ addr + ":"
-									+ ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort() + "/"
-									+ upstream.substring(url.length());
+									+ addr + ":" + ((NetworkedConnectiveHttpServer) this.getServer()).getListenPort()
+									+ "/" + upstream.substring(url.length());
 							hosts.addProperty("launcherDataSource", upstream);
 						}
 					}
 				}
-				
+
 				// Load existing data over it
 				if (reqFile.exists()) {
 					try {

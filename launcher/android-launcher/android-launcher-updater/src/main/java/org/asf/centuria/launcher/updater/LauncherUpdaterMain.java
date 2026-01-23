@@ -221,29 +221,14 @@ public class LauncherUpdaterMain {
 					url = launcher.get("url").getAsString();
 					String version = launcher.get("version").getAsString();
 
-					// Handle relative paths for banner
-					if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
-						JsonObject serverInfo = info.get("server").getAsJsonObject();
-						JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
-						String api = hosts.get("api").getAsString();
-						if (!api.endsWith("/"))
-							api += "/";
-						while (splash.startsWith("/"))
-							splash = splash.substring(1);
-						splash = api + splash;
-					}
-
-					// Handle relative paths for banner
-					if (!splash.startsWith("http://") && !splash.startsWith("https://")) {
-						JsonObject serverInfo = info.get("server").getAsJsonObject();
-						JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
-						String api = hosts.get("api").getAsString();
-						if (!api.endsWith("/"))
-							api += "/";
-						while (splash.startsWith("/"))
-							splash = splash.substring(1);
-						splash = api + splash;
-					}
+					// Map relative splash
+					JsonObject serverInfo = info.get("server").getAsJsonObject();
+					JsonObject hosts = serverInfo.get("hosts").getAsJsonObject();
+					String api = hosts.get("api").getAsString();
+					if (!api.endsWith("/"))
+						api += "/";
+					String apiData = api + "data/";
+					splash = processRelative(apiData, splash);
 
 					// Log
 					logDone = false;
@@ -267,7 +252,7 @@ public class LauncherUpdaterMain {
 
 					// Assign fields
 					launcherVersion = version;
-					launcherURL = url;
+					launcherURL = processRelative(apiData, url);
 
 					// Done, check extras
 					if (extras != null && extras.containsKey("exposeApplicationData")
@@ -632,6 +617,15 @@ public class LauncherUpdaterMain {
 				builder.create().show();
 			}
 		});
+	}
+
+	private static String processRelative(String apiData, String url) {
+		if (!url.startsWith("http://") && !url.startsWith("https://")) {
+			while (url.startsWith("/"))
+				url = url.substring(1);
+			url = apiData + url;
+		}
+		return url;
 	}
 
 	public static Context getApplicationContext() {

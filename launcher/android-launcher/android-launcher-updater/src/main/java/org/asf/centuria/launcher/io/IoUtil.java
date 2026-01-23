@@ -32,7 +32,7 @@ public class IoUtil {
 		int c = 0;
 		while (true) {
 			try {
-				int r = strm.read(res, c, n);
+				int r = strm.read(res, c, n - c);
 				if (r == -1)
 					break;
 				c += r;
@@ -60,7 +60,7 @@ public class IoUtil {
 			// Read
 			int c = 0;
 			try {
-				int r = input.read(buf, c, buf.length);
+				int r = input.read(buf, c, buf.length - c);
 				if (r == -1)
 					break;
 				c += r;

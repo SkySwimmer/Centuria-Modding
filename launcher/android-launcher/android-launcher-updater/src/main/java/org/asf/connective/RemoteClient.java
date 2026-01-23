@@ -48,7 +48,7 @@ public abstract class RemoteClient {
 					resp.setResponseStatus(404, "Not found");
 				}
 			}
-
+			
 			// Set body if missing
 			if (!resp.hasResponseBody()) {
 				if (!resp.isSuccessResponseCode()) {

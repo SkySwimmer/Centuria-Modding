@@ -32,6 +32,15 @@ public class WMNI {
 	public static native long loadLibrary(String path);
 
 	/**
+	 * Loads symbols from libraries
+	 * 
+	 * @param ptr Library pointer
+	 * @param sym Symbol name
+	 * @return Library pointer
+	 */
+	public static native long librarySymbol(long ptr, String sym);
+
+	/**
 	 * Closes libraries
 	 * 
 	 * @param ptr Library pointer

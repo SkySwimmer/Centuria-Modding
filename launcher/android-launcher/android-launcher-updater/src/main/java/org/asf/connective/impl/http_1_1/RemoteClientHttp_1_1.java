@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
@@ -22,6 +23,7 @@ import org.asf.connective.objects.HttpRequest;
 import org.asf.connective.objects.HttpResponse;
 import org.asf.connective.io.IoUtil;
 import org.asf.connective.io.LengthTrackingStream;
+import org.asf.connective.io.PrependedBufferStream;
 import org.asf.connective.headers.HeaderCollection;
 import org.asf.connective.headers.HttpHeader;
 import org.asf.connective.tasks.AsyncTaskManager;
@@ -30,7 +32,7 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 
 	private ConnectiveHttpServer_1_1 server;
 	private Socket socket;
-	private InputStream in;
+	private PrependedBufferStream in;
 	private OutputStream out;
 	private String addr;
 	private int port;
@@ -49,7 +51,7 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 		super(server, responseCreator);
 		this.server = server;
 		this.socket = socket;
-		this.in = in;
+		this.in = new PrependedBufferStream(in);
 		this.out = out;
 
 		// Retrieve address and port
@@ -261,16 +263,65 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 		}
 	}
 
-	protected String readStreamLine(InputStream strm) throws IOException {
-		String buffer = "";
-		while (true) {
-			char ch = (char) strm.read();
-			if (ch == (char) -1)
-				return null;
-			if (ch == '\n') {
-				return buffer;
-			} else if (ch != '\r') {
-				buffer += ch;
+	protected String readStreamLine(PrependedBufferStream strm) throws IOException {
+		// Read a number of bytes
+		byte[] content = new byte[20480];
+		int read = strm.read(content, 0, content.length);
+		if (read <= -1) {
+			// Failed
+			return null;
+		} else {
+			// Trim array
+			content = Arrays.copyOfRange(content, 0, read);
+
+			// Find newline
+			String newData = new String(content, "UTF-8");
+			if (newData.contains("\n")) {
+				// Found newline
+				String line = newData.substring(0, newData.indexOf("\n"));
+				int offset = line.length() + 1;
+				int returnLength = content.length - offset;
+				if (returnLength > 0) {
+					// Return
+					strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+				}
+				return line.replace("\r", "");
+			} else {
+				// Read more
+				while (true) {
+					byte[] addition = new byte[20480];
+					read = strm.read(addition, 0, addition.length);
+					if (read <= -1) {
+						// Failed
+						strm.returnToBuffer(content);
+						return null;
+					}
+
+					// Trim
+					addition = Arrays.copyOfRange(addition, 0, read);
+
+					// Append
+					byte[] newContent = new byte[content.length + addition.length];
+					for (int i = 0; i < content.length; i++)
+						newContent[i] = content[i];
+					for (int i = content.length; i < newContent.length; i++)
+						newContent[i] = addition[i - content.length];
+					content = newContent;
+
+					// Find newline
+					newData = new String(content, "UTF-8");
+					if (newData.contains("\n")) {
+						// Found newline
+						String line = newData.substring(0, newData.indexOf("\n"));
+						int offset = line.length() + 1;
+						int returnLength = content.length - offset;
+						if (returnLength > 0) {
+							// Return
+							strm.returnToBuffer(Arrays.copyOfRange(content, offset, content.length));
+						}
+						return line.replace("\r", "");
+					}
+				}
 			}
 		}
 	}
@@ -374,14 +425,22 @@ public class RemoteClientHttp_1_1 extends RemoteClient {
 			// Transfer body
 			if (response.getBodyLength() >= 0) {
 				long length = response.getBodyLength();
-				int tr = 0;
+				long tr = 0;
 				for (long i = 0; i < length; i += tr) {
-					tr = 1024 * 1024;
-					if (tr > length)
-						tr = (int) length;
-					byte[] b = IoUtil.readNBytes(response.getBodyStream(), tr);
-					tr = b.length;
-					out.write(b);
+					// Prepare buffer
+					int bufLen = 20480;
+					if (bufLen > (length - i))
+						bufLen = (int) (length - i);
+
+					// Read
+					byte[] buffer = new byte[bufLen];
+					int readNum = response.getBodyStream().read(buffer, 0, buffer.length);
+					if (readNum == -1)
+						throw new IOException("Unexpected End of File");
+
+					// Write
+					out.write(buffer, 0, readNum);
+					tr = readNum;
 				}
 			} else {
 				// Write in chunks
