@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Base64;
 
 import java.net.InetSocketAddress;
@@ -59,11 +60,17 @@ public class DataProcessor extends HttpRequestHandler {
 
 			// Check file
 			File reqFile = new File(module.ftDataPath, path);
-			if (reqFile.isDirectory()) {
+			File sourceFile = reqFile;
+			File userpatchFile = new File(module.ftUserPatchesPath, path);
+			if (reqFile.isDirectory() && (!userpatchFile.exists() || userpatchFile.isDirectory())) {
 				this.setResponseStatus(404, "Not found");
 				this.setResponseContent("text/json", "{\"error\":\"file_not_found\"}");
 				return;
 			}
+
+			// Check existence of userpatch, if found, use that one
+			if (userpatchFile.exists())
+				reqFile = userpatchFile;
 
 			// Verify security
 
@@ -118,10 +125,12 @@ public class DataProcessor extends HttpRequestHandler {
 
 			// Find secure root
 			File moduleFileRoot = new File(module.ftDataPath);
+			File userpatchFileRoot = new File(module.ftUserPatchesPath);
 			File secureRoot = reqFile.getParentFile();
 			while (true) {
 				// Check if at module root
-				if (secureRoot.getCanonicalPath().equals(moduleFileRoot.getCanonicalPath()))
+				if (secureRoot.getCanonicalPath().equals(moduleFileRoot.getCanonicalPath())
+						|| secureRoot.getCanonicalPath().equals(userpatchFileRoot.getCanonicalPath()))
 					break;
 
 				// Check file
@@ -130,6 +139,24 @@ public class DataProcessor extends HttpRequestHandler {
 
 				// Get parent
 				secureRoot = secureRoot.getParentFile();
+			}
+
+			// Check userpatches
+			if (reqFile != sourceFile && !new File(secureRoot, "ftserverdocsecurity.json").exists()) {
+				// Try with original source
+				secureRoot = sourceFile.getParentFile();
+				while (true) {
+					// Check if at module root
+					if (secureRoot.getCanonicalPath().equals(moduleFileRoot.getCanonicalPath()))
+						break;
+
+					// Check file
+					if (new File(secureRoot, "ftserverdocsecurity.json").exists())
+						break;
+
+					// Get parent
+					secureRoot = secureRoot.getParentFile();
+				}
 			}
 
 			// Check security
@@ -394,10 +421,15 @@ public class DataProcessor extends HttpRequestHandler {
 			}
 
 			// Check result
-			if ((!reqFile.exists() || (!reqFile.getParentFile().getCanonicalPath()
+			if ((!reqFile.exists() || ((!reqFile.getParentFile().getCanonicalPath()
 					.equalsIgnoreCase(new File(module.ftDataPath).getCanonicalPath())
 					&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
-							.startsWith(new File(module.ftDataPath).getCanonicalPath().toLowerCase() + File.separator)))
+							.startsWith(new File(module.ftDataPath).getCanonicalPath().toLowerCase() + File.separator))
+					&& (!reqFile.getParentFile().getCanonicalPath()
+							.equalsIgnoreCase(new File(module.ftUserPatchesPath).getCanonicalPath())
+							&& !reqFile.getParentFile().getCanonicalPath().toLowerCase()
+									.startsWith(new File(module.ftUserPatchesPath).getCanonicalPath().toLowerCase()
+											+ File.separator))))
 					&& !path.endsWith("/feraltweaks/chartpatches/index.json")
 					&& !path.endsWith("/feraltweaks/settings.props")
 					&& !path.endsWith("/clientmods/assemblies/index.json")
@@ -412,11 +444,15 @@ public class DataProcessor extends HttpRequestHandler {
 				// Check if its a index json request of a different folder
 				if (path.endsWith("/index.json")) {
 					// Find path
-					File parent = reqFile.getParentFile();
-					if (parent.exists() && parent.isDirectory() && !parent.equals(new File(module.ftDataPath))) {
+					File parent = sourceFile.getParentFile();
+					File parentPatched = userpatchFile.getParentFile();
+					if ((parent.exists() && parent.isDirectory() && !parent.equals(new File(module.ftDataPath)))
+							|| (parentPatched.exists() && parentPatched.isDirectory()
+									&& !parentPatched.equals(new File(module.ftUserPatchesPath)))) {
 						// Handle
 						JsonArray res = new JsonArray();
-						scan(parent, res, path.substring(0, path.lastIndexOf("index.json")));
+						scan(parent, parentPatched, new ArrayList<String>(), res,
+								path.substring(0, path.lastIndexOf("index.json")));
 						getResponse().setResponseStatus(200, "OK");
 						getResponse().setContent("text/json", res.toString());
 						return;
@@ -461,7 +497,10 @@ public class DataProcessor extends HttpRequestHandler {
 
 				// Index json
 				JsonArray res = new JsonArray();
-				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+				File reqSource = new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json")));
+				File reqSourcePatched = new File(module.ftUserPatchesPath,
+						path.substring(0, path.lastIndexOf("/index.json")));
+				scan(reqSource, reqSourcePatched, new ArrayList<String>(), res,
 						path.substring(0, path.lastIndexOf("/index.json")) + "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
@@ -478,7 +517,10 @@ public class DataProcessor extends HttpRequestHandler {
 
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+				File source = new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json")));
+				File sourcePatched = new File(module.ftUserPatchesPath,
+						path.substring(0, path.lastIndexOf("/index.json")));
+				scan(source, sourcePatched, new ArrayList<String>(), res,
 						path.substring(0, path.lastIndexOf("/index.json")) + "/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
@@ -495,7 +537,10 @@ public class DataProcessor extends HttpRequestHandler {
 
 				// Index json
 				JsonObject res = new JsonObject();
-				scan(new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json"))), res,
+				File source = new File(module.ftDataPath, path.substring(0, path.lastIndexOf("/index.json")));
+				File sourcePatched = new File(module.ftUserPatchesPath,
+						path.substring(0, path.lastIndexOf("/index.json")));
+				scan(source, sourcePatched, new ArrayList<String>(), res,
 						path.substring(0, path.lastIndexOf("/index.json")) + "/", "/");
 				getResponse().setResponseStatus(200, "OK");
 				getResponse().setContent("text/json", res.toString());
@@ -618,7 +663,17 @@ public class DataProcessor extends HttpRequestHandler {
 				}
 
 				// Load existing data over it
-				if (reqFile.exists()) {
+				if (sourceFile.exists()) {
+					try {
+						JsonObject localServerInfo = JsonParser.parseString(Files.readString(reqFile.toPath()))
+								.getAsJsonObject();
+
+						// Load existing data over the server info block
+						mergeObject(localServerInfo, serverInfo);
+					} catch (Exception e) {
+					}
+				}
+				if (userpatchFile.exists()) {
 					try {
 						JsonObject localServerInfo = JsonParser.parseString(Files.readString(reqFile.toPath()))
 								.getAsJsonObject();
@@ -665,23 +720,56 @@ public class DataProcessor extends HttpRequestHandler {
 		return res;
 	}
 
-	private void scan(File source, JsonArray res, String prefix) {
-		for (File f : source.listFiles()) {
-			if (f.isDirectory()) {
-				// Scan
-				scan(f, res, prefix + f.getName() + "/");
-			} else
-				res.add(prefix + f.getName());
+	private void scan(File source, File sourcePatched, ArrayList<String> foundFiles, JsonArray res, String prefix) {
+		if (source.exists()) {
+			for (File f : source.listFiles()) {
+				if (f.isDirectory()) {
+					// Scan
+					scan(f, new File(sourcePatched, f.getName()), foundFiles, res, prefix + f.getName() + "/");
+				} else if (!foundFiles.contains(prefix + f.getName())) {
+					res.add(prefix + f.getName());
+					foundFiles.add(prefix + f.getName());
+				}
+			}
+		}
+		if (sourcePatched.exists()) {
+			for (File f : sourcePatched.listFiles()) {
+				if (f.isDirectory()) {
+					// Scan
+					scan(new File(source, f.getName()), f, foundFiles, res, prefix + f.getName() + "/");
+				} else if (!foundFiles.contains(prefix + f.getName())) {
+					res.add(prefix + f.getName());
+					foundFiles.add(prefix + f.getName());
+				}
+			}
 		}
 	}
 
-	private void scan(File source, JsonObject res, String prefix, String prefixOut) {
-		for (File f : source.listFiles()) {
-			if (f.isDirectory()) {
-				// Scan
-				scan(f, res, prefix + f.getName() + "/", prefixOut + f.getName() + "/");
-			} else
-				res.addProperty(prefix + f.getName(), prefixOut + f.getName());
+	private void scan(File source, File sourcePatched, ArrayList<String> foundFiles, JsonObject res, String prefix,
+			String prefixOut) {
+		if (source.exists()) {
+			for (File f : source.listFiles()) {
+				if (f.isDirectory()) {
+					// Scan
+					scan(f, new File(sourcePatched, f.getName()), foundFiles, res, prefix + f.getName() + "/",
+							prefixOut + f.getName() + "/");
+				} else if (!foundFiles.contains(prefix + f.getName())) {
+					res.addProperty(prefix + f.getName(), prefixOut + f.getName());
+					foundFiles.add(prefix + f.getName());
+				}
+			}
+		}
+		if (sourcePatched.exists()) {
+			for (File f : sourcePatched.listFiles()) {
+				if (f.isDirectory()) {
+					// Scan
+					scan(new File(source, f.getName()), f, foundFiles, res, prefix + f.getName() + "/",
+							prefixOut + f.getName() + "/");
+				} else if (!foundFiles.contains(prefix + f.getName())) {
+					res.addProperty(prefix + f.getName(), prefixOut + f.getName());
+					foundFiles.add(prefix + f.getName());
+				}
+			}
 		}
 	}
 

@@ -44,6 +44,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	public boolean preventNonFTClients;
 
 	public String ftDataPath;
+	public String ftUserPatchesPath;
 	public String ftCachePath;
 	public String upstreamServerJsonURL;
 
@@ -70,10 +71,11 @@ public class FeralTweaksModule implements ICenturiaModule {
 		if (!configFile.exists()) {
 			// Write config
 			try {
-				Files.writeString(configFile.toPath(), ""
+				Files.writeString(configFile.toPath(), "" //
 						+ "enable-by-default=false\n" //
 						+ "prevent-non-ft-clients=true\n" //
 						+ "data-path=feraltweaks/content\n" //
+						+ "userpatch-path=feraltweaks/userpatches\n" //
 						+ "cache-path=feraltweaks/cache\n" //
 						+ "upstream-server-json-source=https://emuferal.ddns.net:6970/\n" //
 						+ "error-unauthorized=\\nFeralTweaks is presently not enabled on your account!\\n\\nPlease uninstall the client modding project, contact the server administrator if you believe this is an error.\n" //
@@ -112,6 +114,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 		enableByDefault = properties.getOrDefault("enable-by-default", "false").equalsIgnoreCase("true");
 		preventNonFTClients = properties.getOrDefault("prevent-non-ft-clients", "false").equalsIgnoreCase("true");
 		ftDataPath = properties.getOrDefault("data-path", "feraltweaks/content");
+		ftUserPatchesPath = properties.getOrDefault("userpatch-path", "feraltweaks/userpatches");
 		ftCachePath = properties.getOrDefault("cache-path", "feraltweaks/cache");
 		upstreamServerJsonURL = properties.getOrDefault("upstream-server-json-source",
 				"https://emuferal.ddns.net:6970/");
@@ -131,6 +134,12 @@ public class FeralTweaksModule implements ICenturiaModule {
 			new File(ftDataPath + "/clientmods/assemblies").mkdirs();
 		if (!new File(ftDataPath + "/clientmods/assets").exists())
 			new File(ftDataPath + "/clientmods/assets").mkdirs();
+		if (!new File(ftUserPatchesPath + "/feraltweaks/chartpatches").exists())
+			new File(ftUserPatchesPath + "/feraltweaks/chartpatches").mkdirs();
+		if (!new File(ftUserPatchesPath + "/clientmods/assemblies").exists())
+			new File(ftUserPatchesPath + "/clientmods/assemblies").mkdirs();
+		if (!new File(ftUserPatchesPath + "/clientmods/assets").exists())
+			new File(ftUserPatchesPath + "/clientmods/assets").mkdirs();
 
 		// Init managers
 		ScheduledMaintenanceManager.initMaintenanceManager();
@@ -167,8 +176,7 @@ public class FeralTweaksModule implements ICenturiaModule {
 	@EventListener
 	public void miscModeration(MiscModerationEvent event) {
 		// Check type
-		if (event.getModerationEventID() == "permissions.update" && event.getTarget() != null)
-		{
+		if (event.getModerationEventID() == "permissions.update" && event.getTarget() != null) {
 			// Update target's display
 			PlayerNameManager.updatePlayer(event.getTarget());
 		}
