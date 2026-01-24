@@ -1966,9 +1966,7 @@ public class LauncherUpdaterMain {
 				regWriteError();
 			}
 		}
-
-		// TODO: support URL protocols
-
+		
 		// Windows and linux only, macos already has the app installed now
 		if (os != 0 && (createShortcutDesktop || createStartMenu)) {
 			log("Creating shortcuts...");
