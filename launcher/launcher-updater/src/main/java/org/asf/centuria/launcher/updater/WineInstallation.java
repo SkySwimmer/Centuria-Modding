@@ -13,13 +13,29 @@ public class WineInstallation {
 		if (LauncherUpdaterMain.os != 1) {
 			File steamappsCommonDefault = new File(
 					System.getProperty("user.home") + "/.local/share/Steam/steamapps/common");
+			if (steamappsCommonDefault.exists()) {
+				// Find proton installations matching supported
+				String[] preferredProton = new String[] { "Proton 8.0", "Proton 9.0 (Beta)" };
+				ArrayList<String> protonVersions = new ArrayList<String>();
+				for (String proton : preferredProton) {
+					File game = new File(steamappsCommonDefault, proton);
+					if (game.exists()) {
+						File wineBinary = new File(game, "dist/bin/wineserver");
+						if (!wineBinary.exists()) {
+							wineBinary = new File(game, "files/bin/wineserver");
+						}
 
-			// Find proton installations matching supported
-			String[] preferredProton = new String[] { "Proton 8.0", "Proton 9.0 (Beta)" };
-			ArrayList<String> protonVersions = new ArrayList<String>();
-			for (String proton : preferredProton) {
-				File game = new File(steamappsCommonDefault, proton);
-				if (game.exists()) {
+						// Check
+						if (wineBinary.exists() && !protonVersions.contains(game.getName())) {
+							// Found proton
+							findWine(game.getName(), wineBinary.getParentFile(), null, installs, true);
+							protonVersions.add(game.getName());
+						}
+					}
+				}
+
+				// Find remaining versions
+				for (File game : steamappsCommonDefault.listFiles(t -> t.isDirectory())) {
 					File wineBinary = new File(game, "dist/bin/wineserver");
 					if (!wineBinary.exists()) {
 						wineBinary = new File(game, "files/bin/wineserver");
@@ -31,21 +47,6 @@ public class WineInstallation {
 						findWine(game.getName(), wineBinary.getParentFile(), null, installs, true);
 						protonVersions.add(game.getName());
 					}
-				}
-			}
-
-			// Find remaining versions
-			for (File game : steamappsCommonDefault.listFiles(t -> t.isDirectory())) {
-				File wineBinary = new File(game, "dist/bin/wineserver");
-				if (!wineBinary.exists()) {
-					wineBinary = new File(game, "files/bin/wineserver");
-				}
-
-				// Check
-				if (wineBinary.exists() && !protonVersions.contains(game.getName())) {
-					// Found proton
-					findWine(game.getName(), wineBinary.getParentFile(), null, installs, true);
-					protonVersions.add(game.getName());
 				}
 			}
 		}
