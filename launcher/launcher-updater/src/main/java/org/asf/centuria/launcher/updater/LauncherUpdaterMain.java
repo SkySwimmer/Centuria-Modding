@@ -1471,7 +1471,8 @@ public class LauncherUpdaterMain {
 
 		// Wine setup
 		boolean useWine = os == 2 || (os == 0 && osxUseWineMethod);
-		boolean supportBundledWine = new File("installerdata/syslibs/bin/wine").exists();
+		boolean supportBundledWine = new File("installerdata/syslibs/bin/wine").exists()
+				|| new File("installerdata/Contents/Resources/syslibs/bin/wine").exists();
 		WineInstallation[] allWineInstalls = useWine ? WineInstallation.findAllWineInstallations()
 				: new WineInstallation[0];
 
