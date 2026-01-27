@@ -60,6 +60,7 @@ public class WineInstallation {
 		// Bundled wine
 		findWine("Bundled wine (builtin)", new File("syslibs/bin"), "syslibs/bin", installs, false);
 		findWine("Bundled wine (builtin)", new File("installerdata/syslibs/bin"), "syslibs/bin", installs, false);
+		findWine("Bundled wine (builtin)", new File("installerdata/Contents/Resources/syslibs/bin"), "syslibs/bin", installs, false);
 
 		// Return
 		return installs.toArray(t -> new WineInstallation[t]);

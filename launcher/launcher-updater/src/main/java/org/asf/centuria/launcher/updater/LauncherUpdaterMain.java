@@ -1471,7 +1471,8 @@ public class LauncherUpdaterMain {
 
 		// Wine setup
 		boolean useWine = os == 2 || (os == 0 && osxUseWineMethod);
-		boolean supportBundledWine = new File("installerdata/syslibs/bin/wine").exists();
+		boolean supportBundledWine = new File("installerdata/syslibs/bin/wine").exists()
+				|| new File("installerdata/Contents/Resources/syslibs/bin/wine").exists();
 		WineInstallation[] allWineInstalls = useWine ? WineInstallation.findAllWineInstallations()
 				: new WineInstallation[0];
 
@@ -1966,7 +1967,7 @@ public class LauncherUpdaterMain {
 				regWriteError();
 			}
 		}
-		
+
 		// Windows and linux only, macos already has the app installed now
 		if (os != 0 && (createShortcutDesktop || createStartMenu)) {
 			log("Creating shortcuts...");
