@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CenturiaSelfExtractingInstaller")]
+[assembly: AssemblyTitle("Centuria Self-extracting Installer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("CenturiaSelfExtractingInstaller")]
-[assembly: AssemblyCopyright("Copyright ©  2023")]
+[assembly: AssemblyProduct("")]
+[assembly: AssemblyCopyright("Copyright(c) 2026 Nexus Emulation - Open Source GPLv2")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,9 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f1fe378a-ea57-420c-b581-1873ff9ade50")]
+[assembly: Guid("b949f94e-ea57-420c-b581-1873ff9ade50")]
+// b9b9f94e-c1c4-44d6-8729-55940a72fe80 = one false positive
+// f1fe378a-ea57-420c-b581-1873ff9ade50 = 4 palse positives
 
 // Version information for an assembly consists of the following four values:
 //

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Reflection;
 
 namespace CenturiaSelfExtractingInstaller
 {
@@ -24,8 +25,6 @@ namespace CenturiaSelfExtractingInstaller
         {
             Task.Run(() =>
             {
-                long sPos = 0;
-                long payloadEnd = 0;
                 Stream strm = null;
                 try
                 {
@@ -35,23 +34,11 @@ namespace CenturiaSelfExtractingInstaller
                     }));
 
                     // Check for installer
-                    string exe = Application.ExecutablePath;
-                    strm = File.OpenRead(exe);
-
-                    // Seek to header
-                    byte[] magic = Encoding.UTF8.GetBytes("CENTURIA!LAUNCHER");
-                    strm.Position = strm.Length - magic.Length - 8;
-                    payloadEnd = strm.Position;
-
-                    // Read header
-                    byte[] pos = new byte[8];
-                    strm.Read(pos, 0, 8);
-                    if (!BitConverter.IsLittleEndian)
-                        Array.Reverse(pos);
-
-                    // Read position
-                    sPos = BitConverter.ToInt64(pos, 0);
-                    strm.Position = sPos;
+                    strm = Assembly
+                        .GetExecutingAssembly()
+                        .GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".installer.payload.zip");;
+                    if (strm == null)
+                        throw new ArgumentException();
                 }
                 catch
                 {
@@ -73,17 +60,7 @@ namespace CenturiaSelfExtractingInstaller
                     // Read archive
                     Directory.CreateDirectory(path);
                     Stream output = File.OpenWrite(path + "/data.zip");
-                    while (sPos < payloadEnd)
-                    {
-                        byte[] block = new byte[2048];
-                        if (payloadEnd - sPos < 2048)
-                            block = new byte[payloadEnd - sPos];
-
-                        // Read block
-                        int read = strm.Read(block, 0, block.Length);
-                        sPos += read;
-                        output.Write(block, 0, block.Length);
-                    }
+                    strm.CopyTo(output);
                     output.Close();
                 }
                 catch
