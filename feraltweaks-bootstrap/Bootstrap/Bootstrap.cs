@@ -1156,8 +1156,8 @@ namespace FeralTweaksBootstrap
                 }
 
                 // Check cache
-                if (assemblyCache.ContainsKey(nm.FullName))
-                    return assemblyCache[nm.FullName];
+                if (assemblyCache.ContainsKey(nm.Name))
+                    return assemblyCache[nm.Name];
 
                 // Handle it ourselves
                 if (File.Exists("FeralTweaks/cache/assemblies/" + nm.Name + ".dll"))
@@ -1169,7 +1169,7 @@ namespace FeralTweaksBootstrap
                     res = Assembly.Load(File.ReadAllBytes("FeralTweaks/cache/unity/" + nm.Name + ".dll"));
                 }
                 if (res != null)
-                    assemblyCache[nm.FullName] = res;
+                    assemblyCache[nm.Name] = res;
                 return res;
             };
 
