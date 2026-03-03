@@ -1561,6 +1561,10 @@ public class LauncherUpdaterMain {
 			return false;
 		}
 
+		// Update file paths
+		wineProperties = new File(targetInstall, "wine.json");
+		shortcutsProperties = new File(targetInstall, "shortcuts.json");
+
 		// Wine settings
 		if (useWine) {
 			selectedWine = overview.getSelectedWine();
