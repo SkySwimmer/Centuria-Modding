@@ -16,7 +16,6 @@ function build_portable() {
 
     # OSX launcher
     from-artifact share/osx.artifact
-    from-artifact launcher/osx.artifact
 
     # OSX portable assets
     from-assets portables/osx
