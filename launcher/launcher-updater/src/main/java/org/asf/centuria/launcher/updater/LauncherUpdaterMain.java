@@ -836,7 +836,7 @@ public class LauncherUpdaterMain {
 				}
 
 				// Wine default settings
-				boolean preferProtonEnabled = true;
+				boolean preferProtonEnabled = false;
 				boolean useBundled = supportBundledWine;
 				WineInstallation selectedWine = null;
 
@@ -1662,7 +1662,7 @@ public class LauncherUpdaterMain {
 		}
 
 		// Wine default settings
-		boolean preferProtonEnabled = true;
+		boolean preferProtonEnabled = false;
 		boolean useBundled = supportBundledWine;
 		WineInstallation selectedWine = null;
 
