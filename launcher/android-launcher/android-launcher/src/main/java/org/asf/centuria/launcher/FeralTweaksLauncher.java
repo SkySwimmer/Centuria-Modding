@@ -171,7 +171,6 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					JsonObject launcher = info.get("launcher").getAsJsonObject();
 					JsonObject androidLauncher = info.get(launcherName).getAsJsonObject();
 					String banner = launcher.get("banner").getAsString();
-					url = launcher.get("url").getAsString();
 					serverInfo = info.get("server").getAsJsonObject();
 					hosts = serverInfo.get("hosts").getAsJsonObject();
 					ports = serverInfo.get("ports").getAsJsonObject();
@@ -196,6 +195,11 @@ public class FeralTweaksLauncher implements IFeralTweaksLauncher {
 					if (!api.endsWith("/"))
 						api += "/";
 					String apiData = api + "data/";
+					if (hosts.has("launcherDataSource")) {
+						apiData = hosts.get("launcherDataSource").getAsString();
+						if (!apiData.endsWith("/"))
+							apiData += "/";
+					}
 					banner = processRelative(apiData, banner);
 					proxyAssetUrl = processRelative(apiData, proxyAssetUrl);
 

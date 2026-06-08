@@ -228,6 +228,11 @@ public class LauncherUpdaterMain {
 					if (!api.endsWith("/"))
 						api += "/";
 					String apiData = api + "data/";
+					if (hosts.has("launcherDataSource")) {
+						apiData = hosts.get("launcherDataSource").getAsString();
+						if (!apiData.endsWith("/"))
+							apiData += "/";
+					}
 					splash = processRelative(apiData, splash);
 
 					// Log
