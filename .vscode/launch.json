@@ -196,6 +196,16 @@
             "classPaths": ["$Test","$Runtime"],
             "vmArgs" : "-DdebugMode -DaddCpModules=org.asf.centuria.feraltweaks.FeralTweaksModule",
             "projectName": "feraltweaks-server-module"
+        },
+        {
+            "type": "java",
+            "name": "Launcher Updater / Installer",
+            "request": "launch",
+            "console": "internalConsole",
+            "mainClass": "org.asf.centuria.launcher.updater.LauncherUpdaterMain",
+            "cwd": "${workspaceFolder}/launcher/launcher-updater/run",
+            "classPaths": ["$Test","$Runtime"],
+            "projectName": "Centuria Launcher Updater-launcher-updater"
         }
     ]
 }
