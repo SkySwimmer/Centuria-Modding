@@ -26,7 +26,7 @@ else
 
     # Build EA18
     tools/buildartifacts.sh assets/earlyaccess-1.8 "$@" || exit
-    mv build/earlyaccess-1.8 build/artifactdata-earlyaccess-1.8
+    mv build/artifacts build/artifactdata-earlyaccess-1.8
 fi
 
 # Move artifacts
