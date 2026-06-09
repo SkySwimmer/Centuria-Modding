@@ -15,6 +15,7 @@ function build_portable() {
     # Accepts: <path>
 
     # Win64 Launcher
+    from-assets portables/share
     from-artifact share/win64.artifact
     from-artifact launcher/win64.artifact
 }

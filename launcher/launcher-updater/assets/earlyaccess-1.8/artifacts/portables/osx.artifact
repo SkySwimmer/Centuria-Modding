@@ -18,6 +18,7 @@ function build_portable() {
     from-artifact share/osx.artifact
 
     # OSX portable assets
+    from-assets portables/share
     from-assets portables/osx
 
     # Set permissions
