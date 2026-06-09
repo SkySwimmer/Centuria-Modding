@@ -65,11 +65,6 @@ project.configurations.implementation.canBeResolved = true
 
 task installation () {
 	doLast {
-		copy {
-			from "launcher.sh"
-			from "launcher.bat"
-			into "build/Installations"
-		}
 		for (ResolvedArtifact arti : project.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
 			if (arti.getClassifier() != null)
 				continue;

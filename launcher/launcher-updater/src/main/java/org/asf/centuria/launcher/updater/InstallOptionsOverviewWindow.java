@@ -42,8 +42,12 @@ public class InstallOptionsOverviewWindow {
 	private JTextField textFieldInstallDir;
 	private BufferedImage img;
 
-	private boolean lock;
+	private String instDirName;
+
 	private File installDir;
+	private String initialInstallDir;
+
+	private boolean lock;
 	private boolean createShortcutDesktop = true;
 	private boolean createStartMenu = true;
 
@@ -88,16 +92,20 @@ public class InstallOptionsOverviewWindow {
 
 	public InstallOptionsOverviewWindow(JFrame parent, boolean preferProton, WineInstallation selectedWine,
 			WineInstallation[] wineInstalls, boolean useWine, boolean bundledWine, boolean useBundled,
-			BufferedImage img, boolean lock, String installDir) {
+			BufferedImage img, boolean lock, String installDir, String instDirName) {
 		this(parent, preferProton, selectedWine, wineInstalls, useWine, bundledWine, useBundled, img, lock, installDir,
+				instDirName,
 				true, true, true);
 	}
 
 	public InstallOptionsOverviewWindow(JFrame parent, boolean preferProton, WineInstallation selectedWine,
 			WineInstallation[] wineInstalls, boolean useWine, boolean bundledWine, boolean useBundled,
-			BufferedImage img, boolean lock, String installDir, boolean createShortcutDesktop, boolean createStartMenu,
+			BufferedImage img, boolean lock, String installDir, String instDirName, boolean createShortcutDesktop,
+			boolean createStartMenu,
 			boolean supportShortcutDesktop) {
 		try {
+			this.initialInstallDir = installDir;
+			this.instDirName = instDirName;
 			this.selectedWine = selectedWine;
 			this.preferProton = preferProton;
 			this.useBundled = useBundled;
@@ -204,7 +212,14 @@ public class InstallOptionsOverviewWindow {
 
 				// Assign
 				try {
-					textFieldInstallDir.setText(chooser.getSelectedFile().getCanonicalPath());
+					String pth = chooser.getSelectedFile().getCanonicalPath();
+					if (!chooser.getSelectedFile().getName().equals(instDirName)) {
+						if (!pth.endsWith(File.separator) && !pth.endsWith("/"))
+							pth += File.separator;
+						pth += instDirName;
+						new File(pth).mkdirs();
+					}
+					textFieldInstallDir.setText(pth);
 				} catch (IOException e1) {
 				}
 			}
@@ -239,13 +254,13 @@ public class InstallOptionsOverviewWindow {
 
 		// Populate wine list
 		ArrayList<WineInstallation> realWineInstalls = new ArrayList<WineInstallation>();
-		WineInstallation wineAuto = new WineInstallation("<auto>", "Use automatic selection...", false, true);
+		WineInstallation wineAuto = new WineInstallation("<auto>", "<auto>", "Use automatic selection...", false, true);
 		realWineInstalls.add(wineAuto);
 		for (WineInstallation wine : wineInstalls) {
 			// Add
 			realWineInstalls.add(wine);
 		}
-		WineInstallation winePick = new WineInstallation("<picker>", "Pick from folder...", true, true);
+		WineInstallation winePick = new WineInstallation("<picker>", "<picker>", "Pick from folder...", true, true);
 		realWineInstalls.add(winePick);
 
 		// Select
@@ -313,67 +328,30 @@ public class InstallOptionsOverviewWindow {
 							return;
 						}
 						File winePath = chooser.getSelectedFile();
-						File wineBinary = new File(winePath, "bin/wineserver");
-						String wineName = winePath.getName();
-						if (!wineBinary.exists()) {
-							// Try as binary path
-							wineBinary = new File(winePath, "wineserver");
-
-							// Try as proton
-							if (!wineBinary.exists()) {
-								// Try proton 8
-								wineBinary = new File(winePath, "dist/bin/wineserver");
-
-								// Try as proton 9
-								if (!wineBinary.exists()) {
-									// Try proton 9
-									wineBinary = new File(winePath, "files/bin/wineserver");
-
-									// Check
-									if (!wineBinary.exists()) {
-										// Try subfolder
-
-										// Try as wine in subfolder
-										File[] subfolders = winePath.listFiles(t -> t.isDirectory());
-										if (subfolders.length >= 1) {
-											// Search
-											for (File winePotential : subfolders) {
-												wineName = winePotential.getName();
-												wineBinary = new File(winePotential, "wineserver");
-												if (wineBinary.exists())
-													break;
-												wineBinary = new File(winePotential, "bin/wineserver");
-												if (wineBinary.exists())
-													break;
-												wineBinary = new File(winePotential, "files/bin/wineserver");
-												if (wineBinary.exists())
-													break;
-												wineBinary = new File(winePotential, "dist/bin/wineserver");
-												if (wineBinary.exists())
-													break;
-											}
-										}
-
-										// Invalid
-										if (!wineBinary.exists()) {
-											JOptionPane.showMessageDialog(frame,
-													"The folder you selected is not valid wine installation, please make sure to select a folder with wine binaries.\n\nReason: unable to locate wineserver binary.",
-													"Invalid folder", JOptionPane.ERROR_MESSAGE);
-											return;
-										}
-									}
-								}
-							}
-						}
-
-						// Get version
-						String wineVersion = WineInstallation.getWineVersion(wineBinary);
-						if (wineVersion == null) {
+						WineInstallation.WineSearchResult res = WineInstallation.findWineInstallation(winePath,
+								"User-selected wine: ");
+						if (res.status == WineInstallation.WineSearchResultStatus.INVALID) {
+							// Invalid
 							JOptionPane.showMessageDialog(frame,
-									"The folder you selected is not valid wine installation, please make sure to select a folder with wine binaries.\n\nReason: the wineserver binary could not be queried for wine version.",
+									"The folder you selected is not a valid wine installation, please make sure to select a folder with wine binaries.\n\nReason: unable to locate wineserver binary.",
+									"Invalid folder", JOptionPane.ERROR_MESSAGE);
+							return;
+						} else if (res.status == WineInstallation.WineSearchResultStatus.QUERY_FAILED) {
+							JOptionPane.showMessageDialog(frame,
+									"The folder you selected is not a valid wine installation, please make sure to select a folder with wine binaries.\n\nReason: the wineserver binary could not be queried for wine version.",
+									"Invalid folder", JOptionPane.ERROR_MESSAGE);
+							return;
+						} else if (res.status != WineInstallation.WineSearchResultStatus.SUCCESS) {
+							// Invalid
+							JOptionPane.showMessageDialog(frame,
+									"The folder you selected is not a valid wine installation, please make sure to select a folder with wine binaries.\n\nReason: unknown error: "
+											+ res.status + ".",
 									"Invalid folder", JOptionPane.ERROR_MESSAGE);
 							return;
 						}
+
+						// Update path
+						winePath = res.winePath;
 
 						// Add
 						realWineInstalls.clear();
@@ -382,13 +360,11 @@ public class InstallOptionsOverviewWindow {
 							// Add
 							realWineInstalls.add(wine);
 						}
-						WineInstallation wine = new WineInstallation(winePath.getAbsolutePath(),
-								"User-selected wine: " + wineName + ": " + wineVersion, true, false);
-						realWineInstalls.add(wine);
+						realWineInstalls.add(res.installation);
 						realWineInstalls.add(winePick);
 
 						// Select
-						selectedWine = wine;
+						selectedWine = res.installation;
 
 						// Set model
 						comboBoxWine.setModel(new ComboBoxModel<WineInstallation>() {
@@ -424,10 +400,20 @@ public class InstallOptionsOverviewWindow {
 						});
 						comboBoxWine.setSelectedItem(selectedWine);
 						chckbxPreferProton.setEnabled(selectedWine.isAuto);
+						if (System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON") != null) {
+							chckbxPreferProton.setEnabled(false);
+							chckbxPreferProton.setSelected(
+									System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON").equalsIgnoreCase("true"));
+						}
 					});
 				}
 				selectedWinePrev = selectedWine;
 				chckbxPreferProton.setEnabled(selectedWine.isAuto);
+				if (System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON") != null) {
+					chckbxPreferProton.setEnabled(false);
+					chckbxPreferProton
+							.setSelected(System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON").equalsIgnoreCase("true"));
+				}
 			}
 		});
 		comboBoxWine.setBounds(5, 29, 381, 32);
@@ -436,10 +422,54 @@ public class InstallOptionsOverviewWindow {
 		chckbxUseSystem.setBounds(5, 97, 381, 32);
 		chckbxUseSystem.setSelected(!useBundled);
 		panel_3.add(chckbxUseSystem);
+		boolean supportBundledWine = new File("syslibs/bin/wine").exists()
+				|| new File("installerdata/syslibs/bin/wine").exists()
+				|| new File("installerdata/Contents/Resources/syslibs/bin/wine").exists();
+		if (System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED") != null && supportBundledWine) {
+			chckbxUseSystem.setEnabled(false);
+			chckbxUseSystem.setSelected(!System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED").equalsIgnoreCase("true"));
+		}
+		if (System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON") != null) {
+			chckbxPreferProton.setEnabled(false);
+			chckbxPreferProton.setSelected(System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON").equalsIgnoreCase("true"));
+		}
 		if (!chckbxUseSystem.isSelected()) {
 			// Disable
 			comboBoxWine.setEnabled(false);
 		}
+		if (System.getenv("EMUFERAL_WINEDETECT_USE_AUTO") != null
+				&& System.getenv("EMUFERAL_WINEDETECT_USE_AUTO").equalsIgnoreCase("true")) {
+			chckbxUseSystem.setEnabled(false);
+			chckbxUseSystem.setSelected(true);
+			comboBoxWine.setEnabled(false);
+			selectedWine = wineAuto;
+		} else if (System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE") != null) {
+			String pathFragment = System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE");
+			File path = new File(pathFragment);
+			if (path.exists()) {
+				// Get search result
+				WineInstallation.WineSearchResult res = WineInstallation.findWineInstallation(path,
+						"User-selected wine: ");
+				if (res.status == WineInstallation.WineSearchResultStatus.SUCCESS) {
+					// Lock it
+					chckbxUseSystem.setEnabled(false);
+					chckbxUseSystem.setSelected(true);
+					comboBoxWine.setEnabled(false);
+					selectedWine = res.installation;
+
+					// Add
+					realWineInstalls.clear();
+					realWineInstalls.add(wineAuto);
+					for (WineInstallation wine : wineInstalls) {
+						// Add
+						realWineInstalls.add(wine);
+					}
+					realWineInstalls.add(selectedWine);
+					realWineInstalls.add(winePick);
+				}
+			}
+		}
+
 		chckbxUseSystem.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -513,6 +543,16 @@ public class InstallOptionsOverviewWindow {
 					JOptionPane.showMessageDialog(frame, "The folder you selected is not valid or does not exist.",
 							"Invalid folder", JOptionPane.ERROR_MESSAGE);
 					return;
+				}
+				if (!initialInstallDir.equals(textFieldInstallDir.getText())) {
+					if (!installDir.getName().equals(instDirName)) {
+						String pth = textFieldInstallDir.getText();
+						if (!pth.endsWith(File.separator) && !pth.endsWith("/"))
+							pth += File.separator;
+						pth += instDirName;
+						installDir = new File(pth);
+						installDir.mkdirs();
+					}
 				}
 				useBundled = !chckbxUseSystem.isSelected();
 				preferProton = chckbxPreferProton.isSelected();

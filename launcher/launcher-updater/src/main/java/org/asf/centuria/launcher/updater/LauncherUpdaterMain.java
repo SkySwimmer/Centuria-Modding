@@ -41,6 +41,15 @@ import java.awt.Color;
 
 public class LauncherUpdaterMain {
 
+	///
+	///
+	/// THIS CODE IS A FUCKING MESS ;v;
+	///
+	/// Itll be fixed in a later version, right now we just need something that
+	/// works, we apologize about the mess ;v;
+	///
+	///
+
 	private static boolean installerMode;
 
 	private static JFrame frmCenturiaLauncher;
@@ -51,14 +60,38 @@ public class LauncherUpdaterMain {
 
 	public static int os = 0;
 
-	///
-	///
-	/// THIS CODE IS A FUCKING MESS ;v;
-	///
-	/// Itll be fixed in a later version, right now we just need something that
-	/// works, we apologize about the mess ;v;
-	///
-	///
+	// List of files installed to the target
+	// Only includes root-level files in the target folder
+	// Used to know what to files to delete during uninstallation
+	// Any files created by the installer MUST be added here, otherwise theyre
+	// invalid
+	private static final String[] installTargetFiles = new String[] { // FIXME: also use installerdata contents from
+																		// target-saved installer under
+																		// centuria-installer as part of the deletion
+																		// process guidance
+			// Installation json
+			"installation.json",
+
+			// FT Launcher folder
+			"launcher",
+
+			// Installer
+			"centuria-installer",
+
+			// Launcher binaries
+			"centuria-launcher",
+
+			// Version info
+			"currentversion.info",
+
+			// Settings
+			"shortcuts.json",
+			"wine.json",
+
+			// Caches
+			"banner.image",
+			"launcher.zip"
+	};
 
 	/**
 	 * Launch the application.
@@ -124,44 +157,44 @@ public class LauncherUpdaterMain {
 					// Handle argument
 					switch (opt) {
 
-					case "help": {
-						System.out.println("Arguments:");
-						System.out.println(" --install                     -  selects the install operation");
-						System.out.println(" --uninstall                   -  selects the uninstall operation");
-						System.out.println(
-								" --launch-on-complete          -  enables launching of the installed launcher when installation completes");
-						System.out.println(" --installation-path \"<path>\"  -  defines the installation path");
-						System.exit(0);
-					}
-
-					case "install":
-						operation = 0;
-						break;
-					case "uninstall":
-						operation = 1;
-						break;
-					case "launch-on-complete":
-						launch = true;
-						break;
-
-					case "installation-path": {
-						// Retrieve argument if needed
-						if (val == null) {
-							if (i + 1 < args.length)
-								val = args[i + 1];
-							else
-								break;
-							i++;
+						case "help": {
+							System.out.println("Arguments:");
+							System.out.println(" --install                     -  selects the install operation");
+							System.out.println(" --uninstall                   -  selects the uninstall operation");
+							System.out.println(
+									" --launch-on-complete          -  enables launching of the installed launcher when installation completes");
+							System.out.println(" --installation-path \"<path>\"  -  defines the installation path");
+							System.exit(0);
 						}
 
-						// Set path
-						installPath = val;
-						if (!new File(installPath).exists()) {
-							System.err.println("Error: installation folder does not exist");
-							System.exit(1);
+						case "install":
+							operation = 0;
+							break;
+						case "uninstall":
+							operation = 1;
+							break;
+						case "launch-on-complete":
+							launch = true;
+							break;
+
+						case "installation-path": {
+							// Retrieve argument if needed
+							if (val == null) {
+								if (i + 1 < args.length)
+									val = args[i + 1];
+								else
+									break;
+								i++;
+							}
+
+							// Set path
+							installPath = val;
+							if (!new File(installPath).exists()) {
+								System.err.println("Error: installation folder does not exist");
+								System.exit(1);
+							}
+							break;
 						}
-						break;
-					}
 
 					}
 				}
@@ -525,6 +558,15 @@ public class LauncherUpdaterMain {
 				Files.copy(dir.toPath(), new File(output, output.getName()).toPath());
 				output.delete();
 			}
+			if (progressBar != null) {
+				try {
+					SwingUtilities.invokeAndWait(() -> {
+						progressBar.setValue(progressBar.getValue() + 1);
+						progressBar.repaint();
+					});
+				} catch (InvocationTargetException | InterruptedException e) {
+				}
+			}
 			return;
 		}
 		output.mkdirs();
@@ -581,10 +623,19 @@ public class LauncherUpdaterMain {
 	private static void deleteDir(File dir, JProgressBar progressBar) {
 		if (Files.isSymbolicLink(dir.toPath())) {
 			// Skip symlink
+			if (progressBar != null) {
+				try {
+					SwingUtilities.invokeAndWait(() -> {
+						progressBar.setValue(progressBar.getValue() + 1);
+						progressBar.repaint();
+					});
+				} catch (InvocationTargetException | InterruptedException e) {
+				}
+			}
 			dir.delete();
 			return;
 		}
-		if (!dir.exists() || dir.listFiles() == null) {
+		if (!dir.exists() || dir.listFiles() == null || dir.isFile()) {
 			if (progressBar != null) {
 				try {
 					SwingUtilities.invokeAndWait(() -> {
@@ -739,8 +790,39 @@ public class LauncherUpdaterMain {
 				// Wine setup
 				boolean useWine = os == 2 || (os == 0 && osxUseWineMethod);
 				if (useWine) {
-					log("Setting up wine environment...");
-					log("Finding wine installations...");
+					System.out.println("[LAUNCHER] [UPDATER] " + "Setting up wine environment...");
+					System.out.println("[LAUNCHER] [UPDATER] " + "");
+					System.out.println("[LAUNCHER] [UPDATER] " + "Supported environment variables:");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_DISABLE - set to true to disable this mechanism");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_PREFER_PROTON - controls if proton should be preferred over wine (default: false)");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_WINESEARCH_PATHS - additional priority search paths for wine binary sources, separated by ':', expects a `wineserver` file to exist at the target path");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_PROTONSEARCH_PATHS - additional priority search paths for proton sources, separated by ':', expects a proton game folder or a folder containing proton versions");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_PROTONSEARCH_PREFERREDVERSIONS - additional preferred proton versions to use aside from Proton 11.0, Proton 8.0 and Proton 9.0, separated by ':', expects game folder names");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_SELECTED_WINE - path to the wine version to select, this will use a user-selected wine installation and implies EMUFERAL_WINEDETECT_USE_BUNDLED=false");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_USE_AUTO - controls if automatic wine detection mode should be used (default: false)");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ " - EMUFERAL_WINEDETECT_USE_BUNDLED - controls if the bundled wine should be used (default: false) [macOS only]");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ "Note: environment variables override the launcher completely, and prevent manual configuration from the launcher");
+					System.out.println("[LAUNCHER] [UPDATER] "
+							+ "Note: if a variable is unspecified, the user-configured settings will be used");
+					System.out.println("[LAUNCHER] [UPDATER] " + "");
+					if (System.getenv("EMUFERAL_WINEDETECT_DISABLE") != null
+							&& System.getenv("EMUFERAL_WINEDETECT_DISABLE").equalsIgnoreCase("true")) {
+						// Disabled
+						System.out.println("[LAUNCHER] [UPDATER] "
+								+ "Wine support system disabled! Depending on the system to provide wine versions for the PATH.");
+						useWine = false;
+					} else {
+						System.out.println("[LAUNCHER] [UPDATER] " + "Finding wine installations...");
+					}
 				}
 				boolean supportBundledWine = new File("syslibs/bin/wine").exists();
 				WineInstallation[] allWineInstalls = useWine ? WineInstallation.findAllWineInstallations()
@@ -754,14 +836,14 @@ public class LauncherUpdaterMain {
 				}
 
 				// Wine default settings
-				boolean preferProtonEnabled = true;
+				boolean preferProtonEnabled = false;
 				boolean useBundled = supportBundledWine;
 				WineInstallation selectedWine = null;
 
 				// Load wine preferences
 				File wineProperties = new File(dir, "wine.json");
 				if (wineProperties.exists() && useWine) {
-					log("Loading wine settings...");
+					System.out.println("[LAUNCHER] [UPDATER] " + "Loading wine settings...");
 
 					// Load settings
 					JsonObject wineSettings = JsonParser.parseString(Files.readString(wineProperties.toPath()))
@@ -782,19 +864,79 @@ public class LauncherUpdaterMain {
 					if (!useBundled) {
 						if (auto) {
 							// Set
-							selectedWine = new WineInstallation("<auto>", "", false, true);
+							selectedWine = new WineInstallation("<auto>", "<auto>", "", false, true);
 							System.out.println("[LAUNCHER] [UPDATER] " + "Automatic mode: enabled");
 						} else {
 							// Get path
 							String path = wineSettings.get("path").getAsString();
+							if (!wineSettings.has("name"))
+								wineSettings.addProperty("name", "<unknownname>");
+							String name = wineSettings.get("name").getAsString();
 							String display = wineSettings.get("display").getAsString();
 							boolean userPicked = wineSettings.get("userPicked").getAsBoolean();
-							selectedWine = new WineInstallation(path, display, userPicked, false);
+							selectedWine = new WineInstallation(path, name, display, userPicked, false);
 							System.out.println("[LAUNCHER] [UPDATER] " + "Automatic mode: disabled");
 							System.out.println("[LAUNCHER] [UPDATER] " + "Current wine profile: " + display);
 							System.out.println("[LAUNCHER] [UPDATER] " + "Current wine path: " + path);
 							System.out.println("[LAUNCHER] [UPDATER] " + "Was added by user: " + userPicked);
 						}
+					}
+				}
+
+				// Check overrides
+				if (System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON") != null) {
+					preferProtonEnabled = System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON").equalsIgnoreCase("true");
+					System.out
+							.println("[LAUNCHER] [UPDATER] " + "Override! Prefer proton mode: " + preferProtonEnabled);
+				}
+				if (System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED") != null
+						&& !System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED").equalsIgnoreCase("true")) {
+					useBundled = false;
+					System.out.println("[LAUNCHER] [UPDATER] " + "Override! Disabled bundled wine!");
+				}
+
+				// Check pre-specified
+				if (System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED") != null
+						&& System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED").equalsIgnoreCase("true")
+						&& supportBundledWine) {
+					// Use auto
+					System.out.println("[LAUNCHER] [UPDATER] " + "Override! Using bundled wine!");
+					useBundled = true;
+				} else if (System.getenv("EMUFERAL_WINEDETECT_USE_AUTO") != null
+						&& System.getenv("EMUFERAL_WINEDETECT_USE_AUTO").equalsIgnoreCase("true")) {
+					// Use auto
+					System.out.println("[LAUNCHER] [UPDATER] " + "Override! Using automatic wine detection!");
+					selectedWine = new WineInstallation("<auto>", "<auto>", "", false, true);
+					useBundled = false;
+				} else if (System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE") != null) {
+					// Load
+					String pathFragment = System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE");
+					System.out.println("[LAUNCHER] [UPDATER] " + "Override! Trying to select user-specified wine: "
+							+ pathFragment + "...");
+					File path = new File(pathFragment);
+					if (path.exists()) {
+						// Get search result
+						WineInstallation.WineSearchResult res = WineInstallation.findWineInstallation(path,
+								"User-selected wine: ");
+						if (res.status == WineInstallation.WineSearchResultStatus.SUCCESS) {
+							// Disable bundled
+							useBundled = false;
+
+							// Select
+							System.out.println("[LAUNCHER] [UPDATER] " + "Selected wine installation: "
+									+ res.installation.display);
+							selectedWine = res.installation;
+							selectedWine.isUserPicked = true;
+						} else {
+							// Invalid
+							System.err.println("[LAUNCHER] [UPDATER] " + "Error: invalid wine installation: "
+									+ pathFragment + ": got error code: "
+									+ res.status);
+						}
+					} else {
+						// Invalid
+						System.err.println("[LAUNCHER] [UPDATER] " + "Error: invalid wine installation: " + pathFragment
+								+ ": path does not exist");
 					}
 				}
 
@@ -813,12 +955,13 @@ public class LauncherUpdaterMain {
 					if (supportBundledWine && useBundled) {
 						// Use bundled
 						log("Using bundled wine!");
-						selectedWine = new WineInstallation("syslibs/bin", "Bundled wine", false, false);
+						selectedWine = new WineInstallation("syslibs/bin", "<bundled>", "Bundled wine", false, false);
 					} else {
 						// Check auto
-						if (selectedWine == null || selectedWine.isAuto) {
+						if (selectedWine == null || selectedWine.isAuto || !new File(selectedWine.path).exists()) {
 							// Find first automatic entry
 							log("Selecting wine using automatic detection system...");
+							selectedWine = null;
 
 							// Check proton preference
 							if (preferProtonEnabled) {
@@ -1041,31 +1184,31 @@ public class LauncherUpdaterMain {
 					// Handle argument
 					switch (opt) {
 
-					case "install-with-gui":
-						operation = 0;
-						break;
-					case "uninstall-with-gui":
-						operation = 1;
-						break;
+						case "install-with-gui":
+							operation = 0;
+							break;
+						case "uninstall-with-gui":
+							operation = 1;
+							break;
 
-					case "installation-path": {
-						// Retrieve argument if needed
-						if (val == null) {
-							if (i + 1 < args.length)
-								val = args[i + 1];
-							else
-								break;
-							i++;
-						}
+						case "installation-path": {
+							// Retrieve argument if needed
+							if (val == null) {
+								if (i + 1 < args.length)
+									val = args[i + 1];
+								else
+									break;
+								i++;
+							}
 
-						// Set path
-						selectedInstallPath = val;
-						if (!new File(selectedInstallPath).exists()) {
-							System.err.println("Error: installation folder does not exist");
-							System.exit(1);
+							// Set path
+							selectedInstallPath = val;
+							if (!new File(selectedInstallPath).exists()) {
+								System.err.println("Error: installation folder does not exist");
+								System.exit(1);
+							}
+							break;
 						}
-						break;
-					}
 
 					}
 				}
@@ -1471,13 +1614,55 @@ public class LauncherUpdaterMain {
 
 		// Wine setup
 		boolean useWine = os == 2 || (os == 0 && osxUseWineMethod);
+		if (useWine) {
+			System.out.println("[LAUNCHER] [UPDATER] " + "Setting up wine environment...");
+			System.out.println("[LAUNCHER] [UPDATER] " + "");
+			System.out.println("[LAUNCHER] [UPDATER] " + "Supported environment variables:");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_DISABLE - set to true to disable this mechanism");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_PREFER_PROTON - controls if proton should be preferred over wine (default: unspecified)");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_WINESEARCH_PATHS - additional priority search paths for wine binary sources, separated by ':', expects a `wineserver` file to exist at the target path");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_PROTONSEARCH_PATHS - additional priority search paths for proton sources, separated by ':', expects a proton game folder or a folder containing proton versions");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_PROTONSEARCH_PREFERREDVERSIONS - additional preferred proton versions to use aside from Proton 11.0, Proton 8.0 and Proton 9.0, separated by ':', expects game folder names");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_SELECTED_WINE - path to the wine version to select, this will use a user-selected wine installation and implies EMUFERAL_WINEDETECT_USE_BUNDLED=false");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_USE_AUTO - controls if automatic wine detection mode should be used (default: unspecified)");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ " - EMUFERAL_WINEDETECT_USE_BUNDLED - controls if the bundled wine should be used (default: unspecified) [macOS only]");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ "Note: environment variables override the launcher completely, and prevent manual configuration from the launcher");
+			System.out.println("[LAUNCHER] [UPDATER] "
+					+ "Note: if a variable is unspecified, the user-configured settings will be used");
+			System.out.println("[LAUNCHER] [UPDATER] " + "");
+			if (System.getenv("EMUFERAL_WINEDETECT_DISABLE") != null
+					&& System.getenv("EMUFERAL_WINEDETECT_DISABLE").equalsIgnoreCase("true")) {
+				// Disabled
+				System.out.println("[LAUNCHER] [UPDATER] "
+						+ "Wine support system disabled! Depending on the system to provide wine versions for the PATH.");
+				useWine = false;
+			} else {
+				System.out.println("[LAUNCHER] [UPDATER] " + "Finding wine installations...");
+			}
+		}
 		boolean supportBundledWine = new File("installerdata/syslibs/bin/wine").exists()
 				|| new File("installerdata/Contents/Resources/syslibs/bin/wine").exists();
 		WineInstallation[] allWineInstalls = useWine ? WineInstallation.findAllWineInstallations()
 				: new WineInstallation[0];
+		if (useWine) {
+			// Log all wine installs
+			for (WineInstallation install : allWineInstalls) {
+				System.out.println("[LAUNCHER] [UPDATER] " + "Found " + (install.isProton ? "proton" : "wine")
+						+ " installation: " + install.display + ": " + install.path);
+			}
+		}
 
 		// Wine default settings
-		boolean preferProtonEnabled = true;
+		boolean preferProtonEnabled = false;
 		boolean useBundled = supportBundledWine;
 		WineInstallation selectedWine = null;
 
@@ -1498,13 +1683,73 @@ public class LauncherUpdaterMain {
 			// Handle auto
 			if (auto) {
 				// Set
-				selectedWine = new WineInstallation("<auto>", "", false, true);
+				selectedWine = new WineInstallation("<auto>", "<auto>", "", false, true);
 			} else {
 				// Get path
 				String path = wineSettings.get("path").getAsString();
+				if (!wineSettings.has("name"))
+					wineSettings.addProperty("name", "<unknownname>");
+				String name = wineSettings.get("name").getAsString();
 				String display = wineSettings.get("display").getAsString();
 				boolean userPicked = wineSettings.get("userPicked").getAsBoolean();
-				selectedWine = new WineInstallation(path, display, userPicked, false);
+				selectedWine = new WineInstallation(path, name, display, userPicked, false);
+			}
+		}
+
+		// Check overrides
+		if (System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON") != null) {
+			preferProtonEnabled = System.getenv("EMUFERAL_WINEDETECT_PREFER_PROTON").equalsIgnoreCase("true");
+			System.out
+					.println("[LAUNCHER] [UPDATER] " + "Override! Prefer proton mode: " + preferProtonEnabled);
+		}
+		if (System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED") != null
+				&& !System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED").equalsIgnoreCase("true")) {
+			useBundled = false;
+			System.out.println("[LAUNCHER] [UPDATER] " + "Override! Disabled bundled wine!");
+		}
+
+		// Check pre-specified
+		if (System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED") != null
+				&& System.getenv("EMUFERAL_WINEDETECT_USE_BUNDLED").equalsIgnoreCase("true")
+				&& supportBundledWine) {
+			// Use auto
+			System.out.println("[LAUNCHER] [UPDATER] " + "Override! Using bundled wine!");
+			useBundled = true;
+		} else if (System.getenv("EMUFERAL_WINEDETECT_USE_AUTO") != null
+				&& System.getenv("EMUFERAL_WINEDETECT_USE_AUTO").equalsIgnoreCase("true")) {
+			// Use auto
+			System.out.println("[LAUNCHER] [UPDATER] " + "Override! Using automatic wine detection!");
+			selectedWine = new WineInstallation("<auto>", "<auto>", "", false, true);
+			useBundled = false;
+		} else if (System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE") != null) {
+			// Load
+			String pathFragment = System.getenv("EMUFERAL_WINEDETECT_SELECTED_WINE");
+			System.out.println("[LAUNCHER] [UPDATER] " + "Override! Trying to select user-specified wine: "
+					+ pathFragment + "...");
+			File path = new File(pathFragment);
+			if (path.exists()) {
+				// Get search result
+				WineInstallation.WineSearchResult res = WineInstallation.findWineInstallation(path,
+						"User-selected wine: ");
+				if (res.status == WineInstallation.WineSearchResultStatus.SUCCESS) {
+					// Disable bundled
+					useBundled = false;
+
+					// Select
+					System.out.println("[LAUNCHER] [UPDATER] " + "Selected wine installation: "
+							+ res.installation.display);
+					selectedWine = res.installation;
+					selectedWine.isUserPicked = true;
+				} else {
+					// Invalid
+					System.err.println("[LAUNCHER] [UPDATER] " + "Error: invalid wine installation: "
+							+ pathFragment + ": got error code: "
+							+ res.status);
+				}
+			} else {
+				// Invalid
+				System.err.println("[LAUNCHER] [UPDATER] " + "Error: invalid wine installation: " + pathFragment
+						+ ": path does not exist");
 			}
 		}
 
@@ -1531,10 +1776,11 @@ public class LauncherUpdaterMain {
 		}
 
 		// Installation options
+		targetInstall.mkdirs();
 		BufferedImage img = ImageIO.read(new File(instDir2, "banner.image"));
 		InstallOptionsOverviewWindow overview = new InstallOptionsOverviewWindow(frmCenturiaLauncher,
 				preferProtonEnabled, selectedWine, allWineInstalls, useWine, supportBundledWine, useBundled, img, lock,
-				targetInstall.getCanonicalPath(), createShortcutDesktop, createStartMenu, os != 0);
+				targetInstall.getCanonicalPath(), launcherDir, createShortcutDesktop, createStartMenu, os != 0);
 
 		// Check cancel
 		if (overview.getInstallPath() == null) {
@@ -1575,6 +1821,7 @@ public class LauncherUpdaterMain {
 			wineProps.addProperty("preferProton", overview.preferProton());
 			wineProps.addProperty("useAuto", selectedWine.isAuto);
 			if (!selectedWine.isAuto) {
+				wineProps.addProperty("name", selectedWine.name);
 				wineProps.addProperty("display", selectedWine.display);
 				wineProps.addProperty("path", selectedWine.path);
 				wineProps.addProperty("userPicked", selectedWine.isUserPicked);
@@ -1637,42 +1884,37 @@ public class LauncherUpdaterMain {
 		if (targetChanged) {
 			log("Moving installation folder to new location...");
 
-			// Copy
-			File originalTargetLauncherData = new File(originalTarget, "launcher");
-			File originalTargetLauncherZip = new File(originalTarget, "launcher.zip");
-			File originalTargetLauncherFile = new File(originalTarget, "currentversion.info");
-			File originalTargetLauncherShortcuts = new File(originalTarget, "shortcuts.json");
-			File originalTargetLauncherWine = new File(originalTarget, "wine.json");
-			File originalTargetInstaller = new File(originalTarget, "centuria-installer");
-			File originalTargetLauncher = new File(originalTarget, "centuria-launcher");
-			File instDirLauncherData = new File(instDir, "launcher");
-			File instDirLauncherZip = new File(instDir, "launcher.zip");
-			File instDirLauncherFile = new File(instDir, "currentversion.info");
-			File instDirLauncherShortcuts = new File(instDir, "shortcuts.json");
-			File instDirLauncherWine = new File(instDir, "wine.json");
-			File instDirInstaller = new File(instDir, "centuria-installer");
-			File instDirLauncher = new File(instDir, "centuria-launcher");
+			// Collect files
+			File originalTargetF = originalTarget;
+			String[] targetFilesToMoveKeys = installTargetFiles;
+			File[] originalFilesToMove = Stream.of(targetFilesToMoveKeys).map(t -> new File(originalTargetF, t))
+					.filter(t -> t.exists()).toArray(t -> new File[t]);
 			if (progressBar != null) {
 				try {
-					int c = countDir(originalTargetLauncherData) + countDir(originalTargetLauncherZip)
-							+ countDir(originalTargetLauncherFile) + countDir(originalTargetLauncherShortcuts)
-							+ countDir(originalTargetLauncherWine) + countDir(originalTargetInstaller)
-							+ countDir(originalTargetLauncher);
+					int c = 0;
+					for (File f : originalFilesToMove)
+						c += countDir(f);
+					int cF = c;
 					SwingUtilities.invokeAndWait(() -> {
-						progressBar.setMaximum(c);
+						progressBar.setMaximum(cF);
 						progressBar.setValue(0);
 						progressBar.repaint();
 					});
 				} catch (InvocationTargetException | InterruptedException e) {
 				}
 			}
-			moveDir(originalTargetLauncherData, instDirLauncherData, progressBar);
-			moveDir(originalTargetLauncherZip, instDirLauncherZip, progressBar);
-			moveDir(originalTargetLauncherFile, instDirLauncherFile, progressBar);
-			moveDir(originalTargetLauncherShortcuts, instDirLauncherShortcuts, progressBar);
-			moveDir(originalTargetLauncherWine, instDirLauncherWine, progressBar);
-			moveDir(originalTargetInstaller, instDirInstaller, progressBar);
-			moveDir(originalTargetLauncher, instDirLauncher, progressBar);
+
+			// Move
+			for (File fileToMove : originalFilesToMove) {
+				// Move entry
+				moveDir(fileToMove, new File(instDir, fileToMove.getName()), progressBar);
+			}
+
+			// Delete old if empty
+			if (instDir.listFiles().length == 0)
+				instDir.delete();
+
+			// Mark finished
 			if (progressBar != null) {
 				try {
 					SwingUtilities.invokeAndWait(() -> {
@@ -1820,6 +2062,7 @@ public class LauncherUpdaterMain {
 					} catch (InvocationTargetException | InterruptedException e) {
 					}
 				}
+
 				// Delete directory
 				deleteDir(oldLauncher, progressBar);
 				if (progressBar != null) {
@@ -2268,8 +2511,43 @@ public class LauncherUpdaterMain {
 		}
 
 		// Delete directory
-		if (instDir.exists())
-			deleteDir(instDir, progressBar);
+		if (instDir.exists()) {
+			// Uninstall launcher
+
+			// Collect files to delete related to the launcher, and only those related to
+			// the launcher, nothing else, for older installs that still utilize an older
+			// installer
+			File instDirF = instDir;
+			String[] keysToDelete = installTargetFiles;
+			File[] filesToDelete = Stream.of(keysToDelete).map(t -> new File(instDirF, t))
+					.filter(t -> t.exists()).toArray(t -> new File[t]);
+			if (progressBar != null) {
+				try {
+					int c = 0;
+					for (File f : filesToDelete)
+						c += countDir(f);
+					int cF = c;
+					SwingUtilities.invokeAndWait(() -> {
+						progressBar.setMaximum(cF);
+						progressBar.setValue(0);
+						progressBar.repaint();
+					});
+				} catch (InvocationTargetException | InterruptedException e) {
+				}
+			}
+
+			// Move
+			for (File file : filesToDelete) {
+				// Delete entry
+				deleteDir(file, progressBar);
+			}
+
+			// Delete target folder if empty
+			if (new File(instDir.getAbsolutePath()).listFiles().length == 0)
+				instDir.delete();
+		}
+
+		// Mark finished
 		if (progressBar != null) {
 			try {
 				SwingUtilities.invokeAndWait(() -> {
@@ -2349,7 +2627,7 @@ public class LauncherUpdaterMain {
 			}
 		}
 
-		// Read server json
+		// Create URL protocols
 		try {
 			JsonObject conf = JsonParser.parseString(Files.readString(Path.of("server.json"))).getAsJsonObject();
 			if (conf.has("urlProtocols")) {
@@ -2390,12 +2668,15 @@ public class LauncherUpdaterMain {
 		log("Removing installation target specifier file...");
 
 		// Build folder path
+		File installParent = installDirFile.getParentFile();
 		if (installDirFile.exists())
 			installDirFile.delete();
 		File bannerFile = new File(instDir, "banner.image");
 		if (bannerFile.exists())
 			bannerFile.delete();
-		File installParent = installDirFile.getParentFile();
+		bannerFile = new File(installParent, "banner.image");
+		if (bannerFile.exists())
+			bannerFile.delete();
 		if (installParent.exists() && installParent.listFiles().length == 0) {
 			installParent.delete();
 		}
