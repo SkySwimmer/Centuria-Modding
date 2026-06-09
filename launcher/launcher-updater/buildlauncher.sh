@@ -18,7 +18,7 @@ if [ "${#args[@]}" == "0" ]; then
     tools/buildartifacts.sh assets/earlyaccess-1.8 portables || exit
     rm -rf build/targets
     tools/buildartifacts.sh assets/earlyaccess-1.8 installers || exit
-    mv build/earlyaccess-1.8 build/artifactdata-earlyaccess-1.8
+    mv build/artifacts build/artifactdata-earlyaccess-1.8
 else
     # Build stable
     tools/buildartifacts.sh assets/stable "$@" || exit
