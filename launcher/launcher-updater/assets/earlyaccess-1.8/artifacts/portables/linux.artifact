@@ -15,6 +15,7 @@ function build_portable() {
     # Accepts: <path>
 
     # Linux launcher
+    from-assets portables/share
     from-artifact share/linux.artifact
     from-artifact launcher/linux.artifact
 }

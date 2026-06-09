@@ -19,6 +19,7 @@ function build_portable() {
 
     # OSX portable assets
     from-assets portables/osx
+    from-assets portables/share
 
     # Set permissions
     chmod +x -v "$BUILD_TARGET/launcher.command" || exit 1
